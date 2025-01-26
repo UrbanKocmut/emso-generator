@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="sl">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>EMŠO generator</title>
+    <meta name="description" content="Ustvarite naključne slovenske EMŠO številke glede na prilagodljive parametre, kot so datum rojstva, spol in drugo.">
+    <meta name="keywords" content="EMŠO generator, Slovenija, naključni EMŠO, slovenski ID generator, orodje">
+    <meta name="author" content="urban">
+    <meta name="language" content="sl">
+    <meta property="og:title" content="Generator slovenskih EMŠO številk">
+    <meta property="og:description" content="Ustvarite naključne slovenske EMŠO številke z lahkoto in prilagodite parametre.">
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono&family=IBM+Plex+Sans:wght@400;700&display=swap" rel="stylesheet">
+
+</head>
+
+<body>
+<header>
+    <h1>Generator slovenskih EMŠO številk</h1>
+</header>
+
+<main>
+    <h3>Izberite parametre</h3>
+
+    <form id="parameters-form">
+        <p>
+            <label for="date-of-birth-input">Datum rojstva</label>
+            <input id="date-of-birth-input" type="date" value="1991-07-24" required>
+        </p>
+
+        <p>
+            <label for="gender-input">
+                <input id="gender-input" type="checkbox"> Moški
+            </label>
+        </p>
+
+        <p>
+            <label for="18-plus-input">
+                <input id="18-plus-input" type="checkbox"> Polnoletna oseba (18+)
+            </label>
+        </p>
+
+        <p>
+            <label for="number-generated-input">Število generiranih EMŠO številk</label>
+            <input id="number-generated-input" type="number" min="1" step="1" value="10" required>
+        </p>
+
+        <p>
+            <button id="refresh-btn" type="button">Generiraj</button>
+        </p>
+    </form>
+
+    <h3>Generirane EMŠO številke</h3>
+    <div id="emso-output" class="output-box">
+        <!-- EMŠO rezultati bodo prikazani tukaj -->
+    </div>
+</main>
+
+
+<script src="js/app.js"></script>
+</body>
+
+</html>
