@@ -11,10 +11,146 @@
     <meta name="language" content="sl">
     <meta property="og:title" content="Generator slovenskih EMŠO številk">
     <meta property="og:description" content="Ustvarite naključne slovenske EMŠO številke z lahkoto in prilagodite parametre.">
-    <link rel="stylesheet" href="css/style.css">
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono&family=IBM+Plex+Sans:wght@400;700&display=swap" rel="stylesheet">
-
+    <meta name="google-site-verification" content="xnb8tqKhnWDbmJ-ZcreKmNNeJEPkIzC79o-slaLRFmk" />
 </head>
+
+<style>
+    @font-face {
+        font-family: 'IBM Plex Sans';
+        src: url('./fonts/IBMPlexSans-Regular.woff2') format('woff2');
+        font-weight: 400;
+        font-style: normal;
+    }
+
+    @font-face {
+        font-family: 'IBM Plex Sans';
+        src: url('./fonts/IBMPlexSans-Bold.woff2') format('woff2');
+        font-weight: 700;
+        font-style: normal;
+    }
+
+    @font-face {
+        font-family: 'IBM Plex Mono';
+        src: url('./fonts/IBMPlexMono-Regular.woff2') format('woff2');
+        font-weight: 400;
+        font-style: normal;
+    }
+
+    /* General Styles */
+    body {
+        font-family: 'IBM Plex Sans', sans-serif;
+        background-color: #fff;
+        color: #000;
+        margin: 0;
+        padding: 20px;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        overflow-x: hidden;
+    }
+
+    /* Header */
+    header {
+        width: 100%;
+        max-width: 500px;
+        text-align: left; /* Align title with main content */
+    }
+
+    h1 {
+        font-size: 2rem;
+        margin-bottom: 20px;
+        color: #000;
+    }
+
+    /* Form Layout */
+    form {
+        width: 100%;
+        max-width: 500px;
+        display: flex;
+        flex-direction: column;
+    }
+
+    p {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        width: 100%;
+    }
+
+    /* Input Labels & Inputs Alignment */
+    label {
+        flex: 0 0 50%; /* Make labels a fixed width for alignment */
+        text-align: left;
+        font-weight: bold;
+    }
+
+    input[type="date"],
+    input[type="number"],
+    input[type="text"],
+    button {
+        flex: 1; /* Inputs take remaining space */
+        font-size: 1rem;
+        padding: 10px;
+        border: 1px solid #000;
+        background-color: #fff;
+        color: #000;
+        outline: none;
+        box-sizing: border-box;
+    }
+
+
+    /* Button Styling */
+    button {
+        background-color: #000;
+        color: #fff;
+        border: 1px solid #000;
+        cursor: pointer;
+        font-weight: bold;
+        text-transform: uppercase;
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    button:hover {
+        background-color: #fff;
+        color: #000;
+    }
+
+    /* Output Box */
+    #emso-output {
+        width: fit-content;
+        max-width: 500px;
+        padding: 20px;
+        background-color: #f4f4f4;
+        border: 1px solid #000;
+        font-family: 'IBM Plex Mono', monospace;
+        white-space: pre-wrap;
+        overflow-x: auto;
+    }
+
+    /* Mobile Responsive */
+    @media (max-width: 600px) {
+        p {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        label {
+            flex: unset;
+            width: 100%;
+            margin-bottom: 5px;
+        }
+        body {
+            align-items: start;
+        }
+        h1 {
+            margin-top: unset;
+        }
+
+    }
+
+</style>
 
 <body>
 <header>
@@ -22,7 +158,7 @@
 </header>
 
 <main>
-    <h3>Izberite parametre</h3>
+    <h2>Izberite parametre</h2>
 
     <form id="parameters-form">
         <p>
@@ -31,14 +167,11 @@
         </p>
 
         <p>
-            <label for="gender-input">
-                <input id="gender-input" type="checkbox"> Moški
-            </label>
-        </p>
-
-        <p>
             <label for="18-plus-input">
-                <input id="18-plus-input" type="checkbox"> Polnoletna oseba (18+)
+                Polnoletna oseba (18+) <input id="18-plus-input" type="checkbox">
+            </label>
+            <label for="gender-input">
+                Moški <input id="gender-input" type="checkbox">
             </label>
         </p>
 
@@ -52,14 +185,154 @@
         </p>
     </form>
 
-    <h3>Generirane EMŠO številke</h3>
+    <h2>Generirane EMŠO številke</h2>
     <div id="emso-output" class="output-box">
         <!-- EMŠO rezultati bodo prikazani tukaj -->
     </div>
 </main>
 
 
-<script src="js/app.js"></script>
+<script>
+    function generateEMSO(dateOfBirth, is18Plus, isMale) {
+
+        if (isNaN(dateOfBirth)) {
+            dateOfBirth = getRandomEMSOBirthday(is18Plus)
+        }
+
+        // Extract day, month, and year from the date object
+        let day = dateOfBirth.getDate();
+        let month = dateOfBirth.getMonth() + 1; // Months are 0-based
+        let year = dateOfBirth.getFullYear();
+
+        // Format date part (DDMMYY)
+        const formattedDate = `${String(day).padStart(2, "0")}${String(month).padStart(2, "0")}${String(year).slice(-2)}`;
+
+        // Region code (Slovenian citizens: 50–59)
+        const regionCode = 50;
+
+        // Gender-specific sequence
+        const sequenceStart = isMale ? 500 : 0; // true for male, false for female
+
+        let sequence = Math.floor(Math.random() * 500) + sequenceStart;
+
+        // Combine the first 12 digits
+        let partialEMSO = `${formattedDate}${regionCode}${String(sequence).padStart(3, "0")}`;
+
+        // Calculate control digit
+        let controlDigit = calculateControlDigit(partialEMSO);
+        while (controlDigit >= 10) {
+            sequence += 1;
+            partialEMSO = `${formattedDate}${regionCode}${String(sequence).padStart(3, "0")}`;
+            controlDigit = calculateControlDigit(partialEMSO);
+        }
+
+        return `${partialEMSO}${controlDigit}`;
+    }
+
+    // Function to calculate the control digit for EMŠO
+    function calculateControlDigit(partialEMSO) {
+        const weights = [7, 6, 5, 4, 3, 2, 7, 6, 5, 4, 3, 2];
+        const sum = partialEMSO.split("").reduce((acc, digit, index) => {
+            return acc + Number(digit) * weights[index];
+        }, 0);
+
+        const remainder = sum % 11;
+        return remainder === 0 ? 0 : 11 - remainder;
+    }
+
+    function getRandomEMSOBirthday(is18Plus = false) {
+        // Define the start and end dates
+        const startDate = new Date(1976, 0, 1); // January 1, 1976 (month is 0-based)
+        const endDate = new Date(); // Today's date
+        if (is18Plus) {
+            endDate.setFullYear(endDate.getFullYear() - 18); // Adjust to 18 years ago
+
+        }
+        // Get timestamps for the start and end dates
+        const startTimestamp = startDate.getTime();
+        const endTimestamp = endDate.getTime();
+
+        // Generate a random timestamp between the start and end timestamps
+        const randomTimestamp = Math.floor(Math.random() * (endTimestamp - startTimestamp + 1)) + startTimestamp;
+
+        // Convert the random timestamp back to a Date object
+        return new Date(randomTimestamp);
+    }
+
+
+    function updateEmsos(numberGeneratedInput, isMaleInput, is18PlusInput, dateInput, emsoOutput) {
+        let numberToGenerate = numberGeneratedInput.value;
+        let isMale = isMaleInput.checked;
+        let is18Plus = is18PlusInput.checked;
+        let dateOfBirth = new Date(dateInput.value);
+
+        if (isNaN(numberToGenerate) || numberToGenerate === undefined) {
+            numberToGenerate = 10;
+        }
+
+        if (isNaN(isMale)) {
+            isMale = false;
+        }
+
+        if (isNaN(is18Plus)) {
+            is18Plus = false;
+        }
+
+        let emsos = new Array(numberToGenerate);
+
+        for (let i = 0; i < numberToGenerate; i++) {
+            emsos[i] = generateEMSO(dateOfBirth, is18Plus, isMale);
+        }
+        emsoOutput.innerText = emsos.join("\n");
+
+
+    }
+
+    // TODO use wasm to make fast
+
+    window.onload = function () {
+
+
+        const dateInput = window.document.getElementById("date-of-birth-input");
+        const is18PlusInput = window.document.getElementById("18-plus-input");
+        const isMaleInput = window.document.getElementById("gender-input");
+        const numberGeneratedInput = window.document.getElementById("number-generated-input");
+
+        const refreshBtn = window.document.getElementById("refresh-btn");
+
+        const emsoOutput = window.document.getElementById("emso-output")
+
+        dateInput.addEventListener("input", ev => {
+            updateEmsos(numberGeneratedInput, isMaleInput, is18PlusInput, dateInput, emsoOutput);
+        });
+        is18PlusInput.addEventListener("input", ev => {
+            if (is18PlusInput.checked) {
+                dateInput.value = "";
+                dateInput.disabled = true;
+            } else {
+                dateInput.disabled = false;
+            }
+
+            updateEmsos(numberGeneratedInput, isMaleInput, is18PlusInput, dateInput, emsoOutput);
+        });
+        isMaleInput.addEventListener("input", ev => {
+            updateEmsos(numberGeneratedInput, isMaleInput, is18PlusInput, dateInput, emsoOutput);
+        });
+        numberGeneratedInput.addEventListener("input", ev => {
+            if (parseInt(numberGeneratedInput.value) > 1000){
+                numberGeneratedInput.value = 1000
+            }
+            updateEmsos(numberGeneratedInput, isMaleInput, is18PlusInput, dateInput, emsoOutput);
+        });
+        refreshBtn.addEventListener("click", ev => {
+            updateEmsos(numberGeneratedInput, isMaleInput, is18PlusInput, dateInput, emsoOutput);
+        })
+
+
+        updateEmsos(numberGeneratedInput, isMaleInput, is18PlusInput, dateInput, emsoOutput);
+    };
+
+</script>
 </body>
 
 </html>
