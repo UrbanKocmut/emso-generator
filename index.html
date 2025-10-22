@@ -204,8 +204,8 @@
         let month = dateOfBirth.getMonth() + 1; // Months are 0-based
         let year = dateOfBirth.getFullYear();
 
-        // Format date part (DDMMYY)
-        const formattedDate = `${String(day).padStart(2, "0")}${String(month).padStart(2, "0")}${String(year).slice(-2)}`;
+        // Format date part (DDMMYYY)
+        const formattedDate = `${String(day).padStart(2, "0")}${String(month).padStart(2, "0")}${String(year).slice(-3)}`;
 
         // Region code (Slovenian citizens: 50–59)
         const regionCode = 50;
