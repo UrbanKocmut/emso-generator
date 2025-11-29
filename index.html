@@ -211,7 +211,7 @@
         const formattedDate = `${String(day).padStart(2, "0")}${String(month).padStart(2, "0")}${String(year).slice(-3)}`;
 
         // Region code (Slovenian citizens: 50–59)
-        const regionCode = 50;
+        const regionCode = 50 + Math.floor(Math.random() * 10); // 50–59
 
         // Gender-specific sequence
         const sequenceStart = isMale ? 500 : 0; // true for male, false for female
@@ -322,8 +322,8 @@
             updateEmsos(numberGeneratedInput, isMaleInput, is18PlusInput, dateInput, emsoOutput);
         });
         numberGeneratedInput.addEventListener("input", ev => {
-            if (parseInt(numberGeneratedInput.value) > 1000){
-                numberGeneratedInput.value = 1000
+            if (parseInt(numberGeneratedInput.value) > 10000) {
+                numberGeneratedInput.value = 10000
             }
             updateEmsos(numberGeneratedInput, isMaleInput, is18PlusInput, dateInput, emsoOutput);
         });
