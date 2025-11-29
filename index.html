@@ -166,7 +166,7 @@
     <form id="parameters-form">
         <p>
             <label for="date-of-birth-input">Datum rojstva</label>
-            <input id="date-of-birth-input" type="date" value="1991-07-24" required>
+            <input id="date-of-birth-input" type="date">
         </p>
 
         <p>
@@ -291,49 +291,58 @@
 
     }
 
-    // TODO use wasm to make fast
-
     window.onload = function () {
-
 
         const dateInput = window.document.getElementById("date-of-birth-input");
         const is18PlusInput = window.document.getElementById("18-plus-input");
         const isMaleInput = window.document.getElementById("gender-input");
         const numberGeneratedInput = window.document.getElementById("number-generated-input");
-
         const refreshBtn = window.document.getElementById("refresh-btn");
+        const emsoOutput = window.document.getElementById("emso-output");
 
-        const emsoOutput = window.document.getElementById("emso-output")
+        const form = window.document.getElementById("parameters-form");
+        form.addEventListener("submit", function (ev) {
+            ev.preventDefault(); // stop reload
+            updateEmsos(numberGeneratedInput, isMaleInput, is18PlusInput, dateInput, emsoOutput);
+        });
+
+        const dobRow = dateInput.parentElement;
 
         dateInput.addEventListener("input", ev => {
             updateEmsos(numberGeneratedInput, isMaleInput, is18PlusInput, dateInput, emsoOutput);
         });
+
         is18PlusInput.addEventListener("input", ev => {
             if (is18PlusInput.checked) {
                 dateInput.value = "";
                 dateInput.disabled = true;
+                dobRow.style.display = "none";
             } else {
                 dateInput.disabled = false;
+                dobRow.style.display = "";
             }
 
             updateEmsos(numberGeneratedInput, isMaleInput, is18PlusInput, dateInput, emsoOutput);
         });
+
         isMaleInput.addEventListener("input", ev => {
             updateEmsos(numberGeneratedInput, isMaleInput, is18PlusInput, dateInput, emsoOutput);
         });
+
         numberGeneratedInput.addEventListener("input", ev => {
             if (parseInt(numberGeneratedInput.value) > 10000) {
-                numberGeneratedInput.value = 10000
+                numberGeneratedInput.value = 10000;
             }
             updateEmsos(numberGeneratedInput, isMaleInput, is18PlusInput, dateInput, emsoOutput);
         });
+
         refreshBtn.addEventListener("click", ev => {
             updateEmsos(numberGeneratedInput, isMaleInput, is18PlusInput, dateInput, emsoOutput);
-        })
-
+        });
 
         updateEmsos(numberGeneratedInput, isMaleInput, is18PlusInput, dateInput, emsoOutput);
     };
+
 
 </script>
 </body>
