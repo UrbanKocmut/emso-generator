@@ -3,15 +3,17 @@
 
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta content="width=device-width, initial-scale=1" name="viewport">
     <title>EMŠO generator</title>
-    <meta name="description" content="Ustvarite naključne slovenske EMŠO številke glede na prilagodljive parametre, kot so datum rojstva, spol in drugo.">
-    <meta name="keywords" content="EMŠO generator, Slovenija, naključni EMŠO, slovenski ID generator, orodje">
-    <meta name="author" content="urban">
-    <meta name="language" content="sl">
-    <meta property="og:title" content="Generator slovenskih EMŠO številk">
-    <meta property="og:description" content="Ustvarite naključne slovenske EMŠO številke z lahkoto in prilagodite parametre.">
-    <meta name="google-site-verification" content="xnb8tqKhnWDbmJ-ZcreKmNNeJEPkIzC79o-slaLRFmk" />
+    <meta content="Ustvarite naključne slovenske EMŠO številke glede na prilagodljive parametre, kot so datum rojstva, spol in drugo."
+          name="description">
+    <meta content="EMŠO generator, Slovenija, naključni EMŠO, slovenski ID generator, orodje" name="keywords">
+    <meta content="urban" name="author">
+    <meta content="sl" name="language">
+    <meta content="Generator slovenskih EMŠO številk" property="og:title">
+    <meta content="Ustvarite naključne slovenske EMŠO številke z lahkoto in prilagodite parametre."
+          property="og:description">
+    <meta content="xnb8tqKhnWDbmJ-ZcreKmNNeJEPkIzC79o-slaLRFmk" name="google-site-verification"/>
 </head>
 
 <style>
@@ -55,10 +57,10 @@
     }
 
     /* Header */
-    header {
+    header,
+    main {
         width: 100%;
-        max-width: 500px;
-        text-align: left; /* Align title with main content */
+        max-width: 600px;
     }
 
     h1 {
@@ -70,7 +72,6 @@
     /* Form Layout */
     form {
         width: 100%;
-        max-width: 500px;
         display: flex;
         flex-direction: column;
     }
@@ -123,14 +124,15 @@
 
     /* Output Box */
     #emso-output {
-        width: fit-content;
-        max-width: 500px;
+        width: 125px;
+        white-space: pre;
+        font-family: 'IBM Plex Mono', monospace;
+        overflow-x: auto;
         padding: 20px;
         background-color: #f4f4f4;
         border: 1px solid #000;
-        font-family: 'IBM Plex Mono', monospace;
-        white-space: pre-wrap;
-        overflow-x: auto;
+        content-visibility: auto;
+        contain-intrinsic-size: 0 500px;
     }
 
     /* Mobile Responsive */
@@ -139,19 +141,50 @@
             flex-direction: column;
             align-items: flex-start;
         }
+
         label {
             flex: unset;
             width: 100%;
             margin-bottom: 5px;
         }
+
         body {
             align-items: start;
         }
+
         h1 {
             margin-top: unset;
         }
 
     }
+
+    .loading {
+        display: none;
+        margin-left: 10px;
+        font-size: 0.9rem;
+    }
+
+    .loading.visible {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .spinner {
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        border: 2px solid #000;
+        border-top-color: transparent;
+        animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
 
 </style>
 
@@ -180,26 +213,51 @@
 
         <p>
             <label for="number-generated-input">Število generiranih EMŠO številk</label>
-            <input id="number-generated-input" type="number" min="1" step="1" value="10" required>
+            <input id="number-generated-input" min="1" required step="1" type="number" value="10">
         </p>
 
         <p>
             <button id="refresh-btn" type="button">Generiraj</button>
+            <span class="loading" id="loading-indicator">
+        <span class="spinner"></span>
+        <span id="loading-text">Generiram EMŠO datoteko...</span>
+    </span>
         </p>
+
     </form>
 
-    <h2>Generirane EMŠO številke</h2>
-    <div id="emso-output" class="output-box">
+    <h2 id="emso-output-title">Generirane EMŠO številke</h2>
+    <pre class="output-box" id="emso-output">
         <!-- EMŠO rezultati bodo prikazani tukaj -->
-    </div>
+    </pre>
 </main>
 
 
 <script>
+    const VIEW_THRESHOLD = 100000;      // show in page up to 100k
+    const MAX_COUNT = 100000000;        // hard cap 100M
+
+    // compute once at startup
+    const EMSO_START_TS = new Date(1976, 0, 1).getTime(); // 1976-01-01
+
+    // "today"
+    const EMSO_TODAY = new Date();
+    const EMSO_END_TS_ALL = EMSO_TODAY.getTime();
+
+    // today minus 18 years
+    const EMSO_18_TODAY = new Date(
+        EMSO_TODAY.getFullYear() - 18,
+        EMSO_TODAY.getMonth(),
+        EMSO_TODAY.getDate()
+    );
+    const EMSO_END_TS_18PLUS = EMSO_18_TODAY.getTime();
+    const EMSO_TEMP_DATE = new Date();
+
+
     function generateEMSO(dateOfBirth, is18Plus, isMale) {
 
         if (isNaN(dateOfBirth)) {
-            dateOfBirth = getRandomEMSOBirthday(is18Plus)
+            dateOfBirth = getRandomEMSOBirthday(is18Plus);
         }
 
         // Extract day, month, and year from the date object
@@ -244,24 +302,17 @@
     }
 
     function getRandomEMSOBirthday(is18Plus = false) {
-        // Define the start and end dates
-        const startDate = new Date(1976, 0, 1); // January 1, 1976 (month is 0-based)
-        const endDate = new Date(); // Today's date
-        if (is18Plus) {
-            endDate.setFullYear(endDate.getFullYear() - 18); // Adjust to 18 years ago
+        const startTimestamp = EMSO_START_TS;
+        const endTimestamp = is18Plus ? EMSO_END_TS_18PLUS : EMSO_END_TS_ALL;
 
-        }
-        // Get timestamps for the start and end dates
-        const startTimestamp = startDate.getTime();
-        const endTimestamp = endDate.getTime();
+        const randomTimestamp =
+            Math.floor(Math.random() * (endTimestamp - startTimestamp + 1)) +
+            startTimestamp;
 
-        // Generate a random timestamp between the start and end timestamps
-        const randomTimestamp = Math.floor(Math.random() * (endTimestamp - startTimestamp + 1)) + startTimestamp;
-
-        // Convert the random timestamp back to a Date object
-        return new Date(randomTimestamp);
+        // reuse same Date instance
+        EMSO_TEMP_DATE.setTime(randomTimestamp);
+        return EMSO_TEMP_DATE;
     }
-
 
     function updateEmsos(numberGeneratedInput, isMaleInput, is18PlusInput, dateInput, emsoOutput) {
         let numberToGenerate = numberGeneratedInput.value;
@@ -286,9 +337,7 @@
         for (let i = 0; i < numberToGenerate; i++) {
             emsos[i] = generateEMSO(dateOfBirth, is18Plus, isMale);
         }
-        emsoOutput.innerText = emsos.join("\n");
-
-
+        emsoOutput.textContent = emsos.join("\n");
     }
 
     window.onload = function () {
@@ -299,17 +348,168 @@
         const numberGeneratedInput = window.document.getElementById("number-generated-input");
         const refreshBtn = window.document.getElementById("refresh-btn");
         const emsoOutput = window.document.getElementById("emso-output");
-
+        const emsoOutputTitle = window.document.getElementById("emso-output-title");
         const form = window.document.getElementById("parameters-form");
-        form.addEventListener("submit", function (ev) {
-            ev.preventDefault(); // stop reload
-            updateEmsos(numberGeneratedInput, isMaleInput, is18PlusInput, dateInput, emsoOutput);
-        });
 
         const dobRow = dateInput.parentElement;
 
+        const loadingIndicator = document.getElementById("loading-indicator");
+        const loadingText = document.getElementById("loading-text");
+
+        let isGenerating = false;
+
+        function setGenerating(generating, isDownloadMode) {
+            isGenerating = generating;
+
+            if (loadingIndicator) {
+                loadingIndicator.classList.toggle("visible", generating);
+            }
+
+            if (generating) {
+                dateInput.disabled = true;
+                is18PlusInput.disabled = true;
+                isMaleInput.disabled = true;
+                numberGeneratedInput.disabled = true;
+                refreshBtn.disabled = true;
+            } else {
+                is18PlusInput.disabled = false;
+                isMaleInput.disabled = false;
+                numberGeneratedInput.disabled = false;
+                refreshBtn.disabled = false;
+                // keep date disabled if 18+ is checked
+                dateInput.disabled = is18PlusInput.checked;
+            }
+
+            if (isDownloadMode) {
+                refreshBtn.textContent = generating ? "Generiram datoteko..." : "Prenesi EMŠO datoteko";
+            } else {
+                refreshBtn.textContent = "Generiraj";
+            }
+
+            if (!generating && loadingText) {
+                loadingText.textContent = "Generiram EMŠO datoteko...";
+            }
+        }
+
+        async function generateAndDownloadLargeEmso(count, isMale, is18Plus, dateInputValue) {
+            const CHUNK_SIZE = 100000; // 100k per chunk
+            const chunks = [];
+
+            const hasFixedDate = !!dateInputValue;
+            let fixedDate = null;
+            if (hasFixedDate) {
+                const d = new Date(dateInputValue);
+                if (!isNaN(d)) {
+                    fixedDate = d;
+                }
+            }
+
+            let generated = 0;
+
+            while (generated < count) {
+                const currentChunkSize = Math.min(CHUNK_SIZE, count - generated);
+                const lines = new Array(currentChunkSize);
+
+                for (let i = 0; i < currentChunkSize; i++) {
+                    const dob = fixedDate || getRandomEMSOBirthday(is18Plus);
+                    lines[i] = generateEMSO(dob, is18Plus, isMale);
+                }
+
+                chunks.push(lines.join("\n") + "\n");
+                generated += currentChunkSize;
+
+                if (loadingText) {
+                    const percent = Math.floor((generated / count) * 100);
+                    loadingText.textContent = `Generiram EMŠO datoteko... ${percent}%`;
+                }
+
+                // yield to keep UI responsive
+                await new Promise(requestAnimationFrame);
+            }
+
+            const blob = new Blob(chunks, {type: "text/plain;charset=utf-8"});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `emso_${count}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+
+            setTimeout(() => URL.revokeObjectURL(url), 60000);
+        }
+
+        async function handleGenerate() {
+            if (isGenerating) return;
+
+            let count = parseInt(numberGeneratedInput.value, 10);
+            if (!Number.isFinite(count) || count <= 0) {
+                count = 10;
+                numberGeneratedInput.value = "10";
+            }
+            if (count > MAX_COUNT) {
+                count = MAX_COUNT;
+                numberGeneratedInput.value = String(MAX_COUNT);
+            }
+
+            const isMale = isMaleInput.checked;
+            const is18Plus = is18PlusInput.checked;
+            const isDownloadMode = count > VIEW_THRESHOLD;
+
+            if (!isDownloadMode) {
+                emsoOutput.style.display = "";
+                emsoOutputTitle.style.display = "";
+                setGenerating(true, false);
+                try {
+                    updateEmsos(numberGeneratedInput, isMaleInput, is18PlusInput, dateInput, emsoOutput);
+                } finally {
+                    setGenerating(false, false);
+                }
+            } else {
+                emsoOutputTitle.style.display = "none";
+                setGenerating(true, true);
+                try {
+                    await generateAndDownloadLargeEmso(count, isMale, is18Plus, dateInput.value);
+                } finally {
+                    setGenerating(false, true);
+                }
+            }
+        }
+
+        function updateUiModeAndPreview() {
+            if (isGenerating) return;
+
+            let n = parseInt(numberGeneratedInput.value, 10);
+            if (!Number.isFinite(n) || n <= 0) return;
+
+            if (n > MAX_COUNT) {
+                n = MAX_COUNT;
+                numberGeneratedInput.value = String(MAX_COUNT);
+            }
+
+            const isDownloadMode = n > VIEW_THRESHOLD;
+
+            if (isDownloadMode) {
+                emsoOutput.style.display = "none";
+                emsoOutputTitle.style.display = "none";
+                refreshBtn.textContent = "Prenesi EMŠO datoteko";
+                // do NOT auto-generate for big counts
+            } else {
+                emsoOutput.style.display = "";
+                emsoOutputTitle.style.display = "";
+                refreshBtn.textContent = "Generiraj";
+                // small enough → update preview live
+                updateEmsos(numberGeneratedInput, isMaleInput, is18PlusInput, dateInput, emsoOutput);
+            }
+        }
+
+        form.addEventListener("submit", function (ev) {
+            ev.preventDefault(); // stop reload on Enter
+            handleGenerate();
+        });
+
         dateInput.addEventListener("input", ev => {
-            updateEmsos(numberGeneratedInput, isMaleInput, is18PlusInput, dateInput, emsoOutput);
+            updateUiModeAndPreview();
         });
 
         is18PlusInput.addEventListener("input", ev => {
@@ -322,29 +522,28 @@
                 dobRow.style.display = "";
             }
 
-            updateEmsos(numberGeneratedInput, isMaleInput, is18PlusInput, dateInput, emsoOutput);
+            updateUiModeAndPreview();
         });
 
         isMaleInput.addEventListener("input", ev => {
-            updateEmsos(numberGeneratedInput, isMaleInput, is18PlusInput, dateInput, emsoOutput);
+            updateUiModeAndPreview();
         });
 
         numberGeneratedInput.addEventListener("input", ev => {
-            if (parseInt(numberGeneratedInput.value) > 10000) {
-                numberGeneratedInput.value = 10000;
-            }
-            updateEmsos(numberGeneratedInput, isMaleInput, is18PlusInput, dateInput, emsoOutput);
+            updateUiModeAndPreview();
         });
 
         refreshBtn.addEventListener("click", ev => {
-            updateEmsos(numberGeneratedInput, isMaleInput, is18PlusInput, dateInput, emsoOutput);
+            handleGenerate();
         });
 
+        // Initial preview
         updateEmsos(numberGeneratedInput, isMaleInput, is18PlusInput, dateInput, emsoOutput);
     };
 
 
 </script>
+
 </body>
 
 </html>
