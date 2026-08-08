@@ -1,0 +1,18 @@
+{
+  "name": "delavnica",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Lokalna spletna delavnica za vsakodnevna podatkovna opravila.",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "build:check": "node scripts/build.mjs --check",
+    "preview": "node scripts/serve.mjs",
+    "test": "npm run build:check && node tests/toolbox.test.js && node --test tests/file-output.test.js tests/pwa-ui.test.js tests/pwa-infra.test.mjs"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.1"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

@@ -2,14 +2,23 @@
 <html lang="sl">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="theme-color" content="#0a0a0a">
     <meta name="color-scheme" content="light">
+    <meta name="application-name" content="Delavnica">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Delavnica">
     <title>Zasebnost — Delavnica</title>
     <meta name="description" content="Obvestilo o zasebnosti, lokalnem delovanju in hrambi nastavitev na strani Delavnica.">
     <meta name="robots" content="index,follow">
     <link rel="canonical" href="https://delavnica.kocmut.com/zasebnost.html">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" href="assets/icons/favicon.png" type="image/png" sizes="64x64">
+    <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
     <link rel="stylesheet" href="assets/css/toolbox.css">
+    <script defer src="assets/js/pwa.js"></script>
 </head>
 <body class="policy-document">
 <a class="skip-link" href="#policy-content">Preskoči na vsebino</a>
@@ -20,9 +29,11 @@
         <span>DELAVNICA</span>
     </a>
     <div class="masthead-meta">
-        <span>LOKALNA OBDELAVA</span>
+        <button id="pwa-header-action" class="button pwa-action pwa-header-action" type="button" data-pwa-action hidden>NAMESTI</button>
     </div>
 </header>
+
+<a class="policy-back-button" href="index.html#overview" aria-label="Nazaj v Delavnico"><span aria-hidden="true">←</span></a>
 
 <main id="policy-content" class="policy-main" tabindex="-1">
     <article class="policy-shell">
@@ -59,6 +70,8 @@
                 <ul>
                     <li><strong>Vsebina orodij:</strong> številke, žetoni JWT, ključi, JSON ter datoteke PDF, CSV in QIF se uporabljajo samo v vašem brskalniku. Niso vključeni v omrežne zahteve in niso dostopni avtorju ali GitHubu.</li>
                     <li><strong>Nastavitve CSV → QIF:</strong> če označite »Zapomni si nastavitve«, se v <code>localStorage</code> pod ključem <code>delavnica.qif.settings.v1</code> shranijo le kodiranje, vrsta računa, obliki datuma in dve možnosti pretvorbe. Vsebina datotek in ime datoteke se ne shranita.</li>
+                    <li><strong>Delovanje brez povezave:</strong> brskalnik po uspešnem prvem obisku v svoj predpomnilnik shrani statične datoteke aplikacije, na primer HTML, CSS, JavaScript, pisave in knjižnice za obdelavo PDF-jev. Ta predpomnilnik ne vsebuje vaših vnosov, izbranih datotek ali ustvarjenih dokumentov.</li>
+                    <li><strong>Shranjevanje in deljenje datotek:</strong> Delavnica ustvarjeno datoteko preda brskalniku oziroma operacijskemu sistemu šele, ko izberete shranjevanje ali deljenje. Pri shranjevanju jo prejme mesto, ki ga izberete ali ga je brskalnik določil za prenose; pri deljenju pa samo aplikacija, ki jo izrecno izberete. Nadaljnjo obdelavo ureja izbrani cilj.</li>
                     <li><strong>Običajen obisk strani:</strong> brskalnik mora za prenos statičnih datotek poslati zahtevo gostitelju. GitHub navaja, da pri obisku GitHub Pages zaradi varnosti beleži in hrani naslov IP. Ta zahteva ne vsebuje vaših vnosov v orodja.</li>
                 </ul>
                 <p class="policy-note">Če v orodje prilepite osebne ali druge občutljive podatke, ti še vedno ostanejo na vaši napravi. Delavnica jih ne zbira, ne pošilja in ne shranjuje na strežniku.</p>
@@ -68,7 +81,8 @@
         <section class="policy-section" aria-labelledby="policy-functional-storage">
             <h2 id="policy-functional-storage">04 / FUNKCIONALNA HRAMBA</h2>
             <div class="policy-copy">
-                <p>Lokalna hramba nastavitev se vključi šele na vašo izrecno zahtevo. Gre za funkcionalno hrambo, potrebno za zapomnitev izbranih nastavitev, skladno z izjemo iz drugega odstavka 225. člena ZEKom-2. Možnost lahko kadar koli izključite.</p>
+                <p>Lokalna hramba nastavitev QIF se vključi šele na vašo izrecno zahtevo. Gre za funkcionalno hrambo, potrebno za zapomnitev izbranih nastavitev, skladno z izjemo iz drugega odstavka 225. člena ZEKom-2. Možnost lahko kadar koli izključite.</p>
+                <p>Predpomnilnik statičnih datotek se pripravi samodejno, da lahko Delavnica po prvem obisku deluje brez povezave. Namenjen je samo delovanju aplikacije in je ločen od vsebine, ki jo obdelujete.</p>
             </div>
         </section>
 
@@ -76,6 +90,7 @@
             <h2 id="policy-cookies">05 / PIŠKOTKI IN HRAMBA</h2>
             <div class="policy-copy">
                 <p>Koda Delavnice ne nastavlja piškotkov. Funkcionalne nastavitve QIF ostanejo v vašem brskalniku, dokler ne odznačite možnosti »Zapomni si nastavitve« ali izbrišete podatkov spletnega mesta v brskalniku.</p>
+                <p>Predpomnjene datoteke aplikacije ostanejo, dokler jih brskalnik ne posodobi, odstrani zaradi upravljanja prostora ali dokler ne izbrišete podatkov spletnega mesta oziroma odstranite nameščene aplikacije. Predpomnilnik ne hrani datotek, ki jih odprete ali ustvarite v orodjih.</p>
                 <p>Avtor nima oddaljenega dostopa do lokalno shranjenih nastavitev. Čas hrambe tehničnih dnevnikov gostovanja določa GitHub; avtor teh dnevnikov ne prejema.</p>
             </div>
         </section>
@@ -91,7 +106,7 @@
         <section class="policy-section" aria-labelledby="policy-control">
             <h2 id="policy-control">07 / VAŠ NADZOR</h2>
             <div class="policy-copy">
-                <p>Vnose lahko odstranite z gumbom za čiščenje v posameznem orodju. Delavnica jih trajno ne shranjuje, brskalnik pa lahko stanje obrazcev ali seje začasno ohrani skladno s svojimi nastavitvami. Shranjene nastavitve QIF izbrišete z odznačitvijo možnosti »Zapomni si nastavitve« ali z brisanjem podatkov spletnega mesta v brskalniku.</p>
+                <p>Vnose lahko odstranite z gumbom za čiščenje v posameznem orodju. Delavnica jih trajno ne shranjuje, brskalnik pa lahko stanje obrazcev ali seje začasno ohrani skladno s svojimi nastavitvami. Shranjene nastavitve QIF izbrišete z odznačitvijo možnosti »Zapomni si nastavitve«. Nastavitve in predpomnilnik aplikacije lahko odstranite tudi z brisanjem podatkov spletnega mesta oziroma odstranitvijo nameščene Delavnice.</p>
                 <p>Ker avtor lokalnih vnosov ne prejme in do njih nima dostopa, jih ne more pregledati, izvoziti, popraviti ali izbrisati namesto vas. Delavnica ne izvaja profiliranja ali avtomatiziranega odločanja.</p>
                 <p>Za tehnične podatke, ki jih pri gostovanju zbira GitHub, veljajo <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement" rel="noreferrer">GitHubova politika in njegove kontaktne poti</a>.</p>
             </div>
@@ -119,5 +134,6 @@
         <a href="https://github.com/UrbanKocmut/emso-generator" rel="noreferrer">IZVORNA KODA ↗</a>
     </nav>
 </footer>
+<div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true" hidden></div>
 </body>
 </html>

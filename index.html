@@ -2,9 +2,14 @@
 <html lang="sl">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="theme-color" content="#0a0a0a">
     <meta name="color-scheme" content="light">
+    <meta name="application-name" content="Delavnica">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Delavnica">
     <title>Delavnica</title>
     <meta name="description" content="Hitra in zasebna spletna delavnica za slovenske testne podatke, PDF-je, preverjanje JWT, formatiranje JSON in pretvorbo Sparkasse CSV.">
     <meta name="author" content="Urban Kocmut">
@@ -13,10 +18,14 @@
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://delavnica.kocmut.com/">
     <link rel="canonical" href="https://delavnica.kocmut.com/">
-    <link rel="icon" href="data:,">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" href="assets/icons/favicon.png" type="image/png" sizes="64x64">
+    <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
     <link rel="stylesheet" href="assets/css/toolbox.css">
     <script defer src="assets/js/toolbox-core.js"></script>
+    <script defer src="assets/js/file-output.js"></script>
     <script defer src="assets/js/toolbox-ui.js"></script>
+    <script defer src="assets/js/pwa.js"></script>
     <script defer src="assets/vendor/pdfjs/pdf.worker.classic.js"></script>
     <script defer src="assets/js/pdf-merger.js"></script>
 </head>
@@ -29,7 +38,7 @@
         <span>DELAVNICA</span>
     </a>
     <div class="masthead-meta">
-        <span>LOKALNA OBDELAVA</span>
+        <button id="pwa-header-action" class="button pwa-action pwa-header-action" type="button" data-pwa-action hidden>NAMESTI</button>
     </div>
 </header>
 
@@ -89,9 +98,24 @@
                 </div>
                 <div class="hero-copy">
                     <p>Generirajte testne identifikatorje, preglejte žetone, uredite podatke in pretvorite bančne izvoze, ne da bi karkoli poslali strežniku.</p>
-                    <a class="text-link" href="#emso">ODPRI PRVO ORODJE <span aria-hidden="true">→</span></a>
+                    <aside class="install-tip" data-pwa-surface hidden aria-label="Namig za aplikacijo">
+                        <div class="install-tip-heading">
+                            <span>NAMIG</span>
+                            <span aria-hidden="true">↘</span>
+                        </div>
+                        <div class="install-tip-body">
+                            <p class="install-tip-copy" data-pwa-copy="install">Dodajte <strong class="install-tip-name">Delavnico</strong> na začetni zaslon za delo brez povezave</p>
+                            <p class="install-tip-copy" data-pwa-copy="update" hidden>Posodobite <strong class="install-tip-name">Delavnico</strong>, ko vam ustreza.</p>
+                            <button id="pwa-overview-action" class="button pwa-action pwa-overview-action" type="button" data-pwa-action data-pwa-install-label="NAMESTI" data-pwa-update-label="POSODOBI" hidden>NAMESTI</button>
+                        </div>
+                    </aside>
                 </div>
             </div>
+
+            <button id="mobile-info-hint" class="mobile-info-hint" type="button" aria-controls="mobile-info-rail" aria-expanded="false">
+                <span aria-hidden="true">→</span>
+                <span class="visually-hidden">Odpri informacije o Delavnici</span>
+            </button>
 
             <div class="overview-grid" aria-label="Razpoložljiva orodja">
                 <a class="tool-card" href="#emso">
@@ -478,7 +502,8 @@
 
                     <div class="form-actions">
                         <button id="qif-convert" class="button primary" type="submit">PRETVORI CSV</button>
-                        <button id="qif-download" class="button" type="button" disabled>PRENESI QIF</button>
+                        <button id="qif-download" class="button" type="button" disabled>SHRANI QIF</button>
+                        <button id="qif-share" class="button" type="button" hidden disabled>DELI QIF</button>
                         <button id="qif-copy" class="button" type="button" disabled>KOPIRAJ QIF</button>
                         <button id="qif-clear" class="button" type="button">POČISTI</button>
                     </div>
@@ -548,7 +573,8 @@
                         <span>Ime datoteke</span>
                         <input id="pdf-output-name" type="text" value="zdruzen-dokument.pdf" maxlength="180" spellcheck="false">
                     </label>
-                    <button id="pdf-download" class="button primary pdf-download-button" type="button" disabled>USTVARI IN PRENESI PDF</button>
+                    <button id="pdf-download" class="button primary pdf-download-button" type="button" disabled>USTVARI IN SHRANI PDF</button>
+                    <button id="pdf-share" class="button pdf-share-button" type="button" hidden disabled>PRIPRAVI ZA DELJENJE</button>
                 </div>
                 <p class="pdf-export-note">Izvoz ohrani velikost in kakovost izvirnih strani. Digitalni podpisi po združevanju niso več veljavni; zaščiteni PDF-ji niso podprti.</p>
             </section>
@@ -556,7 +582,16 @@
     </main>
 </div>
 
-<footer class="site-footer">
+<aside id="mobile-info-rail" class="mobile-info-rail" aria-label="Informacije o Delavnici" aria-hidden="true" inert>
+    <button id="mobile-info-close" class="mobile-info-close" type="button" aria-label="Zapri informacije">←</button>
+    <div class="mobile-info-rail-content">
+        <a href="zasebnost.html">ZASEBNOST</a>
+        <a href="https://github.com/UrbanKocmut/emso-generator" rel="noreferrer">IZVORNA KODA ↗</a>
+        <span class="mobile-info-author">DELAVNICA / URBAN KOCMUT</span>
+    </div>
+</aside>
+
+<footer class="site-footer landing-footer">
     <span>DELAVNICA / URBAN KOCMUT</span>
     <nav class="site-footer-links" aria-label="Pravne in projektne povezave">
         <a href="zasebnost.html">ZASEBNOST</a>

@@ -1,0 +1,97 @@
+{
+  "id": "./",
+  "name": "Delavnica — osebna spletna orodja",
+  "short_name": "Delavnica",
+  "description": "Hitra in zasebna zbirka slovenskih spletnih orodij, ki delujejo lokalno in brez povezave.",
+  "lang": "sl",
+  "dir": "ltr",
+  "start_url": "./#overview",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f2f2ee",
+  "theme_color": "#0a0a0a",
+  "categories": ["utilities", "productivity"],
+  "launch_handler": {
+    "client_mode": "navigate-existing"
+  },
+  "icons": [
+    {
+      "src": "assets/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/icons/icon-maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "assets/icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Generator EMŠO",
+      "short_name": "EMŠO",
+      "description": "Ustvari testne slovenske enotne matične številke.",
+      "url": "./#emso"
+    },
+    {
+      "name": "Generator davčnih številk",
+      "short_name": "SI DDV",
+      "description": "Ustvari testne slovenske davčne številke.",
+      "url": "./#vat"
+    },
+    {
+      "name": "Preverjanje JWT",
+      "short_name": "JWT",
+      "description": "Razčleni in preveri žeton JWT.",
+      "url": "./#jwt"
+    },
+    {
+      "name": "Formatiranje JSON",
+      "short_name": "JSON",
+      "description": "Oblikuj ali strni vsebino JSON.",
+      "url": "./#json"
+    },
+    {
+      "name": "Sparkasse CSV v QIF",
+      "short_name": "CSV/QIF",
+      "description": "Pretvori izvoz Sparkasse CSV v QIF.",
+      "url": "./#qif"
+    },
+    {
+      "name": "Združevanje PDF-jev",
+      "short_name": "PDF",
+      "description": "Združi, uredi in zavrti strani PDF.",
+      "url": "./#pdf"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "assets/screenshots/delavnica-wide.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Pregled orodij Delavnice na namizju"
+    },
+    {
+      "src": "assets/screenshots/delavnica-mobile.png",
+      "sizes": "500x844",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Pregled orodij Delavnice na telefonu"
+    }
+  ]
+}

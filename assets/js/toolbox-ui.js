@@ -5,6 +5,10 @@
     if (!core) {
         throw new Error("ToolboxCore failed to load.");
     }
+    const fileOutput = window.DelavnicaFileOutput;
+    if (!fileOutput) {
+        throw new Error("DelavnicaFileOutput failed to load.");
+    }
 
     const TOOL_ROUTES = ["emso", "vat", "jwt", "json", "qif", "pdf"];
     const ROUTE_SEQUENCE = ["overview"].concat(TOOL_ROUTES);
@@ -99,10 +103,14 @@
     function showToast(message) {
         const toast = byId("toast");
         window.clearTimeout(toastTimer);
+        const revision = String((Number(toast.dataset.toastRevision) || 0) + 1);
+        toast.dataset.toastRevision = revision;
         toast.textContent = message;
         toast.hidden = false;
         toastTimer = window.setTimeout(function () {
-            toast.hidden = true;
+            if (toast.dataset.toastRevision === revision) {
+                toast.hidden = true;
+            }
         }, 1900);
     }
 
@@ -650,6 +658,7 @@
         const rememberSettings = byId("qif-remember-settings");
         const convertButton = byId("qif-convert");
         const downloadButton = byId("qif-download");
+        const shareButton = byId("qif-share");
         const copyButton = byId("qif-copy");
         const clearButton = byId("qif-clear");
         const output = byId("qif-output");
@@ -660,6 +669,20 @@
         let selectedFile = null;
         let convertedQif = "";
         let converting = false;
+        const qifFileType = "application/x-qif";
+        const qifPickerTypes = [{
+            description: "Datoteka QIF",
+            accept: { "application/x-qif": [".qif"] }
+        }];
+        const qifSharingAvailable = Boolean(
+            shareButton &&
+            typeof window.File === "function" &&
+            fileOutput.canShare(new File([""], "delavnica.qif", { type: qifFileType }))
+        );
+
+        if (shareButton) {
+            shareButton.hidden = !qifSharingAvailable;
+        }
 
         function selectHasValue(select, value) {
             return Array.from(select.options).some(function (option) {
@@ -736,6 +759,9 @@
             outputCount.textContent = "0 TRANSAKCIJ";
             outputNote.textContent = "Pretvorjena ni še nobena datoteka.";
             downloadButton.disabled = true;
+            if (shareButton) {
+                shareButton.disabled = true;
+            }
             copyButton.disabled = true;
         }
 
@@ -787,6 +813,9 @@
                     truncated ? "Predogled je skrajšan; prenos vsebuje celoten QIF." : "Predogled vsebuje celoten QIF."
                 ].join(" ");
                 downloadButton.disabled = false;
+                if (shareButton && qifSharingAvailable) {
+                    shareButton.disabled = false;
+                }
                 copyButton.disabled = false;
                 setStatus(
                     status,
@@ -809,6 +838,11 @@
             }
             const withoutExtension = selectedFile.name.replace(/\.[^.]+$/, "");
             return (withoutExtension || "sparkasse") + ".qif";
+        }
+
+        function outputBlob() {
+            const bytes = core.encodeTextBytes(convertedQif, outputEncoding.value);
+            return new Blob([bytes], { type: qifFileType });
         }
 
         form.addEventListener("submit", function (event) {
@@ -870,25 +904,41 @@
             }
         });
 
-        downloadButton.addEventListener("click", function () {
+        downloadButton.addEventListener("click", async function () {
             if (!convertedQif) {
                 return;
             }
 
             try {
-                const bytes = core.encodeTextBytes(convertedQif, outputEncoding.value);
-                const blob = new Blob([bytes], { type: "application/x-qif" });
-                const url = URL.createObjectURL(blob);
-                const link = document.createElement("a");
-                link.href = url;
-                link.download = outputFileName();
-                document.body.appendChild(link);
-                link.click();
-                link.remove();
-                window.setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
-                showToast("DATOTEKA QIF JE PRIPRAVLJENA");
+                const name = outputFileName();
+                const result = await fileOutput.writeOrDownload(outputBlob(), {
+                    fileName: name,
+                    types: qifPickerTypes
+                });
+                if (!result.cancelled) {
+                    showToast(result.method === "file-system"
+                        ? "DATOTEKA QIF JE SHRANJENA"
+                        : "DATOTEKA QIF JE PRIPRAVLJENA");
+                }
             } catch (error) {
-                setStatus(status, localizedError(error), true);
+                setStatus(status, "Datoteke QIF ni bilo mogoče shraniti. Poskusite znova.", true);
+            }
+        });
+
+        shareButton?.addEventListener("click", async function () {
+            if (!convertedQif || !qifSharingAvailable) {
+                return;
+            }
+
+            try {
+                const name = outputFileName();
+                const file = new File([outputBlob()], name, { type: qifFileType });
+                const result = await fileOutput.shareFile(file, { title: name });
+                if (!result.cancelled) {
+                    showToast("DATOTEKA QIF JE DELJENA");
+                }
+            } catch (error) {
+                setStatus(status, "Datoteke QIF ni bilo mogoče deliti. Poskusite znova.", true);
             }
         });
 
@@ -935,6 +985,225 @@
                 action();
             }
         });
+    }
+
+    function initMobileInfoRail() {
+        const hint = byId("mobile-info-hint");
+        const rail = byId("mobile-info-rail");
+        const closeButton = byId("mobile-info-close");
+        const surface = byId("main-content");
+        const overviewPanel = document.querySelector('[data-panel="overview"]');
+        if (!hint || !rail || !closeButton || !surface || !overviewPanel) {
+            return;
+        }
+
+        let isOpen = false;
+        let gesture = null;
+        let settleTimer = 0;
+
+        function isMobileInfoViewport() {
+            return window.innerWidth <= 640 && window.innerWidth <= window.innerHeight;
+        }
+
+        function matchingTouch(touches, identifier) {
+            return Array.from(touches).find(function (touch) {
+                return touch.identifier === identifier;
+            });
+        }
+
+        function setOpen(nextOpen, focusTarget, forceAnimation) {
+            const resolvedOpen = Boolean(
+                nextOpen && isMobileInfoViewport() && currentRoute() === "overview"
+            );
+            const shouldAnimate = Boolean(forceAnimation || resolvedOpen !== isOpen);
+            window.clearTimeout(settleTimer);
+            if (shouldAnimate) {
+                document.body.classList.add("is-mobile-info-settling");
+            }
+            isOpen = resolvedOpen;
+            document.body.classList.toggle("is-mobile-info-open", isOpen);
+            document.body.classList.remove("is-mobile-info-dragging");
+            rail.setAttribute("aria-hidden", String(!isOpen));
+            rail.inert = !isOpen;
+            hint.setAttribute("aria-expanded", String(isOpen));
+            if (shouldAnimate) {
+                window.requestAnimationFrame(function () {
+                    rail.style.removeProperty("transform");
+                    overviewPanel.style.removeProperty("transform");
+                });
+                settleTimer = window.setTimeout(function () {
+                    document.body.classList.remove("is-mobile-info-settling");
+                }, 260);
+            } else {
+                rail.style.removeProperty("transform");
+                overviewPanel.style.removeProperty("transform");
+                document.body.classList.remove("is-mobile-info-settling");
+            }
+            if (focusTarget) {
+                (isOpen ? closeButton : surface).focus({ preventScroll: true });
+            }
+        }
+
+        function resetGesture() {
+            document.body.classList.remove("is-mobile-info-dragging");
+            rail.style.removeProperty("transform");
+            overviewPanel.style.removeProperty("transform");
+            rail.setAttribute("aria-hidden", String(!isOpen));
+            rail.inert = !isOpen;
+            gesture = null;
+        }
+
+        function startGesture(event, fromRail) {
+            if (
+                !isMobileInfoViewport() ||
+                currentRoute() !== "overview" ||
+                event.touches.length !== 1
+            ) {
+                return;
+            }
+
+            const touch = event.touches[0];
+            window.clearTimeout(settleTimer);
+            document.body.classList.remove("is-mobile-info-settling");
+            if (fromRail || isOpen) {
+                event.stopPropagation();
+            }
+
+            gesture = {
+                identifier: touch.identifier,
+                startX: touch.clientX,
+                startY: touch.clientY,
+                lastX: touch.clientX,
+                lastTime: event.timeStamp,
+                velocity: 0,
+                dragging: false,
+                startedOpen: isOpen,
+                width: Math.max(1, rail.getBoundingClientRect().width || surface.clientWidth / 7)
+            };
+        }
+
+        function moveGesture(event) {
+            if (!gesture) {
+                return;
+            }
+            const touch = matchingTouch(event.touches, gesture.identifier);
+            if (!touch) {
+                return;
+            }
+
+            const horizontalDistance = touch.clientX - gesture.startX;
+            const verticalDistance = touch.clientY - gesture.startY;
+            if (!gesture.dragging) {
+                if (Math.max(Math.abs(horizontalDistance), Math.abs(verticalDistance)) < 8) {
+                    return;
+                }
+                if (Math.abs(horizontalDistance) <= Math.abs(verticalDistance) * 1.08) {
+                    resetGesture();
+                    return;
+                }
+                if (!gesture.startedOpen && horizontalDistance < 0) {
+                    gesture = null;
+                    return;
+                }
+                gesture.dragging = true;
+                document.body.classList.add("is-mobile-info-dragging");
+                rail.setAttribute("aria-hidden", "false");
+            }
+
+            event.preventDefault();
+            event.stopPropagation();
+            const elapsed = Math.max(1, event.timeStamp - gesture.lastTime);
+            gesture.velocity = (touch.clientX - gesture.lastX) / elapsed;
+            gesture.lastX = touch.clientX;
+            gesture.lastTime = event.timeStamp;
+
+            const initial = gesture.startedOpen ? gesture.width : 0;
+            const rawProgress = Math.max(0, initial + horizontalDistance);
+            const progress = rawProgress > gesture.width
+                ? gesture.width + Math.min(gesture.width * .72, (rawProgress - gesture.width) * .28)
+                : rawProgress;
+            rail.style.transform = "translate3d(" + (progress - gesture.width) + "px, 0, 0)";
+            overviewPanel.style.transform = "translate3d(" + progress + "px, 0, 0)";
+        }
+
+        function endGesture(event) {
+            if (!gesture) {
+                return;
+            }
+            const touch = matchingTouch(event.changedTouches, gesture.identifier);
+            if (!touch) {
+                return;
+            }
+
+            if (!gesture.dragging) {
+                resetGesture();
+                return;
+            }
+
+            event.preventDefault();
+            event.stopPropagation();
+            const horizontalDistance = touch.clientX - gesture.startX;
+            const threshold = Math.min(46, gesture.width * .5);
+            const fastOpening = gesture.velocity > .35 && horizontalDistance > 18;
+            const fastClosing = gesture.velocity < -.35 && horizontalDistance < -18;
+            const nextOpen = gesture.startedOpen
+                ? !(horizontalDistance <= -threshold || fastClosing)
+                : horizontalDistance >= threshold || fastOpening;
+
+            gesture = null;
+            setOpen(nextOpen, false, true);
+        }
+
+        hint.addEventListener("click", function () {
+            setOpen(true, true);
+        });
+        closeButton.addEventListener("click", function () {
+            setOpen(false, true);
+        });
+        rail.addEventListener("click", function (event) {
+            if (event.target.closest("a")) {
+                setOpen(false, false);
+            }
+        });
+        overviewPanel.addEventListener("touchstart", function (event) {
+            startGesture(event, false);
+        }, { passive: true });
+        rail.addEventListener("touchstart", function (event) {
+            startGesture(event, true);
+        }, { passive: true });
+        [overviewPanel, rail].forEach(function (target) {
+            target.addEventListener("touchmove", moveGesture, { passive: false });
+            target.addEventListener("touchend", endGesture, { passive: false });
+            target.addEventListener("touchcancel", function () {
+                if (gesture && gesture.dragging) {
+                    gesture = null;
+                    setOpen(isOpen, false, true);
+                } else {
+                    resetGesture();
+                }
+            }, { passive: true });
+        });
+        document.addEventListener("keydown", function (event) {
+            if (event.key === "Escape" && isOpen) {
+                setOpen(false, true);
+            }
+        });
+        window.addEventListener("hashchange", function () {
+            if (currentRoute() !== "overview") {
+                setOpen(false, false);
+            }
+        });
+        window.addEventListener("resize", function () {
+            if (!isMobileInfoViewport()) {
+                setOpen(false, false);
+            }
+        });
+        window.addEventListener("pageshow", function (event) {
+            if (event.persisted) {
+                setOpen(false, false);
+            }
+        });
+        setOpen(false, false);
     }
 
     function initSwipeNavigation() {
@@ -1185,6 +1454,7 @@
         initJsonTool();
         initQifTool();
         initKeyboardShortcuts();
+        initMobileInfoRail();
         initSwipeNavigation();
     }
 

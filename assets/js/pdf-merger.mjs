@@ -34,6 +34,10 @@ function initPdfMerger() {
     if (!fileInput) {
         return;
     }
+    const fileOutput = window.DelavnicaFileOutput;
+    if (!fileOutput) {
+        throw new Error("DelavnicaFileOutput failed to load.");
+    }
 
     const dropZone = document.getElementById("pdf-drop-zone");
     const fileHint = document.getElementById("pdf-file-hint");
@@ -45,6 +49,7 @@ function initPdfMerger() {
     const pagesList = document.getElementById("pdf-pages");
     const outputName = document.getElementById("pdf-output-name");
     const downloadButton = document.getElementById("pdf-download");
+    const shareButton = document.getElementById("pdf-share");
 
     const documents = new Map();
     let pages = [];
@@ -54,6 +59,17 @@ function initPdfMerger() {
     let draggedPageId = "";
     let renderQueue = Promise.resolve();
     const queuedThumbnails = new Set();
+    const pdfFileType = "application/pdf";
+    const pdfPickerTypes = [{
+        description: "Dokument PDF",
+        accept: { "application/pdf": [".pdf"] }
+    }];
+    const pdfSharingAvailable = Boolean(
+        shareButton &&
+        typeof window.File === "function" &&
+        fileOutput.canShare(new File([""], "delavnica.pdf", { type: pdfFileType }))
+    );
+    const preparedPdf = fileOutput.createPreparedFileState();
 
     const thumbnailObserver = "IntersectionObserver" in window
         ? new IntersectionObserver(function (entries) {
@@ -71,11 +87,38 @@ function initPdfMerger() {
         status.classList.toggle("is-error", Boolean(isError));
     }
 
+    function captureStatus() {
+        return {
+            message: status.textContent,
+            isError: status.classList.contains("is-error")
+        };
+    }
+
+    function restoreStatus(snapshot) {
+        setStatus(snapshot.message, snapshot.isError);
+    }
+
+    function syncShareAction() {
+        if (!shareButton) {
+            return;
+        }
+        shareButton.hidden = !pdfSharingAvailable;
+        shareButton.disabled = busy || pages.length === 0;
+        shareButton.textContent = preparedPdf.file ? "DELI PDF" : "PRIPRAVI ZA DELJENJE";
+    }
+
+    function invalidatePreparedPdf() {
+        preparedPdf.invalidate();
+        syncShareAction();
+    }
+
     function setBusy(nextBusy) {
         busy = nextBusy;
         fileInput.disabled = busy;
         clearButton.disabled = busy || pages.length === 0;
         downloadButton.disabled = busy || pages.length === 0;
+        outputName.disabled = busy;
+        syncShareAction();
         pagesList.classList.toggle("is-busy", busy);
     }
 
@@ -233,6 +276,7 @@ function initPdfMerger() {
             : "ali kliknite za izbiro več datotek";
         clearButton.disabled = busy || !hasPages;
         downloadButton.disabled = busy || !hasPages;
+        syncShareAction();
     }
 
     async function renderThumbnail(pageId) {
@@ -342,6 +386,7 @@ function initPdfMerger() {
             throw new Error("PDF has no pages.");
         }
 
+        invalidatePreparedPdf();
         documentSequence += 1;
         const documentId = "pdf-document-" + documentSequence;
         documents.set(documentId, {
@@ -408,6 +453,7 @@ function initPdfMerger() {
         if (!item) {
             return;
         }
+        invalidatePreparedPdf();
         pages = pages.filter(function (page) {
             return page.id !== pageId;
         });
@@ -420,7 +466,14 @@ function initPdfMerger() {
     }
 
     function moveAndFocus(pageId, offset) {
-        pages = movePage(pages, pageId, offset);
+        const nextPages = movePage(pages, pageId, offset);
+        const orderChanged = nextPages.some(function (page, index) {
+            return page !== pages[index];
+        });
+        if (orderChanged) {
+            invalidatePreparedPdf();
+        }
+        pages = nextPages;
         syncWorkspace();
         pagesList.querySelector('[data-page-id="' + CSS.escape(pageId) + '"]')?.focus();
         setStatus("Vrstni red strani je posodobljen.", false);
@@ -431,6 +484,7 @@ function initPdfMerger() {
         if (!item) {
             return;
         }
+        invalidatePreparedPdf();
         item.rotation = normalizeRotation(item.rotation + amount);
         const card = pagesList.querySelector('[data-page-id="' + CSS.escape(pageId) + '"]');
         const canvas = card && card.querySelector("canvas");
@@ -443,6 +497,9 @@ function initPdfMerger() {
     }
 
     function clearWorkspace() {
+        if (pages.length || documents.size) {
+            invalidatePreparedPdf();
+        }
         documents.forEach(function (record) {
             Promise.resolve(record.viewer.destroy()).catch(function () {
                 // Clearing the UI is sufficient even if the worker is already gone.
@@ -469,76 +526,150 @@ function initPdfMerger() {
         return name;
     }
 
+    async function createPdfFile(name) {
+        const output = await PDFDocument.create();
+        const copiedPages = new Map();
+        const documentIds = Array.from(new Set(pages.map(function (page) {
+            return page.documentId;
+        })));
+
+        for (const documentId of documentIds) {
+            const record = documents.get(documentId);
+            if (!record) {
+                throw new Error("Missing source document.");
+            }
+            const source = await PDFDocument.load(record.bytes, { updateMetadata: false });
+            const sourceItems = pages.filter(function (page) {
+                return page.documentId === documentId;
+            });
+            const copies = await output.copyPages(source, sourceItems.map(function (page) {
+                return page.sourceIndex;
+            }));
+
+            sourceItems.forEach(function (item, index) {
+                const copy = copies[index];
+                copy.setRotation(degrees(normalizeRotation(copy.getRotation().angle + item.rotation)));
+                copiedPages.set(item.id, copy);
+            });
+        }
+
+        pages.forEach(function (page) {
+            output.addPage(copiedPages.get(page.id));
+        });
+
+        output.setTitle(name.replace(/\.pdf$/i, ""));
+        output.setCreator("Delavnica");
+        output.setProducer("Delavnica / pdf-lib");
+        output.setCreationDate(new Date());
+
+        const bytes = await output.save({
+            addDefaultPage: false,
+            objectsPerTick: 25,
+            useObjectStreams: true
+        });
+        return new File([bytes], name, { type: pdfFileType });
+    }
+
+    function setPdfOutputError(error, action) {
+        const message = error && error.message ? error.message : String(error);
+        setStatus(
+            /encrypt|password/i.test(message)
+                ? "Eden od dokumentov je zaščiten z geslom in ga ni mogoče izvoziti."
+                : action === "share"
+                    ? "PDF-ja ni bilo mogoče pripraviti ali deliti. Preverite dokumente in poskusite znova."
+                    : "PDF-ja ni bilo mogoče ustvariti ali shraniti. Preverite dokumente in poskusite znova.",
+            true
+        );
+    }
+
     async function exportPdf() {
         if (busy || pages.length === 0) {
             return;
         }
 
+        const name = safeOutputName();
+        const previousStatus = captureStatus();
+        // Open the native picker while the click still carries user activation,
+        // before PDF creation yields to any asynchronous work.
+        const destinationPromise = fileOutput.prepareSaveDestination({
+            suggestedName: name,
+            types: pdfPickerTypes
+        });
         setBusy(true);
         setStatus("Sestavljanje novega PDF-ja z " + pages.length + " stranmi…", false);
 
         try {
-            const output = await PDFDocument.create();
-            const copiedPages = new Map();
-            const documentIds = Array.from(new Set(pages.map(function (page) {
-                return page.documentId;
-            })));
-
-            for (const documentId of documentIds) {
-                const record = documents.get(documentId);
-                if (!record) {
-                    throw new Error("Missing source document.");
-                }
-                const source = await PDFDocument.load(record.bytes, { updateMetadata: false });
-                const sourceItems = pages.filter(function (page) {
-                    return page.documentId === documentId;
-                });
-                const copies = await output.copyPages(source, sourceItems.map(function (page) {
-                    return page.sourceIndex;
-                }));
-
-                sourceItems.forEach(function (item, index) {
-                    const copy = copies[index];
-                    copy.setRotation(degrees(normalizeRotation(copy.getRotation().angle + item.rotation)));
-                    copiedPages.set(item.id, copy);
-                });
+            const destination = await destinationPromise;
+            if (destination.kind === "cancelled") {
+                restoreStatus(previousStatus);
+                return;
             }
 
-            pages.forEach(function (page) {
-                output.addPage(copiedPages.get(page.id));
+            const file = await createPdfFile(name);
+            const result = await fileOutput.writeOrDownload(file, {
+                destination,
+                fileName: name,
+                types: pdfPickerTypes
             });
-
-            const name = safeOutputName();
-            output.setTitle(name.replace(/\.pdf$/i, ""));
-            output.setCreator("Delavnica");
-            output.setProducer("Delavnica / pdf-lib");
-            output.setCreationDate(new Date());
-
-            const bytes = await output.save({
-                addDefaultPage: false,
-                objectsPerTick: 25,
-                useObjectStreams: true
-            });
-            const blob = new Blob([bytes], { type: "application/pdf" });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement("a");
-            link.href = url;
-            link.download = name;
-            document.body.appendChild(link);
-            link.click();
-            link.remove();
-            window.setTimeout(function () {
-                URL.revokeObjectURL(url);
-            }, 2000);
-            setStatus("PDF je ustvarjen in pripravljen za prenos: " + name + ".", false);
-        } catch (error) {
-            const message = error && error.message ? error.message : String(error);
+            if (result.cancelled) {
+                restoreStatus(previousStatus);
+                return;
+            }
             setStatus(
-                /encrypt|password/i.test(message)
-                    ? "Eden od dokumentov je zaščiten z geslom in ga ni mogoče izvoziti."
-                    : "Novega PDF-ja ni bilo mogoče ustvariti. Preverite izbrane dokumente in poskusite znova.",
-                true
+                result.method === "file-system"
+                    ? "PDF je ustvarjen in shranjen: " + name + "."
+                    : "PDF je ustvarjen in pripravljen za prenos: " + name + ".",
+                false
             );
+        } catch (error) {
+            setPdfOutputError(error, "save");
+        } finally {
+            setBusy(false);
+            syncWorkspace();
+        }
+    }
+
+    async function sharePdf() {
+        if (busy || pages.length === 0 || !pdfSharingAvailable) {
+            return;
+        }
+
+        if (preparedPdf.file) {
+            const file = preparedPdf.file;
+            const preparedRevision = preparedPdf.revision;
+            const sharedName = file.name;
+            try {
+                // Invoke share immediately on the second click; awaiting any PDF work
+                // here would consume the browser's transient user activation.
+                const result = await fileOutput.shareFile(file, {
+                    title: sharedName
+                });
+                if (!result.cancelled) {
+                    if (preparedPdf.file === file && preparedPdf.revision === preparedRevision) {
+                        preparedPdf.release();
+                    }
+                    syncShareAction();
+                    setStatus("PDF je deljen: " + sharedName + ".", false);
+                }
+            } catch (error) {
+                setPdfOutputError(error, "share");
+            }
+            return;
+        }
+
+        const name = safeOutputName();
+        const revision = preparedPdf.revision;
+        setBusy(true);
+        setStatus("Priprava PDF-ja za deljenje…", false);
+        try {
+            const file = await createPdfFile(name);
+            if (!preparedPdf.set(file, revision)) {
+                setStatus("Dokument se je med pripravo spremenil. Pripravite ga znova.", false);
+                return;
+            }
+            setStatus("PDF je pripravljen. Pritisnite DELI PDF za izbiro aplikacije.", false);
+        } catch (error) {
+            setPdfOutputError(error, "share");
         } finally {
             setBusy(false);
             syncWorkspace();
@@ -576,6 +707,8 @@ function initPdfMerger() {
 
     clearButton.addEventListener("click", clearWorkspace);
     downloadButton.addEventListener("click", exportPdf);
+    shareButton?.addEventListener("click", sharePdf);
+    outputName.addEventListener("input", invalidatePreparedPdf);
 
     pagesList.addEventListener("click", function (event) {
         const button = event.target.closest("button[data-action]");
@@ -645,7 +778,14 @@ function initPdfMerger() {
         }
         event.preventDefault();
         const placeAfter = target.classList.contains("is-drop-after");
-        pages = reorderPage(pages, draggedPageId, target.dataset.pageId, placeAfter);
+        const nextPages = reorderPage(pages, draggedPageId, target.dataset.pageId, placeAfter);
+        const orderChanged = nextPages.some(function (page, index) {
+            return page !== pages[index];
+        });
+        if (orderChanged) {
+            invalidatePreparedPdf();
+        }
+        pages = nextPages;
         syncWorkspace();
         setStatus("Vrstni red strani je posodobljen.", false);
     });
