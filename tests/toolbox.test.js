@@ -4,6 +4,7 @@ const assert = require("node:assert/strict");
 const nodeCrypto = require("node:crypto");
 const fs = require("node:fs");
 const path = require("node:path");
+const { pathToFileURL } = require("node:url");
 
 if (!globalThis.crypto) {
     Object.defineProperty(globalThis, "crypto", {
@@ -37,22 +38,71 @@ async function run() {
     const uiScript = fs.readFileSync(path.join(projectRoot, "assets/js/toolbox-ui.js"), "utf8");
     const toolboxCss = fs.readFileSync(path.join(projectRoot, "assets/css/toolbox.css"), "utf8");
     const privacyHtml = fs.readFileSync(path.join(projectRoot, "zasebnost.html"), "utf8");
+    const pdfScript = fs.readFileSync(path.join(projectRoot, "assets/js/pdf-merger.mjs"), "utf8");
+    const pdfBundle = fs.readFileSync(path.join(projectRoot, "assets/js/pdf-merger.js"), "utf8");
+    const localServer = fs.readFileSync(path.join(projectRoot, "scripts/serve.mjs"), "utf8");
+    const gitignore = fs.readFileSync(path.join(projectRoot, ".gitignore"), "utf8");
+    const readme = fs.readFileSync(path.join(projectRoot, "README.md"), "utf8");
+    const pdfCore = await import(pathToFileURL(path.join(projectRoot, "assets/js/pdf-merger-core.mjs")).href);
 
     assert.match(indexHtml, /<title>Delavnica<\/title>/);
     assert.match(indexHtml, />U\/<\/span>[\s\S]*?>DELAVNICA<\/span>/);
+    assert.match(indexHtml, /class="tool-nav-link mobile-home-link"[^>]+href="#overview"[^>]+data-route="overview"/);
     assert.match(indexHtml, />LOKALNA OBDELAVA<\/span>/);
     assert.doesNotMatch(indexHtml, /BREZ NALAGANJA|warning-box/);
     assert.match(indexHtml, /<h1 id="jwt-title">Preverjanje JWT<\/h1>/);
     assert.match(indexHtml, /<h1 id="json-title">Formatiranje JSON<\/h1>/);
     assert.match(indexHtml, /id="qif-remember-settings"/);
+    assert.match(indexHtml, /<strong>CSV\/QIF<\/strong>/);
+    assert.doesNotMatch(indexHtml, /<strong>CSV → QIF<\/strong>/);
+    assert.match(indexHtml, /id="emso-date-clear"[^>]+disabled>POČISTI/);
+    assert.match(indexHtml, /<h1 id="pdf-title">Združevanje <span class="pdf-title-word">PDF-jev<\/span><\/h1>/);
+    assert.match(indexHtml, /id="pdf-file"[^>]+accept="\.pdf,application\/pdf"[^>]+multiple/);
+    assert.match(indexHtml, /id="pdf-pages"[^>]+aria-label="Strani novega dokumenta"/);
+    assert.match(indexHtml, /id="pdf-download"[^>]+disabled>USTVARI IN PRENESI PDF/);
+    assert.match(indexHtml, /defer src="assets\/vendor\/pdfjs\/pdf\.worker\.classic\.js"/);
+    assert.match(indexHtml, /defer src="assets\/js\/pdf-merger\.js"/);
+    assert.doesNotMatch(indexHtml, /type="module" src="assets\/js\/pdf-merger/);
     assert.match(indexHtml, /href="zasebnost\.html"/);
     assert.match(uiScript, /delavnica\.qif\.settings\.v1/);
     assert.match(uiScript, /localStorage\.setItem/);
     assert.match(uiScript, /localStorage\.removeItem/);
-    assert.match(uiScript, /const TOOL_ROUTES = \["emso", "vat", "jwt", "json", "qif"\]/);
+    assert.match(uiScript, /const TOOL_ROUTES = \["emso", "vat", "jwt", "json", "qif", "pdf"\]/);
+    assert.match(uiScript, /const ROUTE_SEQUENCE = \["overview"\]\.concat\(TOOL_ROUTES\)/);
     assert.match(uiScript, /addEventListener\("touchstart"/);
+    assert.match(uiScript, /addEventListener\("touchmove"/);
     assert.match(uiScript, /addEventListener\("touchend"/);
+    assert.match(uiScript, /window\.innerHeight <= 500/);
+    assert.match(uiScript, /targetPanel\.style\.top = gesture\.scrollY \+ "px"/);
+    assert.match(uiScript, /scrollToTopInstantly\(\)/);
+    assert.match(uiScript, /dateInput\.disabled = adultOnly/);
+    assert.match(uiScript, /dateInput\.value = ""/);
+    assert.doesNotMatch(uiScript, /closest\("a, button, input, select, textarea/);
     assert.match(toolboxCss, /\.sidebar\s*\{[\s\S]*?position:\s*sticky;[\s\S]*?top:\s*0;[\s\S]*?border-bottom:\s*var\(--line\);/);
+    assert.match(toolboxCss, /@media \(max-width: 640px\)[\s\S]*?\.tool-nav\s*\{[\s\S]*?grid-template-columns:\s*repeat\(7, minmax\(0, 1fr\)\);/);
+    assert.match(toolboxCss, /\.mobile-home-link\s*\{[\s\S]*?display:\s*flex;[\s\S]*?aspect-ratio:\s*auto;/);
+    assert.match(toolboxCss, /@media \(orientation: landscape\) and \(max-height: 500px\) and \(pointer: coarse\)/);
+    assert.match(toolboxCss, /grid-template-rows:\s*calc\(100vw \/ 7\);/);
+    assert.match(toolboxCss, /grid-template-columns:\s*calc\(\(100dvh \/ 7\) \+ var\(--line-width\)\) minmax\(0, 1fr\);/);
+    assert.match(toolboxCss, /\.site-footer\s*\{[\s\S]*?flex-wrap:\s*nowrap;[\s\S]*?font-size:\s*clamp\(7px, 2vw, 9px\);/);
+    assert.match(toolboxCss, /\.toast\s*\{[\s\S]*?border:\s*var\(--line\);[\s\S]*?color:\s*var\(--ink\);[\s\S]*?background:\s*var\(--white\);/);
+    assert.match(toolboxCss, /@media \(hover: hover\) and \(pointer: fine\)/);
+    assert.match(toolboxCss, /\.text-link:hover\s*\{[\s\S]*?transform:\s*translate\(-2px, -2px\);[\s\S]*?box-shadow:\s*3px 3px 0 var\(--ink\);/);
+    assert.match(toolboxCss, /\.button:hover:not\(:disabled\)\s*\{[\s\S]*?box-shadow:\s*3px 3px 0 var\(--ink\);[\s\S]*?transform:\s*translate\(-2px, -2px\);/);
+    assert.match(toolboxCss, /\.pdf-page-grid\s*\{/);
+    assert.match(pdfScript, /output\.copyPages/);
+    assert.match(pdfScript, /copy\.setRotation\(degrees/);
+    assert.match(pdfScript, /URL\.createObjectURL/);
+    assert.ok(pdfBundle.length > 900000);
+    assert.match(localServer, /createServer/);
+    assert.match(localServer, /127\.0\.0\.1/);
+    assert.match(localServer, /"\.mjs", "text\/javascript; charset=utf-8"/);
+    assert.match(localServer, /"\.wasm", "application\/wasm"/);
+    assert.doesNotMatch(gitignore, /Cenik-12\.1\.2026|Info-izracun_VW_ID4|Spletnastran_osnutek/);
+    assert.doesNotMatch(readme, /Cenik-12\.1\.2026|Info-izracun_VW_ID4|Spletnastran_osnutek/);
+    assert.ok(fs.statSync(path.join(projectRoot, "assets/vendor/pdfjs/pdf.min.mjs")).size > 400000);
+    assert.ok(fs.statSync(path.join(projectRoot, "assets/vendor/pdfjs/pdf.worker.min.mjs")).size > 1000000);
+    assert.ok(fs.statSync(path.join(projectRoot, "assets/vendor/pdf-lib/pdf-lib.esm.min.js")).size > 400000);
     assert.match(privacyHtml, /ZEKom-2/);
     assert.match(privacyHtml, /GDPR/);
     assert.match(privacyHtml, /GitHub Pages/);
@@ -97,6 +147,16 @@ async function run() {
             assert.ok(gender === "male" ? validation.serial < 500 : validation.serial >= 500);
         });
     }
+
+    const adultEmsos = core.generateEmsos(1000, {
+        adultOnly: true,
+        now: new Date("2026-08-08T00:00:00Z"),
+        rng: seededRandom(20260808)
+    });
+    assert.ok(adultEmsos.every((emso) => {
+        const validation = core.validateEmso(emso, new Date("2026-08-08T00:00:00Z"));
+        return validation.valid && validation.date <= "2008-08-08";
+    }));
 
     const now = 1_800_000_000;
     const unsignedToken = encodedJwt(
@@ -220,6 +280,14 @@ async function run() {
     assert.throws(() => core.formatJson("{broken}"), SyntaxError);
     assert.equal(core.formatBytes(0), "0 B");
     assert.equal(core.formatBytes(1536), "1.5 KB");
+
+    assert.equal(pdfCore.normalizeRotation(-90), 270);
+    assert.equal(pdfCore.normalizeRotation(451), 90);
+    const pdfPages = [{ id: "a" }, { id: "b" }, { id: "c" }, { id: "d" }];
+    assert.deepEqual(pdfCore.movePage(pdfPages, "b", 1).map((page) => page.id), ["a", "c", "b", "d"]);
+    assert.deepEqual(pdfCore.movePage(pdfPages, "a", -1).map((page) => page.id), ["a", "b", "c", "d"]);
+    assert.deepEqual(pdfCore.reorderPage(pdfPages, "a", "c", true).map((page) => page.id), ["b", "c", "a", "d"]);
+    assert.deepEqual(pdfCore.reorderPage(pdfPages, "d", "b", false).map((page) => page.id), ["a", "d", "b", "c"]);
 
     console.log("toolbox tests: all checks passed");
 }

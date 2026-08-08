@@ -6,16 +6,19 @@
     <meta name="theme-color" content="#0a0a0a">
     <meta name="color-scheme" content="light">
     <title>Delavnica</title>
-    <meta name="description" content="Hitra in zasebna spletna delavnica za slovenske testne podatke, preverjanje JWT, formatiranje JSON in pretvorbo Sparkasse CSV.">
+    <meta name="description" content="Hitra in zasebna spletna delavnica za slovenske testne podatke, PDF-je, preverjanje JWT, formatiranje JSON in pretvorbo Sparkasse CSV.">
     <meta name="author" content="Urban Kocmut">
     <meta property="og:title" content="Delavnica">
-    <meta property="og:description" content="Generatorja EMŠO in davčnih številk, preverjanje JWT, formatiranje JSON ter pretvorba Sparkasse CSV v QIF. Vse deluje lokalno.">
+    <meta property="og:description" content="Generatorja EMŠO in davčnih številk, urejanje PDF-jev, preverjanje JWT, formatiranje JSON ter pretvorba Sparkasse CSV v QIF. Vse deluje lokalno.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://delavnica.kocmut.com/">
     <link rel="canonical" href="https://delavnica.kocmut.com/">
+    <link rel="icon" href="data:,">
     <link rel="stylesheet" href="assets/css/toolbox.css">
     <script defer src="assets/js/toolbox-core.js"></script>
     <script defer src="assets/js/toolbox-ui.js"></script>
+    <script defer src="assets/vendor/pdfjs/pdf.worker.classic.js"></script>
+    <script defer src="assets/js/pdf-merger.js"></script>
 </head>
 <body>
 <a class="skip-link" href="#main-content">Preskoči na orodja</a>
@@ -34,9 +37,12 @@
     <aside class="sidebar">
         <div class="sidebar-heading">
             <span>ORODJA</span>
-            <span>05</span>
+            <span>06</span>
         </div>
         <nav class="tool-nav" aria-label="Delavnica">
+            <a class="tool-nav-link mobile-home-link" href="#overview" data-route="overview" aria-label="Začetna stran">
+                <strong aria-hidden="true">U/</strong>
+            </a>
             <a class="tool-nav-link" href="#emso" data-route="emso">
                 <span class="tool-number">01</span>
                 <span><strong>EMŠO</strong><small>Generator</small></span>
@@ -59,7 +65,12 @@
             </a>
             <a class="tool-nav-link" href="#qif" data-route="qif">
                 <span class="tool-number">05</span>
-                <span><strong>CSV → QIF</strong><small>Pretvornik Sparkasse</small></span>
+                <span><strong>CSV/QIF</strong><small>Pretvornik Sparkasse</small></span>
+                <span aria-hidden="true">↗</span>
+            </a>
+            <a class="tool-nav-link" href="#pdf" data-route="pdf">
+                <span class="tool-number">06</span>
+                <span><strong>PDF</strong><small>Združevanje</small></span>
                 <span aria-hidden="true">↗</span>
             </a>
         </nav>
@@ -118,6 +129,13 @@
                     <span class="card-description">Lokalno pretvorite izvoze transakcij Sparkasse v datoteke QIF za uvoz.</span>
                     <span class="card-action">ODPRI ORODJE <span aria-hidden="true">→</span></span>
                 </a>
+                <a class="tool-card inverted" href="#pdf">
+                    <span class="card-index">06 / DOKUMENTI</span>
+                    <span class="card-symbol" aria-hidden="true">PDF</span>
+                    <span class="card-title">ZDRUŽEVANJE<br>PDF-JEV</span>
+                    <span class="card-description">Združite dokumente, uredite vrstni red strani, jih zavrtite ali izbrišite in prenesite nov PDF.</span>
+                    <span class="card-action">ODPRI ORODJE <span aria-hidden="true">→</span></span>
+                </a>
             </div>
         </section>
 
@@ -134,10 +152,13 @@
                 <form id="emso-form" class="control-panel">
                     <div class="panel-label">PARAMETRI</div>
                     <div class="field-grid">
-                        <label class="field field-wide">
-                            <span>Datum rojstva <small>neobvezno</small></span>
-                            <input id="emso-date" type="date" min="1900-01-01">
-                        </label>
+                        <div class="field field-wide">
+                            <label for="emso-date">Datum rojstva <small>neobvezno</small></label>
+                            <div class="field-input-action">
+                                <input id="emso-date" type="date" min="1900-01-01">
+                                <button id="emso-date-clear" class="button" type="button" disabled>POČISTI</button>
+                            </div>
+                        </div>
                         <label class="field">
                             <span>Spol</span>
                             <select id="emso-gender">
@@ -470,6 +491,67 @@
                     <p id="qif-output-note" class="panel-footnote">Pretvorjena ni še nobena datoteka.</p>
                 </div>
             </div>
+        </section>
+
+        <section class="tool-panel pdf-tool-panel" data-panel="pdf" aria-labelledby="pdf-title" hidden>
+            <div class="tool-header">
+                <div>
+                    <p class="eyebrow">06 / DOKUMENTI</p>
+                    <h1 id="pdf-title">Združevanje <span class="pdf-title-word">PDF-jev</span></h1>
+                </div>
+                <p>Dodajte poljubno število dokumentov, uredite posamezne strani in prenesite nov PDF. Datoteke ostanejo samo v tem zavihku brskalnika.</p>
+            </div>
+
+            <section class="pdf-import-panel" aria-labelledby="pdf-import-title">
+                <div class="panel-label"><span id="pdf-import-title">DODAJ DOKUMENTE</span><span>LOKALNO</span></div>
+                <div class="pdf-import-body">
+                    <label id="pdf-drop-zone" class="file-drop pdf-file-drop" for="pdf-file">
+                        <input id="pdf-file" class="visually-hidden" type="file" accept=".pdf,application/pdf" multiple>
+                        <span class="file-drop-icon" aria-hidden="true">PDF</span>
+                        <span>
+                            <strong>SPUSTITE PDF-JE SEM</strong>
+                            <small id="pdf-file-hint">ali kliknite za izbiro več datotek</small>
+                        </span>
+                    </label>
+                    <div class="pdf-import-actions">
+                        <button id="pdf-clear" class="button" type="button" disabled>ODSTRANI VSE</button>
+                        <p id="pdf-status" class="inline-status" role="status" aria-live="polite">Dodajte enega ali več PDF-jev za začetek.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="pdf-workspace" aria-labelledby="pdf-pages-title">
+                <div class="pdf-workspace-header">
+                    <div>
+                        <p class="eyebrow">DELOVNA POVRŠINA</p>
+                        <h2 id="pdf-pages-title">Uredite strani</h2>
+                        <p>Povlecite strani v želeni vrstni red ali uporabite puščice. Vsako stran lahko zavrtite ali odstranite.</p>
+                    </div>
+                    <div class="pdf-workspace-counts" aria-live="polite">
+                        <span><strong id="pdf-page-count">0</strong> STRANI</span>
+                        <span><strong id="pdf-file-count">0</strong> DATOTEK</span>
+                    </div>
+                </div>
+
+                <div id="pdf-empty-state" class="pdf-empty-state">
+                    <span aria-hidden="true">01—</span>
+                    <strong>STRANI SE BODO PRIKAZALE TUKAJ</strong>
+                    <p>Dodate lahko več PDF-jev naenkrat ali jih vstavljate postopoma.</p>
+                </div>
+                <ol id="pdf-pages" class="pdf-page-grid" aria-label="Strani novega dokumenta" hidden></ol>
+            </section>
+
+            <section class="pdf-export-panel" aria-labelledby="pdf-export-title">
+                <div class="panel-label"><span id="pdf-export-title">IZVOZ</span><span>NOV PDF</span></div>
+                <div class="pdf-export-body">
+                    <label class="field pdf-name-field" for="pdf-output-name">
+                        <span>Ime datoteke</span>
+                        <input id="pdf-output-name" type="text" value="zdruzen-dokument.pdf" maxlength="180" spellcheck="false">
+                    </label>
+                    <button id="pdf-download" class="button primary pdf-download-button" type="button" disabled>USTVARI IN PRENESI PDF</button>
+                </div>
+                <p class="pdf-export-note">Izvoz ohrani velikost in kakovost izvirnih strani. Digitalni podpisi po združevanju niso več veljavni; zaščiteni PDF-ji niso podprti.</p>
+            </section>
         </section>
     </main>
 </div>

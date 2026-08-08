@@ -6,15 +6,17 @@
         throw new Error("ToolboxCore failed to load.");
     }
 
-    const TOOL_ROUTES = ["emso", "vat", "jwt", "json", "qif"];
-    const ROUTES = new Set(["overview"].concat(TOOL_ROUTES));
+    const TOOL_ROUTES = ["emso", "vat", "jwt", "json", "qif", "pdf"];
+    const ROUTE_SEQUENCE = ["overview"].concat(TOOL_ROUTES);
+    const ROUTES = new Set(ROUTE_SEQUENCE);
     const ROUTE_TITLES = {
         overview: "Delavnica",
         emso: "Generator EMŠO — Delavnica",
         vat: "Generator SI DDV — Delavnica",
         jwt: "Preverjanje JWT — Delavnica",
         json: "Formatiranje JSON — Delavnica",
-        qif: "Sparkasse CSV v QIF — Delavnica"
+        qif: "Sparkasse CSV v QIF — Delavnica",
+        pdf: "Združevanje PDF-jev — Delavnica"
     };
     const AUTO_FORMAT_LIMIT = 2 * 1024 * 1024;
     const QIF_SETTINGS_STORAGE_KEY = "delavnica.qif.settings.v1";
@@ -193,16 +195,6 @@
         return new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
     }
 
-    function latestAdultBirthDate() {
-        const date = utcToday();
-        const originalMonth = date.getUTCMonth();
-        date.setUTCFullYear(date.getUTCFullYear() - 18);
-        if (date.getUTCMonth() !== originalMonth) {
-            date.setUTCDate(0);
-        }
-        return date;
-    }
-
     function capAtMaximum(input, maximum, onCap) {
         function enforceMaximum() {
             if (Number(input.value) > maximum) {
@@ -220,6 +212,7 @@
     function initEmsoTool() {
         const form = byId("emso-form");
         const dateInput = byId("emso-date");
+        const clearDateButton = byId("emso-date-clear");
         const genderInput = byId("emso-gender");
         const ageInput = byId("emso-age");
         const countInput = byId("emso-count");
@@ -231,6 +224,40 @@
         dateInput.max = today.toISOString().slice(0, 10);
         capAtMaximum(countInput, 5000, function () {
             setStatus(status, "Količina je omejena na največ 5.000 zapisov.", false);
+        });
+
+        function syncDateControls(announce) {
+            const adultOnly = ageInput.value === "adult";
+            if (adultOnly) {
+                dateInput.value = "";
+            }
+            dateInput.disabled = adultOnly;
+            clearDateButton.disabled = adultOnly || !dateInput.value;
+
+            if (announce) {
+                setStatus(
+                    status,
+                    adultOnly
+                        ? "Datum rojstva je izklopljen. Ob generiranju bodo starosti naključne in vedno 18+."
+                        : "Datum rojstva lahko izberete ali pustite prazen za naključno starost.",
+                    false
+                );
+            }
+        }
+
+        dateInput.addEventListener("input", function () {
+            clearDateButton.disabled = !dateInput.value;
+        });
+
+        clearDateButton.addEventListener("click", function () {
+            dateInput.value = "";
+            syncDateControls(false);
+            dateInput.focus();
+            setStatus(status, "Datum rojstva je počiščen; uporabljen bo naključen datum.", false);
+        });
+
+        ageInput.addEventListener("change", function () {
+            syncDateControls(true);
         });
 
         form.addEventListener("submit", function (event) {
@@ -248,11 +275,6 @@
                 setStatus(status, "Datum rojstva ne sme biti v prihodnosti.", true);
                 return;
             }
-            if (date && ageInput.value === "adult" && date > latestAdultBirthDate()) {
-                setStatus(status, "Ta datum rojstva ne ustreza filtru 18+.", true);
-                return;
-            }
-
             try {
                 const results = core.generateEmsos(count, {
                     date,
@@ -268,12 +290,19 @@
 
                 output.value = results.join("\n");
                 outputCount.textContent = results.length + " ZAPISOV";
-                setStatus(status, "Generirano in kontrolno preverjeno v tem brskalniku.", false);
+                setStatus(
+                    status,
+                    ageInput.value === "adult"
+                        ? "Generirane so naključne osebe, stare najmanj 18 let; vsi zapisi so kontrolno preverjeni."
+                        : "Generirano in kontrolno preverjeno v tem brskalniku.",
+                    false
+                );
             } catch (error) {
                 setStatus(status, localizedError(error), true);
             }
         });
 
+        syncDateControls(false);
         form.requestSubmit();
     }
 
@@ -897,7 +926,8 @@
                 vat: function () { byId("vat-form").requestSubmit(); },
                 jwt: function () { byId("jwt-parse").click(); },
                 json: function () { byId("json-format").click(); },
-                qif: function () { byId("qif-form").requestSubmit(); }
+                qif: function () { byId("qif-form").requestSubmit(); },
+                pdf: function () { byId("pdf-download").click(); }
             }[route];
 
             if (action) {
@@ -910,66 +940,240 @@
     function initSwipeNavigation() {
         const surface = byId("main-content");
         let gesture = null;
+        let settleTimer = 0;
+
+        function panelForRoute(route) {
+            return surface.querySelector('[data-panel="' + route + '"]');
+        }
+
+        function matchingTouch(touches, identifier) {
+            return Array.from(touches).find(function (touch) {
+                return touch.identifier === identifier;
+            });
+        }
+
+        function isSwipeViewport() {
+            return window.innerWidth <= 860 || (
+                window.innerWidth > window.innerHeight &&
+                window.innerHeight <= 500
+            );
+        }
+
+        function clearPanelState(panel) {
+            if (!panel) {
+                return;
+            }
+            panel.classList.remove("is-swipe-active", "is-swipe-target");
+            panel.style.removeProperty("transform");
+            panel.style.removeProperty("top");
+            panel.removeAttribute("aria-hidden");
+        }
+
+        function scrollToTopInstantly() {
+            const root = document.documentElement;
+            root.classList.add("is-route-scroll-resetting");
+            void root.offsetWidth;
+            window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+            window.requestAnimationFrame(function () {
+                window.requestAnimationFrame(function () {
+                    root.classList.remove("is-route-scroll-resetting");
+                });
+            });
+        }
 
         function resetGesture() {
+            window.clearTimeout(settleTimer);
+            if (gesture) {
+                clearPanelState(gesture.activePanel);
+                clearPanelState(gesture.targetPanel);
+            }
+            surface.classList.remove("is-swiping", "is-swipe-settling");
             gesture = null;
         }
 
-        surface.addEventListener("touchstart", function (event) {
-            if (window.innerWidth > 860 || event.touches.length !== 1) {
+        function prepareTarget(direction) {
+            if (!gesture || gesture.direction === direction) {
+                return;
+            }
+
+            if (gesture.targetPanel) {
+                clearPanelState(gesture.targetPanel);
+                gesture.targetPanel.hidden = true;
+            }
+
+            gesture.direction = direction;
+            gesture.targetPanel = null;
+            gesture.targetRoute = "";
+
+            const routeIndex = ROUTE_SEQUENCE.indexOf(gesture.route);
+            const targetRoute = ROUTE_SEQUENCE[routeIndex + direction];
+            if (!targetRoute) {
+                return;
+            }
+
+            const targetPanel = panelForRoute(targetRoute);
+            if (!targetPanel) {
+                return;
+            }
+
+            targetPanel.hidden = false;
+            targetPanel.classList.add("is-swipe-target");
+            targetPanel.setAttribute("aria-hidden", "true");
+            targetPanel.style.top = gesture.scrollY + "px";
+            targetPanel.style.transform = "translate3d(" + (direction * gesture.width) + "px, 0, 0)";
+            gesture.targetPanel = targetPanel;
+            gesture.targetRoute = targetRoute;
+        }
+
+        function settleGesture(commit) {
+            if (!gesture || !gesture.dragging) {
                 resetGesture();
                 return;
             }
 
-            const target = event.target instanceof Element ? event.target : null;
-            if (target && target.closest("a, button, input, select, textarea, label, [contenteditable='true']")) {
+            const activeGesture = gesture;
+            const shouldCommit = Boolean(commit && activeGesture.targetPanel && activeGesture.targetRoute);
+            surface.classList.remove("is-swiping");
+            surface.classList.add("is-swipe-settling");
+            void surface.offsetWidth;
+
+            window.requestAnimationFrame(function () {
+                activeGesture.activePanel.style.transform = shouldCommit
+                    ? "translate3d(" + (-activeGesture.direction * activeGesture.width) + "px, 0, 0)"
+                    : "translate3d(0, 0, 0)";
+                if (activeGesture.targetPanel) {
+                    activeGesture.targetPanel.style.transform = shouldCommit
+                        ? "translate3d(0, 0, 0)"
+                        : "translate3d(" + (activeGesture.direction * activeGesture.width) + "px, 0, 0)";
+                }
+            });
+
+            const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+            settleTimer = window.setTimeout(function () {
+                if (shouldCommit) {
+                    activeGesture.targetPanel.style.top = "0px";
+                    scrollToTopInstantly();
+                    window.location.hash = activeGesture.targetRoute;
+                    renderRoute();
+                } else if (activeGesture.targetPanel) {
+                    activeGesture.targetPanel.hidden = true;
+                }
                 resetGesture();
+            }, reducedMotion ? 20 : 285);
+        }
+
+        surface.addEventListener("touchstart", function (event) {
+            if (
+                !isSwipeViewport() ||
+                event.touches.length !== 1 ||
+                surface.classList.contains("is-swipe-settling")
+            ) {
+                resetGesture();
+                return;
+            }
+
+            const route = currentRoute();
+            const activePanel = panelForRoute(route);
+            if (!activePanel) {
                 return;
             }
 
             const touch = event.touches[0];
             gesture = {
                 identifier: touch.identifier,
+                route,
+                activePanel,
+                targetPanel: null,
+                targetRoute: "",
+                direction: 0,
+                dragging: false,
                 x: touch.clientX,
-                y: touch.clientY
+                y: touch.clientY,
+                lastX: touch.clientX,
+                lastTime: event.timeStamp,
+                velocity: 0,
+                scrollY: window.scrollY,
+                width: Math.max(1, surface.clientWidth)
             };
         }, { passive: true });
+
+        surface.addEventListener("touchmove", function (event) {
+            if (!gesture) {
+                return;
+            }
+
+            const touch = matchingTouch(event.touches, gesture.identifier);
+            if (!touch) {
+                return;
+            }
+
+            const horizontalDistance = touch.clientX - gesture.x;
+            const verticalDistance = touch.clientY - gesture.y;
+            if (!gesture.dragging) {
+                if (Math.max(Math.abs(horizontalDistance), Math.abs(verticalDistance)) < 9) {
+                    return;
+                }
+                if (Math.abs(horizontalDistance) <= Math.abs(verticalDistance) * 1.08) {
+                    gesture = null;
+                    return;
+                }
+                gesture.dragging = true;
+                gesture.activePanel.classList.add("is-swipe-active");
+                surface.classList.add("is-swiping");
+            }
+
+            event.preventDefault();
+            const direction = horizontalDistance < 0 ? 1 : -1;
+            prepareTarget(direction);
+
+            const elapsed = Math.max(1, event.timeStamp - gesture.lastTime);
+            gesture.velocity = (touch.clientX - gesture.lastX) / elapsed;
+            gesture.lastX = touch.clientX;
+            gesture.lastTime = event.timeStamp;
+
+            let translated = Math.max(-gesture.width, Math.min(gesture.width, horizontalDistance));
+            if (!gesture.targetPanel) {
+                translated *= .18;
+            }
+            gesture.activePanel.style.transform = "translate3d(" + translated + "px, 0, 0)";
+            if (gesture.targetPanel) {
+                gesture.targetPanel.style.transform = "translate3d(" +
+                    (translated + gesture.direction * gesture.width) + "px, 0, 0)";
+            }
+        }, { passive: false });
 
         surface.addEventListener("touchend", function (event) {
             if (!gesture) {
                 return;
             }
 
-            const start = gesture;
-            resetGesture();
-            const touch = Array.from(event.changedTouches).find(function (candidate) {
-                return candidate.identifier === start.identifier;
-            });
+            const touch = matchingTouch(event.changedTouches, gesture.identifier);
             if (!touch) {
                 return;
             }
 
-            const horizontalDistance = touch.clientX - start.x;
-            const verticalDistance = touch.clientY - start.y;
-            const minimumDistance = Math.min(90, Math.max(56, surface.clientWidth * 0.14));
-            if (
-                Math.abs(horizontalDistance) < minimumDistance ||
-                Math.abs(horizontalDistance) < Math.abs(verticalDistance) * 1.35
-            ) {
+            if (!gesture.dragging) {
+                resetGesture();
                 return;
             }
 
-            const routeIndex = TOOL_ROUTES.indexOf(currentRoute());
-            if (routeIndex === -1) {
-                return;
-            }
-            const nextIndex = routeIndex + (horizontalDistance < 0 ? 1 : -1);
-            if (nextIndex >= 0 && nextIndex < TOOL_ROUTES.length) {
-                window.location.hash = TOOL_ROUTES[nextIndex];
+            event.preventDefault();
+            const horizontalDistance = touch.clientX - gesture.x;
+            const minimumDistance = Math.min(110, Math.max(58, gesture.width * .18));
+            const fastSwipe = Math.abs(gesture.velocity) > .42 && Math.abs(horizontalDistance) > 28;
+            settleGesture(
+                Boolean(gesture.targetPanel) &&
+                (Math.abs(horizontalDistance) >= minimumDistance || fastSwipe)
+            );
+        }, { passive: false });
+
+        surface.addEventListener("touchcancel", function () {
+            if (gesture && gesture.dragging) {
+                settleGesture(false);
+            } else {
+                resetGesture();
             }
         }, { passive: true });
-
-        surface.addEventListener("touchcancel", resetGesture, { passive: true });
     }
 
     function init() {

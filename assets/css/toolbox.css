@@ -28,7 +28,8 @@
     --white: #fff;
     --soft: #e5e5df;
     --muted: #656561;
-    --line: 2px solid var(--ink);
+    --line-width: 2px;
+    --line: var(--line-width) solid var(--ink);
     --content-width: 1600px;
 }
 
@@ -39,6 +40,12 @@
 html {
     min-width: 320px;
     scroll-behavior: smooth;
+}
+
+html.is-route-scroll-resetting,
+html.is-route-scroll-resetting body {
+    overflow-anchor: none;
+    scroll-behavior: auto !important;
 }
 
 body {
@@ -202,6 +209,10 @@ a {
     text-decoration: none;
 }
 
+.mobile-home-link {
+    display: none;
+}
+
 .tool-nav-link:hover,
 .tool-nav-link[aria-current="page"] {
     color: var(--white);
@@ -317,7 +328,7 @@ a {
     display: grid;
     border-top: var(--line);
     border-left: var(--line);
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .tool-card {
@@ -330,13 +341,6 @@ a {
     border-bottom: var(--line);
     background: var(--white);
     text-decoration: none;
-    transition: transform 120ms ease, box-shadow 120ms ease;
-}
-
-.tool-card:hover {
-    z-index: 1;
-    transform: translate(-4px, -4px);
-    box-shadow: 6px 6px 0 var(--ink);
 }
 
 .tool-card.inverted {
@@ -448,6 +452,7 @@ a {
 }
 
 .field > span,
+.field > label,
 .check-field > span {
     display: block;
     margin-bottom: 7px;
@@ -532,15 +537,9 @@ a {
     letter-spacing: .04em;
 }
 
-.button:hover,
 .button.primary {
     color: var(--white);
     background: var(--ink);
-}
-
-.button.primary:hover {
-    color: var(--ink);
-    background: var(--white);
 }
 
 .button:disabled {
@@ -552,11 +551,6 @@ a {
     min-height: 28px;
     padding: 4px 8px;
     font-size: 9px;
-}
-
-.mini-button:hover {
-    color: var(--white);
-    background: var(--ink);
 }
 
 .reference-panel {
@@ -663,10 +657,6 @@ a {
     text-decoration: none;
 }
 
-.reference-links a:hover {
-    font-weight: 700;
-}
-
 .visually-hidden {
     position: absolute !important;
     width: 1px !important;
@@ -691,7 +681,6 @@ a {
     text-align: left;
 }
 
-.file-drop:hover,
 .file-drop.is-dragging,
 .file-drop:focus-within {
     color: var(--white);
@@ -730,7 +719,6 @@ a {
     white-space: nowrap;
 }
 
-.file-drop:hover small,
 .file-drop.is-dragging small,
 .file-drop:focus-within small {
     color: #c7c7c2;
@@ -744,6 +732,348 @@ a {
     min-height: 655px;
     flex: 1;
     padding: 18px;
+}
+
+.pdf-import-panel,
+.pdf-workspace,
+.pdf-export-panel {
+    border: var(--line);
+    background: var(--white);
+}
+
+.field input:disabled {
+    color: var(--muted);
+    background: var(--soft);
+    cursor: not-allowed;
+}
+
+.field-input-action {
+    display: grid;
+    align-items: stretch;
+    gap: 8px;
+    grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.field-input-action .button {
+    min-height: 48px;
+}
+
+.pdf-title-word {
+    white-space: nowrap;
+}
+
+.pdf-workspace,
+.pdf-export-panel {
+    margin-top: 20px;
+}
+
+.pdf-import-body {
+    display: grid;
+    min-height: 170px;
+    grid-template-columns: minmax(0, 1.55fr) minmax(260px, .45fr);
+}
+
+.pdf-file-drop {
+    min-height: 170px;
+    margin: 0;
+    border: 0;
+    border-right: var(--line);
+}
+
+.pdf-import-actions {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 22px;
+    flex-direction: column;
+}
+
+.pdf-import-actions .inline-status {
+    margin: 0;
+}
+
+.pdf-workspace {
+    padding: 26px;
+}
+
+.pdf-workspace-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 40px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--ink);
+}
+
+.pdf-workspace-header .eyebrow {
+    margin-bottom: 8px;
+}
+
+.pdf-workspace-header h2 {
+    margin: 0 0 8px;
+    font-size: clamp(28px, 3.2vw, 48px);
+    letter-spacing: -.05em;
+    line-height: 1;
+}
+
+.pdf-workspace-header p:not(.eyebrow) {
+    max-width: 650px;
+    margin: 0;
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.pdf-workspace-counts {
+    display: flex;
+    flex: 0 0 auto;
+    gap: 8px;
+}
+
+.pdf-workspace-counts span {
+    display: grid;
+    min-width: 104px;
+    min-height: 70px;
+    place-content: center;
+    border: 1px solid var(--ink);
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 9px;
+    letter-spacing: .05em;
+    text-align: center;
+}
+
+.pdf-workspace-counts strong {
+    display: block;
+    font-size: 21px;
+    font-weight: 400;
+}
+
+.pdf-empty-state {
+    display: grid;
+    min-height: 330px;
+    place-content: center;
+    padding: 42px 20px;
+    text-align: center;
+}
+
+.pdf-empty-state > span {
+    display: block;
+    margin-bottom: 20px;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: clamp(38px, 6vw, 76px);
+    letter-spacing: -.08em;
+}
+
+.pdf-empty-state strong {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 12px;
+    letter-spacing: .06em;
+}
+
+.pdf-empty-state p {
+    margin: 8px 0 0;
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.pdf-page-grid {
+    display: grid;
+    margin: 26px 0 0;
+    padding: 0;
+    gap: 16px;
+    grid-template-columns: repeat(auto-fill, minmax(205px, 1fr));
+    list-style: none;
+}
+
+.pdf-page-grid.is-busy {
+    pointer-events: none;
+}
+
+.pdf-page-card {
+    position: relative;
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    border: 1px solid var(--ink);
+    background: var(--white);
+    cursor: grab;
+    transition: transform 110ms ease, box-shadow 110ms ease, opacity 110ms ease;
+}
+
+.pdf-page-card:active {
+    cursor: grabbing;
+}
+
+.pdf-page-card:focus-visible {
+    z-index: 2;
+}
+
+.pdf-page-card.is-dragging {
+    opacity: .35;
+}
+
+.pdf-page-card.is-drop-before::before,
+.pdf-page-card.is-drop-after::after {
+    position: absolute;
+    z-index: 5;
+    top: -5px;
+    bottom: -5px;
+    width: 5px;
+    background: var(--ink);
+    content: "";
+}
+
+.pdf-page-card.is-drop-before::before {
+    left: -10px;
+}
+
+.pdf-page-card.is-drop-after::after {
+    right: -10px;
+}
+
+.pdf-page-card-header {
+    display: flex;
+    min-height: 36px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 7px 9px;
+    color: var(--white);
+    background: var(--ink);
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 9px;
+    letter-spacing: .04em;
+}
+
+.pdf-page-position {
+    font-size: 12px;
+}
+
+.pdf-drag-handle {
+    opacity: .72;
+}
+
+.pdf-page-preview {
+    display: grid;
+    min-height: 312px;
+    padding: 11px;
+    place-items: center;
+    overflow: hidden;
+    border-bottom: 1px solid var(--ink);
+    background-color: var(--soft);
+    background-image: linear-gradient(45deg, rgba(10, 10, 10, .04) 25%, transparent 25%),
+        linear-gradient(-45deg, rgba(10, 10, 10, .04) 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, rgba(10, 10, 10, .04) 75%),
+        linear-gradient(-45deg, transparent 75%, rgba(10, 10, 10, .04) 75%);
+    background-position: 0 0, 0 8px, 8px -8px, -8px 0;
+    background-size: 16px 16px;
+}
+
+.pdf-page-preview canvas {
+    display: block;
+    max-width: 100%;
+    max-height: 290px;
+    border: 1px solid #c8c8c2;
+    background: var(--white);
+    box-shadow: 0 5px 14px rgba(10, 10, 10, .16);
+}
+
+.pdf-page-loading {
+    max-width: 140px;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 9px;
+    letter-spacing: .05em;
+    line-height: 1.5;
+    text-align: center;
+}
+
+.pdf-page-loading.is-error {
+    font-weight: 700;
+}
+
+.pdf-page-information {
+    min-height: 72px;
+    padding: 12px;
+}
+
+.pdf-page-information strong,
+.pdf-page-information span {
+    display: block;
+}
+
+.pdf-page-source {
+    overflow: hidden;
+    font-size: 11px;
+    line-height: 1.35;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.pdf-page-rotation {
+    margin-top: 6px;
+    color: var(--muted);
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 8px;
+    letter-spacing: .04em;
+}
+
+.pdf-page-actions {
+    display: grid;
+    margin-top: auto;
+    border-top: 1px solid var(--ink);
+    grid-template-columns: repeat(5, 1fr);
+}
+
+.pdf-page-action {
+    min-width: 0;
+    min-height: 40px;
+    padding: 5px;
+    border: 0;
+    border-right: 1px solid var(--ink);
+    color: var(--ink);
+    background: var(--white);
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 16px;
+}
+
+.pdf-page-action:last-child {
+    border-right: 0;
+}
+
+.pdf-page-action:hover:not(:disabled),
+.pdf-page-action:focus-visible {
+    color: var(--white);
+    background: var(--ink);
+}
+
+.pdf-page-action:disabled {
+    cursor: not-allowed;
+    opacity: .24;
+}
+
+.pdf-export-body {
+    display: grid;
+    align-items: end;
+    gap: 16px;
+    padding: 22px;
+    grid-template-columns: minmax(240px, 1fr) auto;
+}
+
+.pdf-name-field > span {
+    margin-bottom: 7px;
+}
+
+.pdf-download-button {
+    min-height: 48px;
+}
+
+.pdf-export-note {
+    margin: 0;
+    padding: 0 22px 22px;
+    color: var(--muted);
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 9px;
+    line-height: 1.5;
 }
 
 .inline-status,
@@ -975,9 +1305,8 @@ a {
     max-width: min(360px, calc(100vw - 44px));
     padding: 13px 16px;
     border: var(--line);
-    color: var(--white);
-    background: var(--ink);
-    box-shadow: 5px 5px 0 var(--white), 7px 7px 0 var(--ink);
+    color: var(--ink);
+    background: var(--white);
     font-family: "IBM Plex Mono", monospace;
     font-size: 11px;
 }
@@ -1124,6 +1453,81 @@ a {
     background: var(--paper);
 }
 
+@media (hover: hover) and (pointer: fine) {
+    .tool-card,
+    .text-link,
+    .reference-links a,
+    .button,
+    .mini-button,
+    .file-drop,
+    .text-link > span[aria-hidden="true"],
+    .reference-links a > span[aria-hidden="true"] {
+        transition: color 120ms ease, background-color 120ms ease,
+            transform 120ms ease, box-shadow 120ms ease;
+    }
+
+    .tool-card:hover {
+        z-index: 1;
+        transform: translate(-4px, -4px);
+        box-shadow: 6px 6px 0 var(--ink);
+    }
+
+    .text-link:hover {
+        transform: translate(-2px, -2px);
+        box-shadow: 3px 3px 0 var(--ink);
+    }
+
+    .text-link:hover > span[aria-hidden="true"],
+    .reference-links a:hover > span[aria-hidden="true"] {
+        transform: translateX(4px);
+    }
+
+    .reference-links a:hover {
+        z-index: 1;
+        outline: 1px solid var(--ink);
+        background: var(--white);
+        box-shadow: 3px 3px 0 var(--ink);
+        font-weight: 700;
+        transform: translate(-2px, -2px);
+    }
+
+    .button:hover:not(:disabled) {
+        color: var(--white);
+        background: var(--ink);
+        box-shadow: 3px 3px 0 var(--ink);
+        transform: translate(-2px, -2px);
+    }
+
+    .button.primary:hover:not(:disabled) {
+        color: var(--ink);
+        background: var(--white);
+    }
+
+    .mini-button:hover:not(:disabled) {
+        color: var(--white);
+        background: var(--ink);
+        box-shadow: 2px 2px 0 var(--ink);
+        transform: translate(-1px, -1px);
+    }
+
+    .button:active:not(:disabled),
+    .mini-button:active:not(:disabled) {
+        box-shadow: none;
+        transform: translate(0, 0);
+    }
+
+    .file-drop:hover {
+        color: var(--white);
+        background: var(--ink);
+        box-shadow: 5px 5px 0 var(--ink);
+        transform: translate(-3px, -3px);
+    }
+
+    .file-drop:hover small {
+        color: #c7c7c2;
+    }
+}
+
 @media (max-width: 1180px) {
     .overview-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1154,6 +1558,10 @@ a {
 }
 
 @media (max-width: 860px) {
+    body {
+        overflow-x: hidden;
+    }
+
     .masthead-meta {
         padding: 0 16px;
     }
@@ -1161,6 +1569,40 @@ a {
     .app-shell {
         display: block;
         border: 0;
+    }
+
+    .main-content {
+        position: relative;
+        touch-action: pan-y;
+    }
+
+    .main-content.is-swiping,
+    .main-content.is-swipe-settling {
+        overflow-anchor: none;
+    }
+
+    .tool-panel.is-swipe-active {
+        position: relative;
+        z-index: 2;
+        background-color: var(--paper);
+        will-change: transform;
+    }
+
+    .tool-panel.is-swipe-target {
+        position: absolute;
+        z-index: 1;
+        top: 0;
+        left: 0;
+        width: 100%;
+        min-height: 100%;
+        pointer-events: none;
+        background-color: var(--paper);
+        will-change: transform;
+    }
+
+    .main-content.is-swipe-settling .tool-panel.is-swipe-active,
+    .main-content.is-swipe-settling .tool-panel.is-swipe-target {
+        transition: transform 260ms cubic-bezier(.22, .72, .18, 1);
     }
 
     .sidebar {
@@ -1183,7 +1625,7 @@ a {
         display: grid;
         width: 100%;
         min-width: 0;
-        grid-template-columns: repeat(5, minmax(0, 1fr));
+        grid-template-columns: repeat(6, minmax(0, 1fr));
     }
 
     .tool-nav-link {
@@ -1215,6 +1657,15 @@ a {
         grid-template-columns: 1fr;
     }
 
+    .pdf-import-body {
+        grid-template-columns: 1fr;
+    }
+
+    .pdf-file-drop {
+        border-right: 0;
+        border-bottom: var(--line);
+    }
+
     .policy-hero {
         grid-template-columns: 1fr;
     }
@@ -1222,38 +1673,41 @@ a {
 
 @media (max-width: 640px) {
     .masthead {
-        min-height: 58px;
-    }
-
-    .wordmark {
-        gap: 12px;
-        padding-right: 12px;
-        font-size: 14px;
-    }
-
-    .wordmark-mark {
-        width: 58px;
-    }
-
-    .masthead-meta {
         display: none;
     }
 
-    .wordmark {
-        width: 100%;
+    .app-shell {
+        min-height: calc(100vh - 54px);
+        min-height: calc(100dvh - 54px);
     }
 
-    .app-shell {
-        min-height: calc(100vh - 58px - 54px);
+    .tool-nav {
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+        grid-template-rows: calc(100vw / 7);
     }
 
     .tool-nav-link {
         display: flex;
-        min-height: 56px;
+        height: 100%;
+        min-height: 0;
         align-items: center;
         justify-content: center;
         padding: 6px 4px;
+        background: var(--white);
         text-align: center;
+    }
+
+    .mobile-home-link {
+        display: flex;
+        min-height: 0;
+        aspect-ratio: auto;
+        padding: 0;
+        font-family: "IBM Plex Mono", monospace;
+    }
+
+    .tool-nav-link.mobile-home-link strong {
+        font-size: 15px;
+        letter-spacing: -.08em;
     }
 
     .tool-nav-link .tool-number,
@@ -1262,7 +1716,12 @@ a {
     }
 
     .tool-nav-link strong {
-        font-size: 12px;
+        font-size: 10px;
+    }
+
+    .text-link,
+    .reference-links a {
+        min-height: 44px;
     }
 
     .tool-panel {
@@ -1345,19 +1804,75 @@ a {
         padding: 20px 16px;
     }
 
+    .pdf-workspace {
+        padding: 18px 14px;
+    }
+
+    .pdf-workspace-header {
+        align-items: stretch;
+        gap: 22px;
+        flex-direction: column;
+    }
+
+    .pdf-workspace-counts span {
+        min-width: 0;
+        flex: 1;
+    }
+
+    .pdf-page-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .pdf-page-card.is-drop-before::before,
+    .pdf-page-card.is-drop-after::after {
+        right: -5px;
+        left: -5px;
+        width: auto;
+        height: 5px;
+    }
+
+    .pdf-page-card.is-drop-before::before {
+        top: -10px;
+        bottom: auto;
+    }
+
+    .pdf-page-card.is-drop-after::after {
+        top: auto;
+        bottom: -10px;
+    }
+
+    .pdf-page-preview {
+        min-height: 360px;
+    }
+
+    .pdf-export-body {
+        align-items: stretch;
+        grid-template-columns: 1fr;
+    }
+
+    .pdf-download-button {
+        width: 100%;
+    }
+
     .site-footer {
-        min-height: 68px;
-        gap: 10px;
-        padding: 0 14px;
-        flex-wrap: wrap;
+        min-height: 56px;
+        gap: 8px;
+        padding: 0 10px;
+        flex-wrap: nowrap;
+        font-size: clamp(7px, 2vw, 9px);
+        letter-spacing: .04em;
+        white-space: nowrap;
     }
 
     .site-footer-links {
-        gap: 14px;
+        min-width: 0;
+        justify-content: flex-end;
+        gap: clamp(8px, 2vw, 12px);
     }
 
     .policy-main {
-        min-height: calc(100vh - 58px - 68px);
+        min-height: calc(100vh - 68px);
+        min-height: calc(100dvh - 68px);
         padding: 24px 16px 36px;
     }
 
@@ -1385,13 +1900,162 @@ a {
     }
 }
 
+@media (orientation: landscape) and (max-height: 500px) and (pointer: coarse) {
+    body {
+        overflow-x: hidden;
+    }
+
+    .masthead {
+        display: none;
+    }
+
+    .app-shell {
+        display: grid;
+        width: 100%;
+        min-height: 100vh;
+        min-height: 100dvh;
+        margin: 0;
+        border: 0;
+        grid-template-columns: calc((100vh / 7) + var(--line-width)) minmax(0, 1fr);
+        grid-template-columns: calc((100dvh / 7) + var(--line-width)) minmax(0, 1fr);
+    }
+
+    .sidebar {
+        position: sticky;
+        z-index: 20;
+        top: 0;
+        display: block;
+        width: 100%;
+        height: 100vh;
+        height: 100dvh;
+        overflow: hidden;
+        border-top: 0;
+        border-right: var(--line);
+        border-bottom: 0;
+    }
+
+    .sidebar-heading,
+    .sidebar-note {
+        display: none;
+    }
+
+    .tool-nav {
+        display: grid;
+        width: 100%;
+        height: 100%;
+        min-width: 0;
+        grid-template-columns: 1fr;
+        grid-template-rows: repeat(7, minmax(0, 1fr));
+    }
+
+    .tool-nav-link {
+        display: flex;
+        min-width: 0;
+        min-height: 0;
+        align-items: center;
+        justify-content: center;
+        padding: 3px 2px;
+        border-right: 0;
+        border-bottom: 1px solid var(--ink);
+        background: var(--white);
+        text-align: center;
+    }
+
+    .tool-nav-link:last-child {
+        border-bottom: 0;
+    }
+
+    .mobile-home-link {
+        display: flex;
+        aspect-ratio: auto;
+        padding: 0;
+        font-family: "IBM Plex Mono", monospace;
+    }
+
+    .tool-nav-link .tool-number,
+    .tool-nav-link small,
+    .tool-nav-link > span:last-child {
+        display: none;
+    }
+
+    .tool-nav-link strong {
+        font-size: 8px;
+        line-height: 1.1;
+    }
+
+    .tool-nav-link.mobile-home-link strong {
+        font-size: 15px;
+        letter-spacing: -.08em;
+    }
+
+    .main-content {
+        position: relative;
+        touch-action: pan-y;
+    }
+
+    .main-content.is-swiping,
+    .main-content.is-swipe-settling {
+        overflow-anchor: none;
+    }
+
+    .tool-panel.is-swipe-active {
+        position: relative;
+        z-index: 2;
+        background-color: var(--paper);
+        will-change: transform;
+    }
+
+    .tool-panel.is-swipe-target {
+        position: absolute;
+        z-index: 1;
+        top: 0;
+        left: 0;
+        width: 100%;
+        min-height: 100%;
+        pointer-events: none;
+        background-color: var(--paper);
+        will-change: transform;
+    }
+
+    .main-content.is-swipe-settling .tool-panel.is-swipe-active,
+    .main-content.is-swipe-settling .tool-panel.is-swipe-target {
+        transition: transform 260ms cubic-bezier(.22, .72, .18, 1);
+    }
+
+    .tool-panel {
+        padding: clamp(24px, 4vw, 44px);
+    }
+
+    .hero-grid,
+    .tool-header {
+        gap: 32px;
+    }
+
+    .hero-grid h1,
+    .tool-header h1 {
+        font-size: clamp(44px, 6vw, 56px);
+    }
+}
+
 @media (prefers-reduced-motion: reduce) {
     html {
         scroll-behavior: auto;
     }
 
-    .tool-card {
+    .tool-card,
+    .text-link,
+    .reference-links a,
+    .button,
+    .mini-button,
+    .file-drop,
+    .text-link > span[aria-hidden="true"],
+    .reference-links a > span[aria-hidden="true"] {
         transition: none;
+    }
+
+    .main-content.is-swipe-settling .tool-panel.is-swipe-active,
+    .main-content.is-swipe-settling .tool-panel.is-swipe-target {
+        transition-duration: 1ms;
     }
 }
 
