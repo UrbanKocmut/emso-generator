@@ -1,549 +1,487 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="sl">
-
 <head>
     <meta charset="utf-8">
-    <meta content="width=device-width, initial-scale=1" name="viewport">
-    <title>EMŠO generator</title>
-    <meta content="Ustvarite naključne slovenske EMŠO številke glede na prilagodljive parametre, kot so datum rojstva, spol in drugo."
-          name="description">
-    <meta content="EMŠO generator, Slovenija, naključni EMŠO, slovenski ID generator, orodje" name="keywords">
-    <meta content="urban" name="author">
-    <meta content="sl" name="language">
-    <meta content="Generator slovenskih EMŠO številk" property="og:title">
-    <meta content="Ustvarite naključne slovenske EMŠO številke z lahkoto in prilagodite parametre."
-          property="og:description">
-    <meta content="xnb8tqKhnWDbmJ-ZcreKmNNeJEPkIzC79o-slaLRFmk" name="google-site-verification"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#0a0a0a">
+    <meta name="color-scheme" content="light">
+    <title>Delavnica</title>
+    <meta name="description" content="Hitra in zasebna spletna delavnica za slovenske testne podatke, preverjanje JWT, formatiranje JSON in pretvorbo Sparkasse CSV.">
+    <meta name="author" content="Urban Kocmut">
+    <meta property="og:title" content="Delavnica">
+    <meta property="og:description" content="Generatorja EMŠO in davčnih številk, preverjanje JWT, formatiranje JSON ter pretvorba Sparkasse CSV v QIF. Vse deluje lokalno.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://delavnica.kocmut.com/">
+    <link rel="canonical" href="https://delavnica.kocmut.com/">
+    <link rel="stylesheet" href="assets/css/toolbox.css">
+    <script defer src="assets/js/toolbox-core.js"></script>
+    <script defer src="assets/js/toolbox-ui.js"></script>
 </head>
-
-<style>
-    @font-face {
-        font-family: 'IBM Plex Sans';
-        src: url('./fonts/IBMPlexSans-Regular.woff2') format('woff2');
-        font-weight: 400;
-        font-style: normal;
-        font-display: swap;
-    }
-
-    @font-face {
-        font-family: 'IBM Plex Sans';
-        src: url('./fonts/IBMPlexSans-Bold.woff2') format('woff2');
-        font-weight: 700;
-        font-style: normal;
-        font-display: swap;
-    }
-
-    @font-face {
-        font-family: 'IBM Plex Mono';
-        src: url('./fonts/IBMPlexMono-Regular.woff2') format('woff2');
-        font-weight: 400;
-        font-style: normal;
-        font-display: swap;
-    }
-
-    /* General Styles */
-    body {
-        font-family: 'IBM Plex Sans', sans-serif;
-        background-color: #fff;
-        color: #000;
-        margin: 0;
-        padding: 20px;
-        box-sizing: border-box;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: flex-start;
-        overflow-x: hidden;
-    }
-
-    /* Header */
-    header,
-    main {
-        width: 100%;
-        max-width: 600px;
-    }
-
-    h1 {
-        font-size: 2rem;
-        margin-bottom: 20px;
-        color: #000;
-    }
-
-    /* Form Layout */
-    form {
-        width: 100%;
-        display: flex;
-        flex-direction: column;
-    }
-
-    p {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        flex-wrap: wrap;
-        width: 100%;
-    }
-
-    /* Input Labels & Inputs Alignment */
-    label {
-        flex: 0 0 50%; /* Make labels a fixed width for alignment */
-        text-align: left;
-        font-weight: bold;
-    }
-
-    input[type="date"],
-    input[type="number"],
-    input[type="text"],
-    button {
-        flex: 1; /* Inputs take remaining space */
-        font-size: 1rem;
-        padding: 10px;
-        border: 1px solid #000;
-        background-color: #fff;
-        color: #000;
-        outline: none;
-        box-sizing: border-box;
-    }
-
-
-    /* Button Styling */
-    button {
-        background-color: #000;
-        color: #fff;
-        border: 1px solid #000;
-        cursor: pointer;
-        font-weight: bold;
-        text-transform: uppercase;
-        transition: background-color 0.3s ease, color 0.3s ease;
-    }
-
-    button:hover {
-        background-color: #fff;
-        color: #000;
-    }
-
-    /* Output Box */
-    #emso-output {
-        width: 125px;
-        white-space: pre;
-        font-family: 'IBM Plex Mono', monospace;
-        overflow-x: auto;
-        padding: 20px;
-        background-color: #f4f4f4;
-        border: 1px solid #000;
-        content-visibility: auto;
-        contain-intrinsic-size: 0 500px;
-    }
-
-    /* Mobile Responsive */
-    @media (max-width: 600px) {
-        p {
-            flex-direction: column;
-            align-items: flex-start;
-        }
-
-        label {
-            flex: unset;
-            width: 100%;
-            margin-bottom: 5px;
-        }
-
-        body {
-            align-items: start;
-        }
-
-        h1 {
-            margin-top: unset;
-        }
-
-    }
-
-    .loading {
-        display: none;
-        margin-left: 10px;
-        font-size: 0.9rem;
-    }
-
-    .loading.visible {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .spinner {
-        width: 16px;
-        height: 16px;
-        border-radius: 50%;
-        border: 2px solid #000;
-        border-top-color: transparent;
-        animation: spin 0.8s linear infinite;
-    }
-
-    @keyframes spin {
-        to {
-            transform: rotate(360deg);
-        }
-    }
-
-
-</style>
-
 <body>
-<header>
-    <h1>Generator slovenskih EMŠO številk</h1>
+<a class="skip-link" href="#main-content">Preskoči na orodja</a>
+
+<header class="masthead">
+    <a class="wordmark" href="#overview" aria-label="Domov — Delavnica">
+        <span class="wordmark-mark" aria-hidden="true">U/</span>
+        <span>DELAVNICA</span>
+    </a>
+    <div class="masthead-meta">
+        <span>LOKALNA OBDELAVA</span>
+    </div>
 </header>
 
-<main>
-    <h2>Izberite parametre</h2>
-
-    <form id="parameters-form">
-        <p>
-            <label for="date-of-birth-input">Datum rojstva</label>
-            <input id="date-of-birth-input" type="date">
-        </p>
-
-        <p>
-            <label for="18-plus-input">
-                Polnoletna oseba (18+) <input id="18-plus-input" type="checkbox">
-            </label>
-            <label for="gender-input">
-                Moški <input id="gender-input" type="checkbox">
-            </label>
-        </p>
-
-        <p>
-            <label for="number-generated-input">Število generiranih EMŠO številk</label>
-            <input id="number-generated-input" min="1" required step="1" type="number" value="10">
-        </p>
-
-        <p>
-            <button id="refresh-btn" type="button">Generiraj</button>
-            <span class="loading" id="loading-indicator">
-        <span class="spinner"></span>
-        <span id="loading-text">Generiram EMŠO datoteko...</span>
-    </span>
-        </p>
-
-    </form>
-
-    <h2 id="emso-output-title">Generirane EMŠO številke</h2>
-    <pre class="output-box" id="emso-output">
-        <!-- EMŠO rezultati bodo prikazani tukaj -->
-    </pre>
-</main>
-
-
-<script>
-    const VIEW_THRESHOLD = 100000;      // show in page up to 100k
-    const MAX_COUNT = 100000000;        // hard cap 100M
-
-    // compute once at startup
-    const EMSO_START_TS = new Date(1976, 0, 1).getTime(); // 1976-01-01
-
-    // "today"
-    const EMSO_TODAY = new Date();
-    const EMSO_END_TS_ALL = EMSO_TODAY.getTime();
-
-    // today minus 18 years
-    const EMSO_18_TODAY = new Date(
-        EMSO_TODAY.getFullYear() - 18,
-        EMSO_TODAY.getMonth(),
-        EMSO_TODAY.getDate()
-    );
-    const EMSO_END_TS_18PLUS = EMSO_18_TODAY.getTime();
-    const EMSO_TEMP_DATE = new Date();
-
-
-    function generateEMSO(dateOfBirth, is18Plus, isMale) {
-
-        if (isNaN(dateOfBirth)) {
-            dateOfBirth = getRandomEMSOBirthday(is18Plus);
-        }
-
-        // Extract day, month, and year from the date object
-        let day = dateOfBirth.getDate();
-        let month = dateOfBirth.getMonth() + 1; // Months are 0-based
-        let year = dateOfBirth.getFullYear();
-
-        // Format date part (DDMMYYY)
-        const formattedDate = `${String(day).padStart(2, "0")}${String(month).padStart(2, "0")}${String(year).slice(-3)}`;
-
-        // Region code (Slovenian citizens: 50–59)
-        const regionCode = 50 + Math.floor(Math.random() * 10); // 50–59
-
-        // Gender-specific sequence
-        const sequenceStart = isMale ? 500 : 0; // true for male, false for female
-
-        let sequence = Math.floor(Math.random() * 500) + sequenceStart;
-
-        // Combine the first 12 digits
-        let partialEMSO = `${formattedDate}${regionCode}${String(sequence).padStart(3, "0")}`;
-
-        // Calculate control digit
-        let controlDigit = calculateControlDigit(partialEMSO);
-        while (controlDigit >= 10) {
-            sequence += 1;
-            partialEMSO = `${formattedDate}${regionCode}${String(sequence).padStart(3, "0")}`;
-            controlDigit = calculateControlDigit(partialEMSO);
-        }
-
-        return `${partialEMSO}${controlDigit}`;
-    }
-
-    // Function to calculate the control digit for EMŠO
-    function calculateControlDigit(partialEMSO) {
-        const weights = [7, 6, 5, 4, 3, 2, 7, 6, 5, 4, 3, 2];
-        const sum = partialEMSO.split("").reduce((acc, digit, index) => {
-            return acc + Number(digit) * weights[index];
-        }, 0);
-
-        const remainder = sum % 11;
-        return remainder === 0 ? 0 : 11 - remainder;
-    }
-
-    function getRandomEMSOBirthday(is18Plus = false) {
-        const startTimestamp = EMSO_START_TS;
-        const endTimestamp = is18Plus ? EMSO_END_TS_18PLUS : EMSO_END_TS_ALL;
-
-        const randomTimestamp =
-            Math.floor(Math.random() * (endTimestamp - startTimestamp + 1)) +
-            startTimestamp;
-
-        // reuse same Date instance
-        EMSO_TEMP_DATE.setTime(randomTimestamp);
-        return EMSO_TEMP_DATE;
-    }
-
-    function updateEmsos(numberGeneratedInput, isMaleInput, is18PlusInput, dateInput, emsoOutput) {
-        let numberToGenerate = numberGeneratedInput.value;
-        let isMale = isMaleInput.checked;
-        let is18Plus = is18PlusInput.checked;
-        let dateOfBirth = new Date(dateInput.value);
-
-        if (isNaN(numberToGenerate) || numberToGenerate === undefined) {
-            numberToGenerate = 10;
-        }
-
-        if (isNaN(isMale)) {
-            isMale = false;
-        }
-
-        if (isNaN(is18Plus)) {
-            is18Plus = false;
-        }
-
-        let emsos = new Array(numberToGenerate);
-
-        for (let i = 0; i < numberToGenerate; i++) {
-            emsos[i] = generateEMSO(dateOfBirth, is18Plus, isMale);
-        }
-        emsoOutput.textContent = emsos.join("\n");
-    }
-
-    window.onload = function () {
-
-        const dateInput = window.document.getElementById("date-of-birth-input");
-        const is18PlusInput = window.document.getElementById("18-plus-input");
-        const isMaleInput = window.document.getElementById("gender-input");
-        const numberGeneratedInput = window.document.getElementById("number-generated-input");
-        const refreshBtn = window.document.getElementById("refresh-btn");
-        const emsoOutput = window.document.getElementById("emso-output");
-        const emsoOutputTitle = window.document.getElementById("emso-output-title");
-        const form = window.document.getElementById("parameters-form");
-
-        const dobRow = dateInput.parentElement;
-
-        const loadingIndicator = document.getElementById("loading-indicator");
-        const loadingText = document.getElementById("loading-text");
-
-        let isGenerating = false;
-
-        function setGenerating(generating, isDownloadMode) {
-            isGenerating = generating;
-
-            if (loadingIndicator) {
-                loadingIndicator.classList.toggle("visible", generating);
-            }
-
-            if (generating) {
-                dateInput.disabled = true;
-                is18PlusInput.disabled = true;
-                isMaleInput.disabled = true;
-                numberGeneratedInput.disabled = true;
-                refreshBtn.disabled = true;
-            } else {
-                is18PlusInput.disabled = false;
-                isMaleInput.disabled = false;
-                numberGeneratedInput.disabled = false;
-                refreshBtn.disabled = false;
-                // keep date disabled if 18+ is checked
-                dateInput.disabled = is18PlusInput.checked;
-            }
-
-            if (isDownloadMode) {
-                refreshBtn.textContent = generating ? "Generiram datoteko..." : "Prenesi EMŠO datoteko";
-            } else {
-                refreshBtn.textContent = "Generiraj";
-            }
-
-            if (!generating && loadingText) {
-                loadingText.textContent = "Generiram EMŠO datoteko...";
-            }
-        }
-
-        async function generateAndDownloadLargeEmso(count, isMale, is18Plus, dateInputValue) {
-            const CHUNK_SIZE = 100000; // 100k per chunk
-            const chunks = [];
-
-            const hasFixedDate = !!dateInputValue;
-            let fixedDate = null;
-            if (hasFixedDate) {
-                const d = new Date(dateInputValue);
-                if (!isNaN(d)) {
-                    fixedDate = d;
-                }
-            }
-
-            let generated = 0;
-
-            while (generated < count) {
-                const currentChunkSize = Math.min(CHUNK_SIZE, count - generated);
-                const lines = new Array(currentChunkSize);
-
-                for (let i = 0; i < currentChunkSize; i++) {
-                    const dob = fixedDate || getRandomEMSOBirthday(is18Plus);
-                    lines[i] = generateEMSO(dob, is18Plus, isMale);
-                }
-
-                chunks.push(lines.join("\n") + "\n");
-                generated += currentChunkSize;
-
-                if (loadingText) {
-                    const percent = Math.floor((generated / count) * 100);
-                    loadingText.textContent = `Generiram EMŠO datoteko... ${percent}%`;
-                }
-
-                // yield to keep UI responsive
-                await new Promise(requestAnimationFrame);
-            }
-
-            const blob = new Blob(chunks, {type: "text/plain;charset=utf-8"});
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = `emso_${count}.txt`;
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-
-            setTimeout(() => URL.revokeObjectURL(url), 60000);
-        }
-
-        async function handleGenerate() {
-            if (isGenerating) return;
-
-            let count = parseInt(numberGeneratedInput.value, 10);
-            if (!Number.isFinite(count) || count <= 0) {
-                count = 10;
-                numberGeneratedInput.value = "10";
-            }
-            if (count > MAX_COUNT) {
-                count = MAX_COUNT;
-                numberGeneratedInput.value = String(MAX_COUNT);
-            }
-
-            const isMale = isMaleInput.checked;
-            const is18Plus = is18PlusInput.checked;
-            const isDownloadMode = count > VIEW_THRESHOLD;
-
-            if (!isDownloadMode) {
-                emsoOutput.style.display = "";
-                emsoOutputTitle.style.display = "";
-                setGenerating(true, false);
-                try {
-                    updateEmsos(numberGeneratedInput, isMaleInput, is18PlusInput, dateInput, emsoOutput);
-                } finally {
-                    setGenerating(false, false);
-                }
-            } else {
-                emsoOutputTitle.style.display = "none";
-                setGenerating(true, true);
-                try {
-                    await generateAndDownloadLargeEmso(count, isMale, is18Plus, dateInput.value);
-                } finally {
-                    setGenerating(false, true);
-                }
-            }
-        }
-
-        function updateUiModeAndPreview() {
-            if (isGenerating) return;
-
-            let n = parseInt(numberGeneratedInput.value, 10);
-            if (!Number.isFinite(n) || n <= 0) return;
-
-            if (n > MAX_COUNT) {
-                n = MAX_COUNT;
-                numberGeneratedInput.value = String(MAX_COUNT);
-            }
-
-            const isDownloadMode = n > VIEW_THRESHOLD;
-
-            if (isDownloadMode) {
-                emsoOutput.style.display = "none";
-                emsoOutputTitle.style.display = "none";
-                refreshBtn.textContent = "Prenesi EMŠO datoteko";
-                // do NOT auto-generate for big counts
-            } else {
-                emsoOutput.style.display = "";
-                emsoOutputTitle.style.display = "";
-                refreshBtn.textContent = "Generiraj";
-                // small enough → update preview live
-                updateEmsos(numberGeneratedInput, isMaleInput, is18PlusInput, dateInput, emsoOutput);
-            }
-        }
-
-        form.addEventListener("submit", function (ev) {
-            ev.preventDefault(); // stop reload on Enter
-            handleGenerate();
-        });
-
-        dateInput.addEventListener("input", ev => {
-            updateUiModeAndPreview();
-        });
-
-        is18PlusInput.addEventListener("input", ev => {
-            if (is18PlusInput.checked) {
-                dateInput.value = "";
-                dateInput.disabled = true;
-                dobRow.style.display = "none";
-            } else {
-                dateInput.disabled = false;
-                dobRow.style.display = "";
-            }
-
-            updateUiModeAndPreview();
-        });
-
-        isMaleInput.addEventListener("input", ev => {
-            updateUiModeAndPreview();
-        });
-
-        numberGeneratedInput.addEventListener("input", ev => {
-            updateUiModeAndPreview();
-        });
-
-        refreshBtn.addEventListener("click", ev => {
-            handleGenerate();
-        });
-
-        // Initial preview
-        updateEmsos(numberGeneratedInput, isMaleInput, is18PlusInput, dateInput, emsoOutput);
-    };
-
-
-</script>
-
+<div class="app-shell">
+    <aside class="sidebar">
+        <div class="sidebar-heading">
+            <span>ORODJA</span>
+            <span>05</span>
+        </div>
+        <nav class="tool-nav" aria-label="Delavnica">
+            <a class="tool-nav-link" href="#emso" data-route="emso">
+                <span class="tool-number">01</span>
+                <span><strong>EMŠO</strong><small>Generator</small></span>
+                <span aria-hidden="true">↗</span>
+            </a>
+            <a class="tool-nav-link" href="#vat" data-route="vat">
+                <span class="tool-number">02</span>
+                <span><strong>SI DDV</strong><small>Generator</small></span>
+                <span aria-hidden="true">↗</span>
+            </a>
+            <a class="tool-nav-link" href="#jwt" data-route="jwt">
+                <span class="tool-number">03</span>
+                <span><strong>JWT</strong><small>Preverjanje</small></span>
+                <span aria-hidden="true">↗</span>
+            </a>
+            <a class="tool-nav-link" href="#json" data-route="json">
+                <span class="tool-number">04</span>
+                <span><strong>JSON</strong><small>Formatiranje</small></span>
+                <span aria-hidden="true">↗</span>
+            </a>
+            <a class="tool-nav-link" href="#qif" data-route="qif">
+                <span class="tool-number">05</span>
+                <span><strong>CSV → QIF</strong><small>Pretvornik Sparkasse</small></span>
+                <span aria-hidden="true">↗</span>
+            </a>
+        </nav>
+        <div class="sidebar-note">
+            <span class="eyebrow">SISTEM</span>
+            <p>Statična zasnova.<br>Brez zunanjih odvisnosti.<br>Po prvem obisku deluje brez povezave.</p>
+        </div>
+    </aside>
+
+    <main id="main-content" class="main-content" tabindex="-1">
+        <section class="tool-panel overview-panel" data-panel="overview" aria-labelledby="overview-title">
+            <div class="hero-grid">
+                <div>
+                    <p class="eyebrow">OSEBNA SPLETNA ORODJA / V2</p>
+                    <h1 id="overview-title">Majhna orodja.<br>Brez trenja.</h1>
+                </div>
+                <div class="hero-copy">
+                    <p>Generirajte testne identifikatorje, preglejte žetone, uredite podatke in pretvorite bančne izvoze, ne da bi karkoli poslali strežniku.</p>
+                    <a class="text-link" href="#emso">ODPRI PRVO ORODJE <span aria-hidden="true">→</span></a>
+                </div>
+            </div>
+
+            <div class="overview-grid" aria-label="Razpoložljiva orodja">
+                <a class="tool-card" href="#emso">
+                    <span class="card-index">01 / IDENTITETA</span>
+                    <span class="card-symbol" aria-hidden="true">13#</span>
+                    <span class="card-title">EMŠO<br>GENERATOR</span>
+                    <span class="card-description">Testni slovenski identifikatorji z veljavno kontrolo ter izbiro datuma in spola.</span>
+                    <span class="card-action">ODPRI ORODJE <span aria-hidden="true">→</span></span>
+                </a>
+                <a class="tool-card inverted" href="#vat">
+                    <span class="card-index">02 / DAVKI</span>
+                    <span class="card-symbol" aria-hidden="true">SI</span>
+                    <span class="card-title">GENERATOR<br>DAVČNIH ŠTEVILK</span>
+                    <span class="card-description">Izmišljene slovenske davčne številke, ki prestanejo kontrolo po modulu 11.</span>
+                    <span class="card-action">ODPRI ORODJE <span aria-hidden="true">→</span></span>
+                </a>
+                <a class="tool-card" href="#jwt">
+                    <span class="card-index">03 / ŽETONI</span>
+                    <span class="card-symbol" aria-hidden="true">{·}</span>
+                    <span class="card-title">PREVERJANJE<br>JWT</span>
+                    <span class="card-description">Razčlenite zahtevke, preverite časovno veljavnost in podpis z Web Crypto.</span>
+                    <span class="card-action">ODPRI ORODJE <span aria-hidden="true">→</span></span>
+                </a>
+                <a class="tool-card" href="#json">
+                    <span class="card-index">04 / PODATKI</span>
+                    <span class="card-symbol" aria-hidden="true">{ }</span>
+                    <span class="card-title">FORMATIRANJE<br>JSON</span>
+                    <span class="card-description">Prilepite strnjen JSON in takoj dobite čist, berljiv izpis.</span>
+                    <span class="card-action">ODPRI ORODJE <span aria-hidden="true">→</span></span>
+                </a>
+                <a class="tool-card" href="#qif">
+                    <span class="card-index">05 / BANČNI PODATKI</span>
+                    <span class="card-symbol" aria-hidden="true">CSV</span>
+                    <span class="card-title">SPARKASSE<br>CSV → QIF</span>
+                    <span class="card-description">Lokalno pretvorite izvoze transakcij Sparkasse v datoteke QIF za uvoz.</span>
+                    <span class="card-action">ODPRI ORODJE <span aria-hidden="true">→</span></span>
+                </a>
+            </div>
+        </section>
+
+        <section class="tool-panel" data-panel="emso" aria-labelledby="emso-title" hidden>
+            <div class="tool-header">
+                <div>
+                    <p class="eyebrow">01 / SLOVENSKA IDENTITETA</p>
+                    <h1 id="emso-title">EMŠO generator</h1>
+                </div>
+                <p>Lokalno ustvarite testne identifikatorje z veljavno kontrolo. Rezultati so sintetični in niso preverjeni v Centralnem registru prebivalstva.</p>
+            </div>
+
+            <div class="workspace-grid">
+                <form id="emso-form" class="control-panel">
+                    <div class="panel-label">PARAMETRI</div>
+                    <div class="field-grid">
+                        <label class="field field-wide">
+                            <span>Datum rojstva <small>neobvezno</small></span>
+                            <input id="emso-date" type="date" min="1900-01-01">
+                        </label>
+                        <label class="field">
+                            <span>Spol</span>
+                            <select id="emso-gender">
+                                <option value="random">Naključno</option>
+                                <option value="male">Moški (000–499)</option>
+                                <option value="female">Ženski (500–999)</option>
+                            </select>
+                        </label>
+                        <label class="field">
+                            <span>Starost</span>
+                            <select id="emso-age">
+                                <option value="any">Vse starosti</option>
+                                <option value="adult">Samo 18+</option>
+                            </select>
+                        </label>
+                        <label class="field field-wide">
+                            <span>Količina <small>največ 5.000</small></span>
+                            <input id="emso-count" type="number" min="1" max="5000" step="1" value="10" inputmode="numeric" required>
+                        </label>
+                    </div>
+                    <div class="form-actions">
+                        <button class="button primary" type="submit">GENERIRAJ EMŠO</button>
+                        <button class="button" type="button" data-copy-target="emso-output">KOPIRAJ</button>
+                    </div>
+                    <p id="emso-status" class="inline-status" role="status" aria-live="polite">Pripravljeno.</p>
+                </form>
+
+                <div class="output-panel">
+                    <div class="panel-label"><span>IZPIS</span><span id="emso-output-count">0 ZAPISOV</span></div>
+                    <textarea id="emso-output" class="code-output identifier-output" readonly spellcheck="false" aria-label="Generirane številke EMŠO"></textarea>
+                    <p class="panel-footnote">Oblika: DDMMYYY + register + zaporedje + kontrolna številka.</p>
+                </div>
+            </div>
+
+            <section class="reference-panel" aria-labelledby="emso-structure-title">
+                <div class="panel-label"><span>SESTAVA IN VIRI</span><span>13 ŠTEVK</span></div>
+                <div class="reference-content">
+                    <div class="structure-map emso-map" aria-label="Sestava EMŠO: datum rojstva, register, zaporedje in kontrolna številka">
+                        <div class="structure-part">
+                            <span>01–07</span>
+                            <strong>DDMMYYY</strong>
+                            <p>Datum rojstva: dan, mesec in trimestna letnica.</p>
+                        </div>
+                        <div class="structure-part">
+                            <span>08–09</span>
+                            <strong>RR</strong>
+                            <p>Šifra registra. Slovenija uporablja 50–59.</p>
+                        </div>
+                        <div class="structure-part">
+                            <span>10–12</span>
+                            <strong>SSS</strong>
+                            <p>Dnevno zaporedje: 000–499 moški, 500–999 ženske.</p>
+                        </div>
+                        <div class="structure-part">
+                            <span>13</span>
+                            <strong>C</strong>
+                            <p>Matematično izračunana kontrolna številka.</p>
+                        </div>
+                    </div>
+                    <div class="reference-copy">
+                        <p class="eyebrow">URADNI VIRI</p>
+                        <h2 id="emso-structure-title">Kako je sestavljen EMŠO</h2>
+                        <p>Generator sestavi vse dele in zavrne kombinacije, pri katerih ni mogoče izračunati veljavne kontrolne številke.</p>
+                        <ul class="reference-links">
+                            <li><a href="https://www.gov.si/teme/registri-in-evidence-prebivalstva/" target="_blank" rel="noreferrer">GOV.SI — opredelitev EMŠO <span aria-hidden="true">↗</span></a></li>
+                            <li><a href="https://www.pisrs.si/Pis.web/pregledPredpisa?id=URED342" target="_blank" rel="noreferrer">PISRS — uredba o identifikacijski številki <span aria-hidden="true">↗</span></a></li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+        </section>
+
+        <section class="tool-panel" data-panel="vat" aria-labelledby="vat-title" hidden>
+            <div class="tool-header">
+                <div>
+                    <p class="eyebrow">02 / SLOVENSKI DAVKI</p>
+                    <h1 id="vat-title">Generator SI DDV</h1>
+                </div>
+                <p>Ustvarite izmišljene slovenske identifikacijske številke za DDV, ki prestanejo osemmestno kontrolo FURS po modulu 11.</p>
+            </div>
+
+            <div class="workspace-grid">
+                <form id="vat-form" class="control-panel">
+                    <div class="panel-label">PARAMETRI</div>
+                    <div class="field-grid">
+                        <label class="field field-wide">
+                            <span>Količina <small>največ 5.000</small></span>
+                            <input id="vat-count" type="number" min="1" max="5000" step="1" value="10" inputmode="numeric" required>
+                        </label>
+                        <label class="check-field field-wide">
+                            <input id="vat-prefix" type="checkbox" checked>
+                            <span>Dodaj predpono države <strong>SI</strong></span>
+                        </label>
+                    </div>
+                    <div class="form-actions">
+                        <button class="button primary" type="submit">GENERIRAJ DAVČNE ŠTEVILKE</button>
+                        <button class="button" type="button" data-copy-target="vat-output">KOPIRAJ</button>
+                    </div>
+                    <p id="vat-status" class="inline-status" role="status" aria-live="polite">Pripravljeno.</p>
+                </form>
+
+                <div class="output-panel">
+                    <div class="panel-label"><span>IZPIS</span><span id="vat-output-count">0 ZAPISOV</span></div>
+                    <textarea id="vat-output" class="code-output identifier-output" readonly spellcheck="false" aria-label="Generirane slovenske davčne številke"></textarea>
+                    <p class="panel-footnote">Osem števk; po izbiri s predpono SI.</p>
+                </div>
+            </div>
+
+            <section class="reference-panel" aria-labelledby="vat-structure-title">
+                <div class="panel-label"><span>SESTAVA IN VIRI</span><span>SI + 8 ŠTEVK</span></div>
+                <div class="reference-content">
+                    <div class="structure-map vat-map" aria-label="Sestava slovenske številke za DDV: predpona države, sedemmestno jedro in kontrolna številka">
+                        <div class="structure-part">
+                            <span>PREDPONA</span>
+                            <strong>SI</strong>
+                            <p>Predpona države za identifikacijo DDV.</p>
+                        </div>
+                        <div class="structure-part">
+                            <span>01–07</span>
+                            <strong>NNNNNNN</strong>
+                            <p>Sedemmestno jedro davčne številke.</p>
+                        </div>
+                        <div class="structure-part">
+                            <span>08</span>
+                            <strong>C</strong>
+                            <p>Kontrolna številka, izračunana po modulu 11.</p>
+                        </div>
+                    </div>
+                    <div class="reference-copy">
+                        <p class="eyebrow">URADNI VIRI</p>
+                        <h2 id="vat-structure-title">Kako je sestavljena slovenska številka za DDV</h2>
+                        <p>Uspešna lokalna kontrola potrdi le sestavo. Za preverjanje dodeljenosti in aktivnosti številke uporabite VIES.</p>
+                        <ul class="reference-links">
+                            <li><a href="https://www.fu.gov.si/davki_in_druge_dajatve/poslovanje_z_nami/vpis_v_davcni_register_in_davcna_stevilka" target="_blank" rel="noreferrer">FURS — opredelitev davčne številke <span aria-hidden="true">↗</span></a></li>
+                            <li><a href="https://ec.europa.eu/taxation_customs/vies/" target="_blank" rel="noreferrer">Evropska komisija — preverjanje VIES <span aria-hidden="true">↗</span></a></li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+        </section>
+
+        <section class="tool-panel" data-panel="jwt" aria-labelledby="jwt-title" hidden>
+            <div class="tool-header">
+                <div>
+                    <p class="eyebrow">03 / PREGLED ŽETONOV</p>
+                    <h1 id="jwt-title">Preverjanje JWT</h1>
+                </div>
+                <p>Razčlenite spletni žeton JSON, preverite njegove časovne zahtevke in po želji tudi podpis. Žeton in ključ nikoli ne zapustita tega zavihka.</p>
+            </div>
+
+            <div class="stacked-workspace">
+                <div class="control-panel compact-panel">
+                    <div class="panel-label"><label for="jwt-input">KODIRAN ŽETON</label><span id="jwt-size">0 B</span></div>
+                    <textarea id="jwt-input" class="code-input jwt-input" spellcheck="false" autocomplete="off" placeholder="Prilepite glava.vsebina.podpis"></textarea>
+                    <div class="form-actions">
+                        <button id="jwt-parse" class="button primary" type="button">RAZČLENI ŽETON</button>
+                        <button id="jwt-clear" class="button" type="button">POČISTI</button>
+                    </div>
+                </div>
+
+                <div class="validation-strip" aria-label="Povzetek preverjanja JWT">
+                    <div><span>SESTAVA</span><strong id="jwt-structure-state" class="state neutral">ČAKANJE</strong></div>
+                    <div><span>ČASOVNI ZAHTEVKI</span><strong id="jwt-time-state" class="state neutral">ČAKANJE</strong></div>
+                    <div><span>PODPIS</span><strong id="jwt-signature-state" class="state neutral">NI PREVERJEN</strong></div>
+                </div>
+                <p id="jwt-status" class="inline-status prominent-status" role="status" aria-live="polite">Za začetek prilepite žeton.</p>
+
+                <div id="jwt-results" hidden>
+                    <div class="decoded-grid">
+                        <div class="output-panel">
+                            <div class="panel-label"><span>GLAVA</span><button class="mini-button" type="button" data-copy-target="jwt-header-output">KOPIRAJ</button></div>
+                            <pre id="jwt-header-output" class="code-block" tabindex="0"></pre>
+                        </div>
+                        <div class="output-panel">
+                            <div class="panel-label"><span>VSEBINA</span><button class="mini-button" type="button" data-copy-target="jwt-payload-output">KOPIRAJ</button></div>
+                            <pre id="jwt-payload-output" class="code-block" tabindex="0"></pre>
+                        </div>
+                    </div>
+
+                    <div class="jwt-details-grid">
+                        <div class="control-panel">
+                            <div class="panel-label">PREVERJANJE ZAHTEVKOV</div>
+                            <div id="jwt-claims" class="claim-list"></div>
+                        </div>
+                        <div class="control-panel">
+                            <div class="panel-label">PREVERJANJE PODPISA</div>
+                            <label class="field">
+                                <span id="jwt-key-label">Ključ za preverjanje</span>
+                                <textarea id="jwt-key" class="key-input" spellcheck="false" autocomplete="off" placeholder="Skrivnost ali javni ključ PEM"></textarea>
+                            </label>
+                            <label id="jwt-key-encoding-field" class="field compact-field">
+                                <span>Kodiranje skrivnosti</span>
+                                <select id="jwt-key-encoding">
+                                    <option value="text">Besedilo UTF-8</option>
+                                    <option value="base64">Base64 / base64url</option>
+                                </select>
+                            </label>
+                            <button id="jwt-verify" class="button primary" type="button">PREVERI PODPIS</button>
+                            <p id="jwt-verify-help" class="panel-footnote">Podprte so družine HS, RS, PS in ES s SHA-256/384/512.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="tool-panel" data-panel="json" aria-labelledby="json-title" hidden>
+            <div class="tool-header">
+                <div>
+                    <p class="eyebrow">04 / UREJANJE PODATKOV</p>
+                    <h1 id="json-title">Formatiranje JSON</h1>
+                </div>
+                <p>Prilepite strnjen JSON in samodejno dobite berljiv izpis. Za hitrost in skladnost s standardi se uporablja vgrajeni razčlenjevalnik brskalnika.</p>
+            </div>
+
+            <div class="json-toolbar control-panel compact-panel">
+                <label class="field compact-field">
+                    <span>Zamik</span>
+                    <select id="json-indent">
+                        <option value="2">2 presledka</option>
+                        <option value="4">4 presledki</option>
+                        <option value="tab">Tabulator</option>
+                    </select>
+                </label>
+                <label class="check-field toolbar-check">
+                    <input id="json-sort" type="checkbox">
+                    <span>Razvrsti ključe objektov</span>
+                </label>
+                <div class="toolbar-actions">
+                    <button id="json-format" class="button primary" type="button">OBLIKUJ</button>
+                    <button id="json-minify" class="button" type="button">STRNI</button>
+                    <button class="button" type="button" data-copy-target="json-output">KOPIRAJ IZPIS</button>
+                    <button id="json-clear" class="button" type="button">POČISTI</button>
+                </div>
+            </div>
+
+            <div class="decoded-grid json-grid">
+                <div class="output-panel">
+                    <div class="panel-label"><label for="json-input">VNOS</label><span id="json-input-size">0 B</span></div>
+                    <textarea id="json-input" class="code-input json-editor" spellcheck="false" autocomplete="off" placeholder='Prilepite JSON, npr. {"pripravljeno":true,"elementi":[1,2,3]}'></textarea>
+                </div>
+                <div class="output-panel">
+                    <div class="panel-label"><label for="json-output">OBLIKOVAN IZPIS</label><span id="json-output-size">0 B</span></div>
+                    <textarea id="json-output" class="code-output json-editor" readonly spellcheck="false"></textarea>
+                </div>
+            </div>
+            <p id="json-status" class="inline-status prominent-status" role="status" aria-live="polite">Prilepite JSON za oblikovanje.</p>
+        </section>
+
+        <section class="tool-panel" data-panel="qif" aria-labelledby="qif-title" hidden>
+            <div class="tool-header">
+                <div>
+                    <p class="eyebrow">05 / BANČNI PODATKI</p>
+                    <h1 id="qif-title">Sparkasse CSV → QIF</h1>
+                </div>
+                <p>Pretvorite izvoz transakcij Sparkasse v datoteko QIF, pripravljeno za uvoz. Podatki o računu se obdelajo samo v tem zavihku brskalnika.</p>
+            </div>
+
+            <div class="workspace-grid qif-workspace">
+                <form id="qif-form" class="control-panel">
+                    <div class="panel-label">VIR IN MOŽNOSTI</div>
+
+                    <label id="qif-drop-zone" class="file-drop" for="qif-file">
+                        <input id="qif-file" class="visually-hidden" type="file" accept=".csv,text/csv">
+                        <span class="file-drop-icon" aria-hidden="true">CSV</span>
+                        <span>
+                            <strong>SPUSTITE SPARKASSE CSV SEM</strong>
+                            <small id="qif-file-name">ali kliknite za izbiro</small>
+                        </span>
+                    </label>
+
+                    <div class="field-grid qif-options">
+                        <label class="field">
+                            <span>Kodiranje CSV</span>
+                            <select id="qif-csv-encoding">
+                                <option value="auto">Samodejna zaznava</option>
+                                <option value="utf-8">UTF-8</option>
+                                <option value="windows-1250">Windows-1250</option>
+                                <option value="latin1">Latinica-1</option>
+                            </select>
+                        </label>
+                        <label class="field">
+                            <span>Kodiranje QIF</span>
+                            <select id="qif-output-encoding">
+                                <option value="utf-8">UTF-8</option>
+                                <option value="windows-1250">Windows-1250</option>
+                            </select>
+                        </label>
+                        <label class="field">
+                            <span>Vrsta računa QIF</span>
+                            <select id="qif-type">
+                                <option value="Bank">Banka</option>
+                                <option value="CCard">Kreditna kartica</option>
+                                <option value="Cash">Gotovina</option>
+                            </select>
+                        </label>
+                        <label class="field">
+                            <span>Oblika datuma v CSV</span>
+                            <input id="qif-input-date" type="text" value="%d.%m.%Y" spellcheck="false">
+                        </label>
+                        <label class="field field-wide">
+                            <span>Oblika datuma v QIF</span>
+                            <input id="qif-output-date" type="text" value="%d.%m.%Y" spellcheck="false">
+                        </label>
+                        <label class="check-field field-wide">
+                            <input id="qif-append-code" type="checkbox">
+                            <span>Dodaj kode transakcij v opombe <small>INTE / COMM / REFU / OTHR</small></span>
+                        </label>
+                        <label class="check-field field-wide">
+                            <input id="qif-stop-errors" type="checkbox">
+                            <span>Ustavi se ob prvi napačni transakciji</span>
+                        </label>
+                        <label class="check-field field-wide">
+                            <input id="qif-remember-settings" type="checkbox">
+                            <span>Zapomni si nastavitve v tem brskalniku</span>
+                        </label>
+                    </div>
+
+                    <div class="form-actions">
+                        <button id="qif-convert" class="button primary" type="submit">PRETVORI CSV</button>
+                        <button id="qif-download" class="button" type="button" disabled>PRENESI QIF</button>
+                        <button id="qif-copy" class="button" type="button" disabled>KOPIRAJ QIF</button>
+                        <button id="qif-clear" class="button" type="button">POČISTI</button>
+                    </div>
+                    <p id="qif-status" class="inline-status" role="status" aria-live="polite">Za začetek izberite izvoz Sparkasse CSV.</p>
+                </form>
+
+                <div class="output-panel">
+                    <div class="panel-label"><span>PREDOGLED QIF</span><span id="qif-output-count">0 TRANSAKCIJ</span></div>
+                    <textarea id="qif-output" class="code-output qif-output" readonly spellcheck="false" aria-label="Predogled pretvorjene datoteke QIF"></textarea>
+                    <p id="qif-output-note" class="panel-footnote">Pretvorjena ni še nobena datoteka.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+</div>
+
+<footer class="site-footer">
+    <span>DELAVNICA / URBAN KOCMUT</span>
+    <nav class="site-footer-links" aria-label="Pravne in projektne povezave">
+        <a href="zasebnost.html">ZASEBNOST</a>
+        <a href="https://github.com/UrbanKocmut/emso-generator" rel="noreferrer">IZVORNA KODA ↗</a>
+    </nav>
+</footer>
+
+<div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true" hidden></div>
 </body>
-
 </html>
