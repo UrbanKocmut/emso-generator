@@ -251,6 +251,13 @@ a {
     display: none;
 }
 
+/* Keep the fixed hint outside transformed panels, and hide it while changing tools. */
+body:has(.main-content.is-swiping) .mobile-info-hint,
+body:has(.main-content.is-swipe-settling) .mobile-info-hint {
+    opacity: 0;
+    pointer-events: none;
+}
+
 .meta-divider {
     color: var(--muted);
 }
@@ -1720,7 +1727,8 @@ a {
 
 @media (max-width: 860px) {
     body {
-        overflow-x: hidden;
+        /* Clip sideways swipes without creating an extra vertical scroll container. */
+        overflow-x: clip;
     }
 
     .masthead-meta {
@@ -1768,7 +1776,7 @@ a {
 
     .sidebar {
         position: sticky;
-        z-index: 20;
+        z-index: 45;
         top: 0;
         display: block;
         overflow: hidden;
@@ -1835,6 +1843,7 @@ a {
 @media (max-width: 640px) {
     body {
         --mobile-info-width: calc(100vw / 7);
+        --mobile-nav-height: calc((100vw / 7) + var(--line-width));
     }
 
     .masthead {
@@ -1966,7 +1975,7 @@ a {
     .mobile-info-hint {
         position: fixed;
         z-index: 31;
-        top: calc(var(--safe-top) + (100vw / 7) + 150px);
+        top: calc(var(--safe-top) + var(--mobile-nav-height) + 150px);
         left: var(--safe-left);
         display: grid;
         width: 16px;
@@ -1990,7 +1999,7 @@ a {
     .mobile-info-rail {
         position: fixed;
         z-index: 40;
-        top: calc((100vw / 7) + var(--safe-top));
+        top: calc(var(--mobile-nav-height) + var(--safe-top));
         bottom: var(--safe-bottom);
         left: 0;
         display: block;
@@ -2038,17 +2047,21 @@ a {
         position: absolute;
         z-index: 1;
         top: 8px;
-        left: calc(var(--safe-left) + 11px);
+        right: 0;
+        left: var(--safe-left);
         display: grid;
-        width: 44px;
+        width: auto;
+        min-width: 0;
         height: 44px;
         place-items: center;
         padding: 0;
         border: 0;
         color: var(--white);
-        background: var(--ink);
+        background: transparent;
+        appearance: none;
         font-family: "IBM Plex Mono", monospace;
         font-size: 18px;
+        line-height: 1;
     }
 
     .mobile-info-rail-content {
@@ -2272,7 +2285,7 @@ a {
 @media (orientation: landscape) and (max-height: 500px) and (pointer: coarse) {
     body {
         --mobile-info-width: calc(100dvh / 7);
-        overflow-x: hidden;
+        overflow-x: clip;
     }
 
     .masthead {

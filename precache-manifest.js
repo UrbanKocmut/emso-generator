@@ -1,13 +1,13 @@
 "use strict";
 
 self.DELAVNICA_PRECACHE = Object.freeze({
-    "version": "ade8ebe56bfb8c36479cf1ead9c9637f6af19683e2e080645d22b7e6db663964",
-    "totalBytes": 8497244,
+    "version": "568c8f88b47e88707846af19775d9e0d50e9c908d088fdae3720d7d23b7702bc",
+    "totalBytes": 8500679,
     "entries": [
         {
             "url": "./assets/css/toolbox.css",
-            "revision": "df6af7dc4884f4abb0de52aec5282a54d7e3ff523ba8ebc4bb51c50d124ad5b2",
-            "size": 53472
+            "revision": "3ec39da62fc7860aedbc3c66ee93751f86c79ced0dbf9dabcebf39574eb039f5",
+            "size": 53977
         },
         {
             "url": "./assets/icons/apple-touch-icon.png",
@@ -71,8 +71,8 @@ self.DELAVNICA_PRECACHE = Object.freeze({
         },
         {
             "url": "./assets/js/toolbox-ui.js",
-            "revision": "1ac43d9e99f83936d51d5ef5639068f173ea08d994d4d41d1b3e7a223ea36623",
-            "size": 57994
+            "revision": "167d8f7a24a6dfd4419d156877142b1237cf68a2b2e9589915b1e935a9ed49cd",
+            "size": 60972
         },
         {
             "url": "./assets/screenshots/delavnica-mobile.png",
@@ -1136,8 +1136,8 @@ self.DELAVNICA_PRECACHE = Object.freeze({
         },
         {
             "url": "./index.html",
-            "revision": "d16e97655b8ec5662ba7a302e9fc29e88dc1abecbb25d42d3fba8ee326fe01d1",
-            "size": 36741
+            "revision": "0a5906127d08fc1e97f2d5a14e2426c251340785b09b0a147029b3156e4cd14d",
+            "size": 36693
         },
         {
             "url": "./manifest.webmanifest",

@@ -95,7 +95,7 @@ async function run() {
     assert.match(uiScript, /window\.innerWidth <= 640 && window\.innerWidth <= window\.innerHeight/);
     assert.match(uiScript, /document\.body\.classList\.toggle\("is-mobile-info-open"/);
     assert.match(uiScript, /overviewPanel\.style\.transform = "translate3d\(" \+ progress/);
-    assert.match(uiScript, /rawProgress > gesture\.width/);
+    // Rail drag bounds are checked against the actual logo geometry in mobile-navigation.browser.js.
     assert.match(uiScript, /addEventListener\("pageshow"[\s\S]*?event\.persisted/);
     assert.match(uiScript, /rail\.addEventListener\("click"[\s\S]*?event\.target\.closest\("a"\)/);
     assert.match(uiScript, /dateInput\.disabled = adultOnly/);

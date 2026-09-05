@@ -25,6 +25,7 @@
     const AUTO_FORMAT_LIMIT = 2 * 1024 * 1024;
     const QIF_SETTINGS_STORAGE_KEY = "delavnica.qif.settings.v1";
     let toastTimer = 0;
+    let renderedRoute = "";
 
     function byId(id) {
         return document.getElementById(id);
@@ -175,6 +176,7 @@
         document.querySelectorAll("[data-panel]").forEach(function (panel) {
             panel.hidden = panel.dataset.panel !== route;
         });
+        byId("mobile-info-hint").hidden = route !== "overview";
 
         document.querySelectorAll("[data-route]").forEach(function (link) {
             if (link.dataset.route === route) {
@@ -191,10 +193,17 @@
         if (activeLink && sidebar && sidebar.scrollWidth > sidebar.clientWidth) {
             sidebar.scrollLeft = activeLink.offsetLeft - (sidebar.clientWidth - activeLink.offsetWidth) / 2;
         }
+        renderedRoute = route;
     }
 
     function initRouter() {
-        window.addEventListener("hashchange", renderRoute);
+        window.addEventListener("hashchange", function () {
+            // A swipe renders synchronously. Its queued hashchange must not hide
+            // the next swipe's preview if another gesture has already started.
+            if (currentRoute() !== renderedRoute) {
+                renderRoute();
+            }
+        });
         renderRoute();
     }
 
@@ -992,17 +1001,34 @@
         const rail = byId("mobile-info-rail");
         const closeButton = byId("mobile-info-close");
         const surface = byId("main-content");
+        const homeLink = document.querySelector(".mobile-home-link");
+        const sidebar = document.querySelector(".sidebar");
         const overviewPanel = document.querySelector('[data-panel="overview"]');
-        if (!hint || !rail || !closeButton || !surface || !overviewPanel) {
+        if (!hint || !rail || !closeButton || !surface || !homeLink || !sidebar || !overviewPanel) {
             return;
         }
 
         let isOpen = false;
         let gesture = null;
         let settleTimer = 0;
+        let settleFrame = 0;
 
         function isMobileInfoViewport() {
             return window.innerWidth <= 640 && window.innerWidth <= window.innerHeight;
+        }
+
+        function syncInfoGeometry() {
+            if (isMobileInfoViewport()) {
+                // Use the actual grid cell, including its fractional width, so
+                // scrollbars and safe-area padding cannot offset the rail edge.
+                document.body.style.setProperty("--mobile-info-width",
+                    homeLink.getBoundingClientRect().width + "px");
+                document.body.style.setProperty("--mobile-nav-height",
+                    sidebar.getBoundingClientRect().height + "px");
+            } else {
+                document.body.style.removeProperty("--mobile-info-width");
+                document.body.style.removeProperty("--mobile-nav-height");
+            }
         }
 
         function matchingTouch(touches, identifier) {
@@ -1015,8 +1041,11 @@
             const resolvedOpen = Boolean(
                 nextOpen && isMobileInfoViewport() && currentRoute() === "overview"
             );
-            const shouldAnimate = Boolean(forceAnimation || resolvedOpen !== isOpen);
+            const shouldAnimate = isMobileInfoViewport() && currentRoute() === "overview" &&
+                Boolean(forceAnimation || resolvedOpen !== isOpen);
             window.clearTimeout(settleTimer);
+            window.cancelAnimationFrame(settleFrame);
+            gesture = null;
             if (shouldAnimate) {
                 document.body.classList.add("is-mobile-info-settling");
             }
@@ -1027,7 +1056,7 @@
             rail.inert = !isOpen;
             hint.setAttribute("aria-expanded", String(isOpen));
             if (shouldAnimate) {
-                window.requestAnimationFrame(function () {
+                settleFrame = window.requestAnimationFrame(function () {
                     rail.style.removeProperty("transform");
                     overviewPanel.style.removeProperty("transform");
                 });
@@ -1057,13 +1086,15 @@
             if (
                 !isMobileInfoViewport() ||
                 currentRoute() !== "overview" ||
-                event.touches.length !== 1
+                event.touches.length !== 1 ||
+                surface.classList.contains("is-swipe-settling")
             ) {
                 return;
             }
 
             const touch = event.touches[0];
             window.clearTimeout(settleTimer);
+            window.cancelAnimationFrame(settleFrame);
             document.body.classList.remove("is-mobile-info-settling");
             if (fromRail || isOpen) {
                 event.stopPropagation();
@@ -1118,10 +1149,7 @@
             gesture.lastTime = event.timeStamp;
 
             const initial = gesture.startedOpen ? gesture.width : 0;
-            const rawProgress = Math.max(0, initial + horizontalDistance);
-            const progress = rawProgress > gesture.width
-                ? gesture.width + Math.min(gesture.width * .72, (rawProgress - gesture.width) * .28)
-                : rawProgress;
+            const progress = Math.max(0, Math.min(gesture.width, initial + horizontalDistance));
             rail.style.transform = "translate3d(" + (progress - gesture.width) + "px, 0, 0)";
             overviewPanel.style.transform = "translate3d(" + progress + "px, 0, 0)";
         }
@@ -1165,13 +1193,15 @@
                 setOpen(false, false);
             }
         });
-        overviewPanel.addEventListener("touchstart", function (event) {
-            startGesture(event, false);
-        }, { passive: true });
+        [overviewPanel, hint].forEach(function (target) {
+            target.addEventListener("touchstart", function (event) {
+                startGesture(event, false);
+            }, { passive: true });
+        });
         rail.addEventListener("touchstart", function (event) {
             startGesture(event, true);
         }, { passive: true });
-        [overviewPanel, rail].forEach(function (target) {
+        [overviewPanel, rail, hint].forEach(function (target) {
             target.addEventListener("touchmove", moveGesture, { passive: false });
             target.addEventListener("touchend", endGesture, { passive: false });
             target.addEventListener("touchcancel", function () {
@@ -1189,11 +1219,13 @@
             }
         });
         window.addEventListener("hashchange", function () {
-            if (currentRoute() !== "overview") {
+            if (currentRoute() !== "overview" &&
+                (isOpen || gesture || document.body.classList.contains("is-mobile-info-settling"))) {
                 setOpen(false, false);
             }
         });
         window.addEventListener("resize", function () {
+            syncInfoGeometry();
             if (!isMobileInfoViewport()) {
                 setOpen(false, false);
             }
@@ -1203,6 +1235,10 @@
                 setOpen(false, false);
             }
         });
+        const layoutObserver = new ResizeObserver(syncInfoGeometry);
+        layoutObserver.observe(homeLink);
+        layoutObserver.observe(sidebar);
+        syncInfoGeometry();
         setOpen(false, false);
     }
 
@@ -1210,6 +1246,7 @@
         const surface = byId("main-content");
         let gesture = null;
         let settleTimer = 0;
+        let settleFrame = 0;
 
         function panelForRoute(route) {
             return surface.querySelector('[data-panel="' + route + '"]');
@@ -1236,6 +1273,7 @@
             panel.style.removeProperty("transform");
             panel.style.removeProperty("top");
             panel.removeAttribute("aria-hidden");
+            panel.hidden = panel.dataset.panel !== currentRoute();
         }
 
         function scrollToTopInstantly() {
@@ -1252,12 +1290,27 @@
 
         function resetGesture() {
             window.clearTimeout(settleTimer);
+            window.cancelAnimationFrame(settleFrame);
             if (gesture) {
                 clearPanelState(gesture.activePanel);
                 clearPanelState(gesture.targetPanel);
             }
             surface.classList.remove("is-swiping", "is-swipe-settling");
             gesture = null;
+        }
+
+        function finishGesture(activeGesture) {
+            if (gesture !== activeGesture) {
+                return;
+            }
+            const destination = activeGesture.commit && currentRoute() === activeGesture.route
+                ? activeGesture.targetRoute : "";
+            resetGesture();
+            if (destination) {
+                window.location.hash = destination;
+                renderRoute();
+                scrollToTopInstantly();
+            }
         }
 
         function prepareTarget(direction) {
@@ -1302,11 +1355,16 @@
 
             const activeGesture = gesture;
             const shouldCommit = Boolean(commit && activeGesture.targetPanel && activeGesture.targetRoute);
+            activeGesture.settling = true;
+            activeGesture.commit = shouldCommit;
             surface.classList.remove("is-swiping");
             surface.classList.add("is-swipe-settling");
             void surface.offsetWidth;
 
-            window.requestAnimationFrame(function () {
+            settleFrame = window.requestAnimationFrame(function () {
+                if (gesture !== activeGesture) {
+                    return;
+                }
                 activeGesture.activePanel.style.transform = shouldCommit
                     ? "translate3d(" + (-activeGesture.direction * activeGesture.width) + "px, 0, 0)"
                     : "translate3d(0, 0, 0)";
@@ -1319,25 +1377,19 @@
 
             const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
             settleTimer = window.setTimeout(function () {
-                if (shouldCommit) {
-                    activeGesture.targetPanel.style.top = "0px";
-                    scrollToTopInstantly();
-                    window.location.hash = activeGesture.targetRoute;
-                    renderRoute();
-                } else if (activeGesture.targetPanel) {
-                    activeGesture.targetPanel.hidden = true;
-                }
-                resetGesture();
+                finishGesture(activeGesture);
             }, reducedMotion ? 20 : 285);
         }
 
         surface.addEventListener("touchstart", function (event) {
-            if (
-                !isSwipeViewport() ||
-                event.touches.length !== 1 ||
-                surface.classList.contains("is-swipe-settling")
-            ) {
+            // Complete the accepted navigation before interpreting a new touch.
+            // Cancelling its timer here would send the user back to the old tool.
+            if (gesture && gesture.settling) {
+                finishGesture(gesture);
+            } else {
                 resetGesture();
+            }
+            if (!isSwipeViewport() || event.touches.length !== 1) {
                 return;
             }
 
@@ -1367,7 +1419,7 @@
         }, { passive: true });
 
         surface.addEventListener("touchmove", function (event) {
-            if (!gesture) {
+            if (!gesture || gesture.settling) {
                 return;
             }
 
@@ -1412,7 +1464,7 @@
         }, { passive: false });
 
         surface.addEventListener("touchend", function (event) {
-            if (!gesture) {
+            if (!gesture || gesture.settling) {
                 return;
             }
 
@@ -1437,12 +1489,28 @@
         }, { passive: false });
 
         surface.addEventListener("touchcancel", function () {
+            if (gesture && gesture.settling) {
+                return;
+            }
             if (gesture && gesture.dragging) {
                 settleGesture(false);
             } else {
                 resetGesture();
             }
         }, { passive: true });
+
+        window.addEventListener("hashchange", function () {
+            if (gesture && gesture.route !== currentRoute()) {
+                resetGesture();
+            }
+        });
+        window.addEventListener("resize", function () {
+            if (gesture && gesture.settling) {
+                finishGesture(gesture);
+            } else {
+                resetGesture();
+            }
+        });
     }
 
     function init() {

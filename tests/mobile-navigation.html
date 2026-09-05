@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mobile navigation regression checks</title>
+<style>
+    body { margin: 20px; font: 16px system-ui, sans-serif; }
+    button { padding: 12px; font: inherit; }
+    iframe { display: block; border: 1px solid #888; margin-top: 20px; }
+    li { margin-block: 8px; }
+    [data-result="fail"] { color: #b00020; }
+    [data-result="pass"] { color: #176329; }
+</style>
+<h1>Mobile navigation regression checks</h1>
+<p>Runs real page handlers with synthetic touch events in a mobile-sized iframe.
+Use a fresh preview port after edits so an older offline cache cannot mask changes.</p>
+<button id="run" type="button">Run checks</button>
+<p id="summary" role="status">Ready</p>
+<ol id="results"></ol>
+<div id="preview"></div>
+<script src="mobile-navigation.browser.js"></script>
+</html>

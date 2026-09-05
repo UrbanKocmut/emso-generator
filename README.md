@@ -29,3 +29,5 @@ The production site has no runtime package dependency or server component; GitHu
 Run `npm run preview` (or `serve.cmd`) and open `http://127.0.0.1:8765/`. This uses a zero-dependency static server with the same browser loading model and MIME types as GitHub Pages.
 
 To use another port, run `npm run preview -- 8766` or `serve.cmd 8766`. Stop the server with `Ctrl+C`.
+
+For the mobile swipe browser regressions, open `/tests/mobile-navigation.html` on the preview server and click **Run checks**. The checks use real page layout and touch handlers in portrait, landscape, and tablet-sized iframes. Use a fresh preview port after runtime edits to avoid testing an older service-worker cache; also check native finger swipes on a mobile device.
