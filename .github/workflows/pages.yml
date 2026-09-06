@@ -25,7 +25,8 @@ jobs:
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/master'
         run: |
           mkdir _site
-          cp -R assets fonts sprites _site/
+          cp -R assets fonts _site/
+          if [ -d sprites ]; then cp -R sprites _site/; fi
           cp index.html zasebnost.html manifest.webmanifest service-worker.js precache-manifest.js CNAME logo.png _site/
       - uses: actions/upload-pages-artifact@v4
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/master'
