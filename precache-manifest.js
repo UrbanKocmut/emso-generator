@@ -1,13 +1,13 @@
 "use strict";
 
 self.DELAVNICA_PRECACHE = Object.freeze({
-    "version": "568c8f88b47e88707846af19775d9e0d50e9c908d088fdae3720d7d23b7702bc",
-    "totalBytes": 8500679,
+    "version": "f7e6ed71263b87a9a7f01df403599426f94326c1e3782dc0089e9e4b99d6cbb8",
+    "totalBytes": 8505460,
     "entries": [
         {
             "url": "./assets/css/toolbox.css",
-            "revision": "3ec39da62fc7860aedbc3c66ee93751f86c79ced0dbf9dabcebf39574eb039f5",
-            "size": 53977
+            "revision": "5a58fa95a6f5022d36aee4a58613ccfe026381c439e33435dc694752a74164cc",
+            "size": 54227
         },
         {
             "url": "./assets/icons/apple-touch-icon.png",
@@ -45,19 +45,24 @@ self.DELAVNICA_PRECACHE = Object.freeze({
             "size": 5170
         },
         {
+            "url": "./assets/js/pdf-loader.js",
+            "revision": "d2fcab29f07b824d962f188f079010c9ef3fb74d6f6ca47d788d8c537100ee4d",
+            "size": 2258
+        },
+        {
             "url": "./assets/js/pdf-merger-core.mjs",
             "revision": "7d3827683fef9448bb195a6cec91dcdd9defcc9cade545ad34bb4627d30b4734",
             "size": 1435
         },
         {
             "url": "./assets/js/pdf-merger.js",
-            "revision": "ac5f4034d1337247768c994ff28d95130abfbb39e4724c6b5a31401ac408f9b4",
-            "size": 949392
+            "revision": "5b2cd8b6ebac8ac5a741ed31bff1e4f5e544c2f0429aa3f97dc097006caaeaac",
+            "size": 949783
         },
         {
             "url": "./assets/js/pdf-merger.mjs",
-            "revision": "5c7959c23480f5c139e5af7bb4d68d214841640b4cab1aeff283bae825bb017e",
-            "size": 29644
+            "revision": "7a246daba9205fdd48ef306549a1ebac759f0b6de4ea557f7d702adc727dba79",
+            "size": 30466
         },
         {
             "url": "./assets/js/pwa.js",
@@ -65,14 +70,19 @@ self.DELAVNICA_PRECACHE = Object.freeze({
             "size": 6101
         },
         {
+            "url": "./assets/js/tool-registry.js",
+            "revision": "22dd7f90ecb55f81778d915fa1716ffa2d38fd0a7802e26301e46285a080a1da",
+            "size": 2203
+        },
+        {
             "url": "./assets/js/toolbox-core.js",
-            "revision": "dff20f80b4bab473459d6f7af7a9ae98e467c196bae7b6e44f5bdfc0050a973e",
-            "size": 35797
+            "revision": "5a0ccf2422dc224c268062048642b1c04dfcf76544c933f0519e7582ad0471a9",
+            "size": 37416
         },
         {
             "url": "./assets/js/toolbox-ui.js",
-            "revision": "167d8f7a24a6dfd4419d156877142b1237cf68a2b2e9589915b1e935a9ed49cd",
-            "size": 60972
+            "revision": "94c479448aa89eda57c90c8e7e026a7d8c40541e3b657b28e848c1a7b3b6ae64",
+            "size": 62999
         },
         {
             "url": "./assets/screenshots/delavnica-mobile.png",
@@ -1136,8 +1146,8 @@ self.DELAVNICA_PRECACHE = Object.freeze({
         },
         {
             "url": "./index.html",
-            "revision": "0a5906127d08fc1e97f2d5a14e2426c251340785b09b0a147029b3156e4cd14d",
-            "size": 36693
+            "revision": "a79379944d292af69b8471382c39167572b090e6413fde6861ffc6eb8879c9d1",
+            "size": 31904
         },
         {
             "url": "./manifest.webmanifest",

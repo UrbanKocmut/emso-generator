@@ -24,10 +24,10 @@
     <link rel="stylesheet" href="assets/css/toolbox.css">
     <script defer src="assets/js/toolbox-core.js"></script>
     <script defer src="assets/js/file-output.js"></script>
+    <script defer src="assets/js/tool-registry.js"></script>
+    <script defer src="assets/js/pdf-loader.js"></script>
     <script defer src="assets/js/toolbox-ui.js"></script>
     <script defer src="assets/js/pwa.js"></script>
-    <script defer src="assets/vendor/pdfjs/pdf.worker.classic.js"></script>
-    <script defer src="assets/js/pdf-merger.js"></script>
 </head>
 <body>
 <a class="skip-link" href="#main-content">Preskoči na orodja</a>
@@ -46,41 +46,11 @@
     <aside class="sidebar">
         <div class="sidebar-heading">
             <span>ORODJA</span>
-            <span>06</span>
+            <span id="tool-count"></span>
         </div>
         <nav class="tool-nav" aria-label="Delavnica">
             <a class="tool-nav-link mobile-home-link" href="#overview" data-route="overview" aria-label="Začetna stran">
                 <strong aria-hidden="true">U/</strong>
-            </a>
-            <a class="tool-nav-link" href="#emso" data-route="emso">
-                <span class="tool-number">01</span>
-                <span><strong>EMŠO</strong><small>Generator</small></span>
-                <span aria-hidden="true">↗</span>
-            </a>
-            <a class="tool-nav-link" href="#vat" data-route="vat">
-                <span class="tool-number">02</span>
-                <span><strong>SI DDV</strong><small>Generator</small></span>
-                <span aria-hidden="true">↗</span>
-            </a>
-            <a class="tool-nav-link" href="#jwt" data-route="jwt">
-                <span class="tool-number">03</span>
-                <span><strong>JWT</strong><small>Preverjanje</small></span>
-                <span aria-hidden="true">↗</span>
-            </a>
-            <a class="tool-nav-link" href="#json" data-route="json">
-                <span class="tool-number">04</span>
-                <span><strong>JSON</strong><small>Formatiranje</small></span>
-                <span aria-hidden="true">↗</span>
-            </a>
-            <a class="tool-nav-link" href="#qif" data-route="qif">
-                <span class="tool-number">05</span>
-                <span><strong>CSV/QIF</strong><small>Pretvornik Sparkasse</small></span>
-                <span aria-hidden="true">↗</span>
-            </a>
-            <a class="tool-nav-link" href="#pdf" data-route="pdf">
-                <span class="tool-number">06</span>
-                <span><strong>PDF</strong><small>Združevanje</small></span>
-                <span aria-hidden="true">↗</span>
             </a>
         </nav>
         <div class="sidebar-note">
@@ -112,50 +82,7 @@
                 </div>
             </div>
 
-            <div class="overview-grid" aria-label="Razpoložljiva orodja">
-                <a class="tool-card" href="#emso">
-                    <span class="card-index">01 / IDENTITETA</span>
-                    <span class="card-symbol" aria-hidden="true">13#</span>
-                    <span class="card-title">EMŠO<br>GENERATOR</span>
-                    <span class="card-description">Testni slovenski identifikatorji z veljavno kontrolo ter izbiro datuma in spola.</span>
-                    <span class="card-action">ODPRI ORODJE <span aria-hidden="true">→</span></span>
-                </a>
-                <a class="tool-card inverted" href="#vat">
-                    <span class="card-index">02 / DAVKI</span>
-                    <span class="card-symbol" aria-hidden="true">SI</span>
-                    <span class="card-title">GENERATOR<br>DAVČNIH ŠTEVILK</span>
-                    <span class="card-description">Izmišljene slovenske davčne številke, ki prestanejo kontrolo po modulu 11.</span>
-                    <span class="card-action">ODPRI ORODJE <span aria-hidden="true">→</span></span>
-                </a>
-                <a class="tool-card" href="#jwt">
-                    <span class="card-index">03 / ŽETONI</span>
-                    <span class="card-symbol" aria-hidden="true">{·}</span>
-                    <span class="card-title">PREVERJANJE<br>JWT</span>
-                    <span class="card-description">Razčlenite zahtevke, preverite časovno veljavnost in podpis z Web Crypto.</span>
-                    <span class="card-action">ODPRI ORODJE <span aria-hidden="true">→</span></span>
-                </a>
-                <a class="tool-card" href="#json">
-                    <span class="card-index">04 / PODATKI</span>
-                    <span class="card-symbol" aria-hidden="true">{ }</span>
-                    <span class="card-title">FORMATIRANJE<br>JSON</span>
-                    <span class="card-description">Prilepite strnjen JSON in takoj dobite čist, berljiv izpis.</span>
-                    <span class="card-action">ODPRI ORODJE <span aria-hidden="true">→</span></span>
-                </a>
-                <a class="tool-card" href="#qif">
-                    <span class="card-index">05 / BANČNI PODATKI</span>
-                    <span class="card-symbol" aria-hidden="true">CSV</span>
-                    <span class="card-title">SPARKASSE<br>CSV → QIF</span>
-                    <span class="card-description">Lokalno pretvorite izvoze transakcij Sparkasse v datoteke QIF za uvoz.</span>
-                    <span class="card-action">ODPRI ORODJE <span aria-hidden="true">→</span></span>
-                </a>
-                <a class="tool-card inverted" href="#pdf">
-                    <span class="card-index">06 / DOKUMENTI</span>
-                    <span class="card-symbol" aria-hidden="true">PDF</span>
-                    <span class="card-title">ZDRUŽEVANJE<br>PDF-JEV</span>
-                    <span class="card-description">Združite dokumente, uredite vrstni red strani, jih zavrtite ali izbrišite in prenesite nov PDF.</span>
-                    <span class="card-action">ODPRI ORODJE <span aria-hidden="true">→</span></span>
-                </a>
-            </div>
+            <div class="overview-grid" aria-label="Razpoložljiva orodja"></div>
         </section>
 
         <section class="tool-panel" data-panel="emso" aria-labelledby="emso-title" hidden>
@@ -526,7 +453,7 @@
                 <div class="panel-label"><span id="pdf-import-title">DODAJ DOKUMENTE</span><span>LOKALNO</span></div>
                 <div class="pdf-import-body">
                     <label id="pdf-drop-zone" class="file-drop pdf-file-drop" for="pdf-file">
-                        <input id="pdf-file" class="visually-hidden" type="file" accept=".pdf,application/pdf" multiple>
+                        <input id="pdf-file" class="visually-hidden" type="file" accept=".pdf,application/pdf" multiple disabled>
                         <span class="file-drop-icon" aria-hidden="true">PDF</span>
                         <span>
                             <strong>SPUSTITE PDF-JE SEM</strong>

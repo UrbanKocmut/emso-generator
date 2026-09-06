@@ -10,18 +10,14 @@
         throw new Error("DelavnicaFileOutput failed to load.");
     }
 
-    const TOOL_ROUTES = ["emso", "vat", "jwt", "json", "qif", "pdf"];
+    const tools = window.ToolboxTools;
+    const TOOL_ROUTES = tools.map(function (tool) { return tool.id; });
     const ROUTE_SEQUENCE = ["overview"].concat(TOOL_ROUTES);
     const ROUTES = new Set(ROUTE_SEQUENCE);
-    const ROUTE_TITLES = {
-        overview: "Delavnica",
-        emso: "Generator EMŠO — Delavnica",
-        vat: "Generator SI DDV — Delavnica",
-        jwt: "Preverjanje JWT — Delavnica",
-        json: "Formatiranje JSON — Delavnica",
-        qif: "Sparkasse CSV v QIF — Delavnica",
-        pdf: "Združevanje PDF-jev — Delavnica"
-    };
+    const ROUTE_TITLES = Object.fromEntries(tools.map(function (tool) {
+        return [tool.id, tool.title + " — Delavnica"];
+    }));
+    ROUTE_TITLES.overview = "Delavnica";
     const AUTO_FORMAT_LIMIT = 2 * 1024 * 1024;
     const QIF_SETTINGS_STORAGE_KEY = "delavnica.qif.settings.v1";
     let toastTimer = 0;
@@ -169,6 +165,46 @@
         return ROUTES.has(candidate) ? candidate : "overview";
     }
 
+    function initToolNavigation() {
+        const navigation = document.querySelector(".tool-nav");
+        const overview = document.querySelector(".overview-grid");
+        function element(tag, className, text) {
+            const node = document.createElement(tag);
+            node.className = className;
+            if (text) node.textContent = text;
+            return node;
+        }
+        function arrow(text) {
+            const node = element("span", "", text);
+            node.setAttribute("aria-hidden", "true");
+            return node;
+        }
+        tools.forEach(function (tool, index) {
+            const number = String(index + 1).padStart(2, "0");
+            const link = element("a", "tool-nav-link");
+            link.href = "#" + tool.id;
+            link.dataset.route = tool.id;
+            const label = element("span", "");
+            label.append(element("strong", "", tool.name), element("small", "", tool.subtitle));
+            link.append(element("span", "tool-number", number), label, arrow("↗"));
+            navigation.append(link);
+
+            const card = element("a", "tool-card" + (tool.inverted ? " inverted" : ""));
+            card.href = "#" + tool.id;
+            const symbol = element("span", "card-symbol", tool.symbol);
+            symbol.setAttribute("aria-hidden", "true");
+            const title = element("span", "card-title");
+            title.append(tool.cardTitle[0], document.createElement("br"), tool.cardTitle[1]);
+            const action = element("span", "card-action", "ODPRI ORODJE ");
+            action.append(arrow("→"));
+            card.append(element("span", "card-index", number + " / " + tool.category), symbol, title,
+                element("span", "card-description", tool.description), action);
+            overview.append(card);
+        });
+        byId("tool-count").textContent = String(tools.length).padStart(2, "0");
+        document.documentElement.style.setProperty("--tool-route-count", String(ROUTE_SEQUENCE.length));
+    }
+
     function renderRoute() {
         const route = currentRoute();
         let activeLink = null;
@@ -188,6 +224,9 @@
         });
 
         document.title = ROUTE_TITLES[route];
+        if (route === "pdf") {
+            window.DelavnicaPdfLoader.load();
+        }
 
         const sidebar = document.querySelector(".sidebar");
         if (activeLink && sidebar && sidebar.scrollWidth > sidebar.clientWidth) {
@@ -1109,7 +1148,7 @@
                 velocity: 0,
                 dragging: false,
                 startedOpen: isOpen,
-                width: Math.max(1, rail.getBoundingClientRect().width || surface.clientWidth / 7)
+                width: Math.max(1, rail.getBoundingClientRect().width || surface.clientWidth / ROUTE_SEQUENCE.length)
             };
         }
 
@@ -1514,6 +1553,7 @@
     }
 
     function init() {
+        initToolNavigation();
         initRouter();
         initCopyButtons();
         initEmsoTool();

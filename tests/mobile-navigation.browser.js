@@ -63,6 +63,71 @@ function assertRoute(page, route) {
 }
 
 const checks = [
+    ["Direct PDF navigation loads the real engines and renders an imported local PDF", async () => {
+        const page = await openPage("pdf");
+        const input = page.doc.getElementById("pdf-file");
+        const deadline = Date.now() + 10000;
+        while (input.disabled && Date.now() < deadline) await delay(50);
+        assert(!input.disabled, "PDF tool did not finish loading");
+        const { PDFDocument } = await import("../assets/vendor/pdf-lib/pdf-lib.esm.min.js");
+        const fixture = await PDFDocument.create();
+        fixture.addPage([200, 300]);
+        fixture.addPage([300, 200]);
+        const transfer = new page.win.DataTransfer();
+        transfer.items.add(new page.win.File([await fixture.save()], "browser-fixture.pdf", { type: "application/pdf" }));
+        input.files = transfer.files;
+        input.dispatchEvent(new page.win.Event("change", { bubbles: true }));
+        const renderDeadline = Date.now() + 10000;
+        while (page.doc.getElementById("pdf-page-count").textContent !== "2" && Date.now() < renderDeadline) await delay(50);
+        // Thumbnails are intentionally lazy: bring the iframe and cards into view.
+        page.frame.scrollIntoView();
+        page.doc.getElementById("pdf-pages").scrollIntoView();
+        while (page.doc.querySelectorAll('#pdf-pages canvas:not([hidden])').length < 2 && Date.now() < renderDeadline) await delay(50);
+        assert(page.doc.getElementById("pdf-page-count").textContent === "2", "Local PDF import lost pages");
+        assert(page.doc.querySelectorAll('#pdf-pages canvas:not([hidden])').length === 2, "Real PDF thumbnails did not render");
+        const card = page.doc.querySelector(".pdf-page-card");
+        card.querySelector('[data-action="rotate-right"]').click();
+        const rotateDeadline = Date.now() + 10000;
+        while (card.querySelector("canvas").dataset.rotation !== "90" && Date.now() < rotateDeadline) await delay(50);
+        assert(card.querySelector("canvas").dataset.rotation === "90", "Rotation did not refresh the thumbnail");
+        assert(!page.doc.getElementById("pdf-download").disabled, "PDF export was not enabled");
+        // Capture the save boundary inside this test iframe; no OS dialog or disk write.
+        let saved;
+        page.win.showSaveFilePicker = async () => ({
+            createWritable: async () => ({
+                write: async (file) => { saved = file; },
+                close: async () => {}
+            })
+        });
+        page.doc.getElementById("pdf-download").click();
+        const exportDeadline = Date.now() + 10000;
+        while ((!saved || page.doc.getElementById("pdf-download").disabled) && Date.now() < exportDeadline) await delay(50);
+        assert(saved, "PDF export did not produce a file");
+        const exported = await PDFDocument.load(new Uint8Array(await saved.arrayBuffer()));
+        assert(exported.getPageCount() === 2, "PDF export lost pages");
+        assert(exported.getPage(0).getRotation().angle === 90, "PDF export lost the rotation");
+        assert(exported.getPage(1).getWidth() === 300, "PDF export changed the source page size");
+        page.doc.getElementById("pdf-clear").click();
+        assert(page.doc.getElementById("pdf-page-count").textContent === "0", "Clear did not remove pages");
+    }],
+    ["Tool registry renders matching navigation, cards, titles, and routes", async () => {
+        const page = await openPage();
+        const ids = ["emso", "vat", "jwt", "json", "qif", "pdf"];
+        const links = [...page.doc.querySelectorAll('.tool-nav [data-route]')];
+        assert(links.map((link) => link.dataset.route).join() === ["overview", ...ids].join(), "Navigation order changed");
+        assert(page.doc.getElementById("tool-count").textContent === "06", "Tool count is incorrect");
+        const cards = [...page.doc.querySelectorAll(".overview-grid .tool-card")];
+        assert(cards.map((card) => card.hash.slice(1)).join() === ids.join(), "Overview cards do not match navigation");
+        assert(!page.doc.querySelector('script[src$="pdf-merger.js"]'), "PDF was executed before opening the tool");
+        assert(!page.doc.querySelector('script[src$="pdf.worker.classic.js"]'), "Classic PDF worker was loaded on HTTP");
+        for (const id of ids) {
+            page.doc.querySelector('[data-route="' + id + '"]').click();
+            await delay(40);
+            assertRoute(page, id);
+            assert(page.doc.title === page.win.ToolboxTools.find((tool) => tool.id === id).title + " — Delavnica", "Page title does not match the registry");
+        }
+        assert(page.doc.querySelectorAll('script[src$="pdf-merger.js"]').length === 1, "PDF bundle should load exactly once");
+    }],
     ["The open rail and close button fit the logo column while the toolbar stays above scrolling content", async () => {
         for (const [width, height] of [[320, 568], [390, 844], [430, 932]]) {
             const page = await openPage("overview", width, height);

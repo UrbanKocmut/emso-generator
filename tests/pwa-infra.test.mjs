@@ -323,6 +323,11 @@ test("service worker installs atomically and serves app entries offline", async 
         url: harness.scope + "assets/vendor/pdfjs/wasm/openjpeg.wasm"
     });
     assert.equal(await pdfAuxiliary.response.text(), "network:assets/vendor/pdfjs/wasm/openjpeg.wasm");
+    for (const asset of ["assets/js/pdf-loader.js", "assets/js/pdf-merger.js", "assets/js/tool-registry.js",
+        "assets/vendor/pdfjs/pdf.worker.min.mjs", "assets/vendor/pdfjs/pdf.worker.classic.js"]) {
+        const loaded = await harness.dispatchFetch({ method: "GET", mode: "same-origin", url: harness.scope + asset });
+        assert.equal(await loaded.response.text(), "network:" + asset, asset + " must load on the first offline PDF visit");
+    }
 });
 
 test("failed precache removes only the incomplete new cache", async () => {

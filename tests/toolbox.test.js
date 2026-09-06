@@ -44,6 +44,7 @@ async function run() {
     const localServer = fs.readFileSync(path.join(projectRoot, "scripts/serve.mjs"), "utf8");
     const gitignore = fs.readFileSync(path.join(projectRoot, ".gitignore"), "utf8");
     const readme = fs.readFileSync(path.join(projectRoot, "README.md"), "utf8");
+    const tools = require("../assets/js/tool-registry.js");
     const pdfCore = await import(pathToFileURL(path.join(projectRoot, "assets/js/pdf-merger-core.mjs")).href);
 
     assert.match(indexHtml, /<title>Delavnica<\/title>/);
@@ -68,7 +69,7 @@ async function run() {
     assert.match(indexHtml, /<h1 id="jwt-title">Preverjanje JWT<\/h1>/);
     assert.match(indexHtml, /<h1 id="json-title">Formatiranje JSON<\/h1>/);
     assert.match(indexHtml, /id="qif-remember-settings"/);
-    assert.match(indexHtml, /<strong>CSV\/QIF<\/strong>/);
+    assert.equal(tools.find((tool) => tool.id === "qif").name, "CSV/QIF");
     assert.doesNotMatch(indexHtml, /<strong>CSV → QIF<\/strong>/);
     assert.match(indexHtml, /id="emso-date-clear"[^>]+disabled>POČISTI/);
     assert.match(indexHtml, /<h1 id="pdf-title">Združevanje <span class="pdf-title-word">PDF-jev<\/span><\/h1>/);
@@ -76,15 +77,19 @@ async function run() {
     assert.match(indexHtml, /id="pdf-pages"[^>]+aria-label="Strani novega dokumenta"/);
     assert.match(indexHtml, /id="qif-download"[^>]+disabled>SHRANI QIF/);
     assert.match(indexHtml, /id="pdf-download"[^>]+disabled>USTVARI IN SHRANI PDF/);
-    assert.match(indexHtml, /defer src="assets\/vendor\/pdfjs\/pdf\.worker\.classic\.js"/);
-    assert.match(indexHtml, /defer src="assets\/js\/pdf-merger\.js"/);
+    assert.match(indexHtml, /defer src="assets\/js\/pdf-loader\.js"/);
+    assert.doesNotMatch(indexHtml, /<script[^>]+src="assets\/(?:vendor\/pdfjs\/pdf\.worker\.classic|js\/pdf-merger)\.js"/);
     assert.doesNotMatch(indexHtml, /type="module" src="assets\/js\/pdf-merger/);
     assert.match(indexHtml, /href="zasebnost\.html"/);
     assert.match(uiScript, /delavnica\.qif\.settings\.v1/);
     assert.match(uiScript, /localStorage\.setItem/);
     assert.match(uiScript, /localStorage\.removeItem/);
-    assert.match(uiScript, /const TOOL_ROUTES = \["emso", "vat", "jwt", "json", "qif", "pdf"\]/);
-    assert.match(uiScript, /const ROUTE_SEQUENCE = \["overview"\]\.concat\(TOOL_ROUTES\)/);
+    assert.deepEqual(tools.map((tool) => tool.id), ["emso", "vat", "jwt", "json", "qif", "pdf"]);
+    assert.equal(new Set(tools.map((tool) => tool.id)).size, tools.length);
+    for (const tool of tools) {
+        assert.ok(indexHtml.includes('data-panel="' + tool.id + '"'), "Every registered tool needs a panel");
+        assert.ok(tool.title && tool.name && tool.description);
+    }
     assert.match(uiScript, /addEventListener\("touchstart"/);
     assert.match(uiScript, /addEventListener\("touchmove"/);
     assert.match(uiScript, /addEventListener\("touchend"/);
@@ -102,12 +107,12 @@ async function run() {
     assert.match(uiScript, /dateInput\.value = ""/);
     assert.doesNotMatch(uiScript, /closest\("a, button, input, select, textarea/);
     assert.match(toolboxCss, /\.sidebar\s*\{[\s\S]*?position:\s*sticky;[\s\S]*?top:\s*0;[\s\S]*?border-bottom:\s*var\(--line\);/);
-    assert.match(toolboxCss, /@media \(max-width: 640px\)[\s\S]*?\.tool-nav\s*\{[\s\S]*?grid-template-columns:\s*repeat\(7, minmax\(0, 1fr\)\);/);
+    assert.match(toolboxCss, /@media \(max-width: 640px\)[\s\S]*?\.tool-nav\s*\{[\s\S]*?grid-template-columns:\s*repeat\(var\(--tool-route-count, 7\), minmax\(0, 1fr\)\);/);
     assert.match(toolboxCss, /\.mobile-home-link\s*\{[\s\S]*?display:\s*flex;[\s\S]*?aspect-ratio:\s*auto;/);
     assert.match(toolboxCss, /@media \(orientation: landscape\) and \(max-height: 500px\) and \(pointer: coarse\)/);
     assert.match(toolboxCss, /@media \(orientation: landscape\) and \(max-width: 640px\),[\s\S]*?\.mobile-info-hint,[\s\S]*?\.mobile-info-rail\s*\{\s*display:\s*none;/);
-    assert.match(toolboxCss, /grid-template-rows:\s*calc\(100vw \/ 7\);/);
-    assert.match(toolboxCss, /grid-template-columns:\s*calc\(\(100dvh \/ 7\) \+ var\(--line-width\)\) minmax\(0, 1fr\);/);
+    assert.match(toolboxCss, /grid-template-rows:\s*calc\(100vw \/ var\(--tool-route-count, 7\)\);/);
+    assert.match(toolboxCss, /grid-template-columns:\s*calc\(\(100dvh \/ var\(--tool-route-count, 7\)\) \+ var\(--line-width\)\) minmax\(0, 1fr\);/);
     assert.match(toolboxCss, /\.site-footer\s*\{[\s\S]*?flex-wrap:\s*nowrap;[\s\S]*?font-size:\s*clamp\(7px, 2vw, 9px\);/);
     assert.match(toolboxCss, /\.toast\s*\{[\s\S]*?border:\s*var\(--line\);[\s\S]*?color:\s*var\(--ink\);[\s\S]*?background:\s*var\(--white\);/);
     assert.match(toolboxCss, /@media \(hover: hover\) and \(pointer: fine\)/);

@@ -1842,8 +1842,8 @@ body:has(.main-content.is-swipe-settling) .mobile-info-hint {
 
 @media (max-width: 640px) {
     body {
-        --mobile-info-width: calc(100vw / 7);
-        --mobile-nav-height: calc((100vw / 7) + var(--line-width));
+        --mobile-info-width: calc(100vw / var(--tool-route-count, 7));
+        --mobile-nav-height: calc((100vw / var(--tool-route-count, 7)) + var(--line-width));
     }
 
     .masthead {
@@ -1856,8 +1856,8 @@ body:has(.main-content.is-swipe-settling) .mobile-info-hint {
     }
 
     .tool-nav {
-        grid-template-columns: repeat(7, minmax(0, 1fr));
-        grid-template-rows: calc(100vw / 7);
+        grid-template-columns: repeat(var(--tool-route-count, 7), minmax(0, 1fr));
+        grid-template-rows: calc(100vw / var(--tool-route-count, 7));
     }
 
     .tool-nav-link {
@@ -2284,7 +2284,7 @@ body:has(.main-content.is-swipe-settling) .mobile-info-hint {
 
 @media (orientation: landscape) and (max-height: 500px) and (pointer: coarse) {
     body {
-        --mobile-info-width: calc(100dvh / 7);
+        --mobile-info-width: calc(100dvh / var(--tool-route-count, 7));
         overflow-x: clip;
     }
 
@@ -2306,8 +2306,8 @@ body:has(.main-content.is-swipe-settling) .mobile-info-hint {
         min-height: 100dvh;
         margin: 0;
         border: 0;
-        grid-template-columns: calc((100vh / 7) + var(--line-width)) minmax(0, 1fr);
-        grid-template-columns: calc((100dvh / 7) + var(--line-width)) minmax(0, 1fr);
+        grid-template-columns: calc((100vh / var(--tool-route-count, 7)) + var(--line-width)) minmax(0, 1fr);
+        grid-template-columns: calc((100dvh / var(--tool-route-count, 7)) + var(--line-width)) minmax(0, 1fr);
     }
 
     .sidebar {
@@ -2335,7 +2335,7 @@ body:has(.main-content.is-swipe-settling) .mobile-info-hint {
         height: 100%;
         min-width: 0;
         grid-template-columns: 1fr;
-        grid-template-rows: repeat(7, minmax(0, 1fr));
+        grid-template-rows: repeat(var(--tool-route-count, 7), minmax(0, 1fr));
     }
 
     .tool-nav-link {
@@ -2439,7 +2439,7 @@ body:has(.main-content.is-swipe-settling) .mobile-info-hint {
         position: fixed;
         z-index: 31;
         top: calc(var(--safe-top) + 50%);
-        left: calc((100dvh / 7) + var(--line-width));
+        left: calc((100dvh / var(--tool-route-count, 7)) + var(--line-width));
         display: grid;
         width: 16px;
         height: 34px;
@@ -2507,7 +2507,7 @@ body:has(.main-content.is-swipe-settling) .mobile-info-hint {
         top: var(--safe-top);
         right: auto;
         bottom: var(--safe-bottom);
-        left: calc((100dvh / 7) + var(--line-width));
+        left: calc((100dvh / var(--tool-route-count, 7)) + var(--line-width));
         display: block;
         width: var(--mobile-info-width);
         border-right: var(--line);

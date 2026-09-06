@@ -151,7 +151,7 @@ function initPdfMerger() {
         const record = documents.get(documentId);
         documents.delete(documentId);
         if (record) {
-            Promise.resolve(record.viewer.destroy()).catch(function () {
+            record.loadingTask.destroy().catch(function () {
                 // The page data is already discarded from the workspace.
             });
         }
@@ -290,6 +290,11 @@ function initPdfMerger() {
         const canvas = card.querySelector("canvas");
         const placeholder = card.querySelector(".pdf-page-loading");
         const requestedRotation = item.rotation;
+        item.thumbnailState = "rendering";
+        canvas.hidden = true;
+        placeholder.hidden = false;
+        placeholder.textContent = "IZRIS PREDOGLEDA…";
+        placeholder.classList.remove("is-error");
 
         try {
             const sourcePage = await record.viewer.getPage(item.sourcePage);
@@ -320,9 +325,11 @@ function initPdfMerger() {
                 return;
             }
             canvas.dataset.rotation = String(requestedRotation);
+            item.thumbnailState = "ready";
             canvas.hidden = false;
             placeholder.hidden = true;
         } catch (error) {
+            item.thumbnailState = "failed";
             if (card.isConnected) {
                 placeholder.textContent = "PREDOGLEDA NI MOGOČE IZRISATI";
                 placeholder.classList.add("is-error");
@@ -331,7 +338,8 @@ function initPdfMerger() {
     }
 
     function scheduleThumbnail(pageId) {
-        if (!pageId || queuedThumbnails.has(pageId)) {
+        const item = pageById(pageId);
+        if (!item || item.thumbnailState === "failed" || queuedThumbnails.has(pageId)) {
             return;
         }
         queuedThumbnails.add(pageId);
@@ -340,6 +348,7 @@ function initPdfMerger() {
                 return renderThumbnail(pageId);
             })
             .catch(function () {
+                item.thumbnailState = "failed";
                 // A failed thumbnail must not stop the remaining render queue.
             })
             .finally(function () {
@@ -347,7 +356,7 @@ function initPdfMerger() {
                 const item = pageById(pageId);
                 const card = pagesList.querySelector('[data-page-id="' + CSS.escape(pageId) + '"]');
                 const canvas = card && card.querySelector("canvas");
-                if (item && canvas && canvas.dataset.rotation !== String(item.rotation)) {
+                if (item && item.thumbnailState === "ready" && canvas && canvas.dataset.rotation !== String(item.rotation)) {
                     scheduleThumbnail(pageId);
                 }
             });
@@ -380,10 +389,15 @@ function initPdfMerger() {
         loadingTask.onPassword = function (updatePassword) {
             updatePassword(new Error("Password-protected PDFs are not supported."));
         };
-        const viewer = await loadingTask.promise;
-        if (!viewer.numPages) {
-            await viewer.destroy();
-            throw new Error("PDF has no pages.");
+        let viewer;
+        try {
+            viewer = await loadingTask.promise;
+            if (!viewer.numPages) {
+                throw new Error("PDF has no pages.");
+            }
+        } catch (error) {
+            await loadingTask.destroy().catch(function () {});
+            throw error;
         }
 
         invalidatePreparedPdf();
@@ -393,6 +407,7 @@ function initPdfMerger() {
             id: documentId,
             name: file.name,
             bytes,
+            loadingTask,
             viewer
         });
 
@@ -404,6 +419,7 @@ function initPdfMerger() {
                 fileName: file.name,
                 sourcePage,
                 sourceIndex: sourcePage - 1,
+                thumbnailState: "pending",
                 rotation: 0
             });
         }
@@ -486,6 +502,10 @@ function initPdfMerger() {
         }
         invalidatePreparedPdf();
         item.rotation = normalizeRotation(item.rotation + amount);
+        // A user rotation permits one fresh attempt, including after a failure.
+        if (item.thumbnailState !== "rendering") {
+            item.thumbnailState = "pending";
+        }
         const card = pagesList.querySelector('[data-page-id="' + CSS.escape(pageId) + '"]');
         const canvas = card && card.querySelector("canvas");
         if (canvas) {
@@ -501,7 +521,7 @@ function initPdfMerger() {
             invalidatePreparedPdf();
         }
         documents.forEach(function (record) {
-            Promise.resolve(record.viewer.destroy()).catch(function () {
+            record.loadingTask.destroy().catch(function () {
                 // Clearing the UI is sufficient even if the worker is already gone.
             });
         });

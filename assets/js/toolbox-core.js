@@ -71,10 +71,12 @@
         }
 
         const candidate = 11 - (sum % 11);
-        if (candidate === 10) {
+        // Slovenian VAT differs from EMŠO: 10 maps to zero; 11 is excluded.
+        // Independent reference: https://github.com/arthurdejong/python-stdnum/blob/master/stdnum/si/ddv.py
+        if (candidate === 11) {
             return null;
         }
-        return candidate === 11 ? 0 : candidate;
+        return candidate === 10 ? 0 : candidate;
     }
 
     function normalizeVatNumber(value) {
@@ -910,26 +912,57 @@
         return new Uint8Array(bytes);
     }
 
-    function sortJsonValue(value) {
-        if (Array.isArray(value)) {
-            return value.map(sortJsonValue);
-        }
-        if (value && typeof value === "object") {
-            return Object.fromEntries(
-                Object.keys(value)
-                    .sort(function (left, right) { return left < right ? -1 : (left > right ? 1 : 0); })
-                    .map(function (key) { return [key, sortJsonValue(value[key])]; })
-            );
-        }
-        return value;
-    }
-
     function formatJson(input, options) {
         const settings = options || {};
-        const parsed = JSON.parse(String(input));
-        const value = settings.sortKeys ? sortJsonValue(parsed) : parsed;
+        const source = String(input);
+        // Let the native parser validate syntax, but never serialize its rounded
+        // Numbers or collapsed duplicate keys. Only whitespace and key order change.
+        JSON.parse(source);
+        const tokens = source.match(/"(?:[^"\\]|\\[\s\S])*"|[^\s{}\[\],:]+|[{}\[\],:]/g);
         const indent = settings.minify ? 0 : (settings.indent === "\t" ? "\t" : (settings.indent || 2));
-        return JSON.stringify(value, null, indent);
+        const gap = typeof indent === "string" ? indent.slice(0, 10)
+            : " ".repeat(Math.max(0, Math.min(10, Math.trunc(Number(indent)) || 0)));
+        let position = 0;
+
+        function formatValue(depth) {
+            const token = tokens[position++];
+            if (token !== "{" && token !== "[") {
+                return token;
+            }
+            const isObject = token === "{";
+            const close = isObject ? "}" : "]";
+            const entries = [];
+            while (tokens[position] !== close) {
+                let key = "";
+                let prefix = "";
+                if (isObject) {
+                    const keyToken = tokens[position++];
+                    key = JSON.parse(keyToken);
+                    position += 1; // Colon (syntax was already validated).
+                    prefix = keyToken + (gap ? ": " : ":");
+                }
+                entries.push({ key, text: prefix + formatValue(depth + 1) });
+                if (tokens[position] === ",") {
+                    position += 1;
+                }
+            }
+            position += 1;
+            if (isObject && settings.sortKeys) {
+                entries.sort(function (left, right) {
+                    return left.key < right.key ? -1 : (left.key > right.key ? 1 : 0);
+                });
+            }
+            if (!entries.length) {
+                return token + close;
+            }
+            const padding = gap.repeat(depth + 1);
+            const contents = entries.map(function (entry) { return entry.text; });
+            return gap
+                ? token + "\n" + padding + contents.join(",\n" + padding) + "\n" + gap.repeat(depth) + close
+                : token + contents.join(",") + close;
+        }
+
+        return formatValue(0);
     }
 
     function formatBytes(bytes) {
