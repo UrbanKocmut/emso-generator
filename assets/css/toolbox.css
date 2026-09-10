@@ -2729,6 +2729,7 @@ body:has(.main-content.is-swipe-settling) .mobile-info-hint {
 }
 /* New explanatory content only; original workspace rules remain unchanged. */
 .tool-help .reference-copy { min-width: 0; overflow-wrap: anywhere; }
+.tool-help .reference-copy:nth-child(odd) { border-left: 0; }
 .tool-help h3 { font-size: 16px; margin: 0 0 12px; }
 .tool-help p { margin: 0 0 18px; }
 .agent-documentation pre { white-space: pre-wrap; overflow-wrap: anywhere; }

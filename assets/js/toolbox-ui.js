@@ -627,7 +627,7 @@
     files,
     artifacts,
     navigate,
-    appVersion: "5a941f2d49afdf2ff2bceec46596664ba7b7e17ec49daf71c6c4873c82fa7b3b",
+    appVersion: "caeeb3e000a6d0f26d32177c0e35523232a2b95c9e91f796df225c44937dec24",
     onInvalidate: (tool) => showArtifact(tool, null),
     pdf: async (args, check) => {
       if (!await window.DelavnicaPdfLoader.load()) throw new Error("PDF engines could not be loaded.");
@@ -642,7 +642,7 @@
       status.textContent = localizedError(error);
       status.classList.add("is-error");
     } });
-    window.DelavnicaAgent = Object.freeze({ apiVersion: API_VERSION, appVersion: "5a941f2d49afdf2ff2bceec46596664ba7b7e17ec49daf71c6c4873c82fa7b3b", execute: (name, input, { signal } = {}) => api.execute(name, input, { signal }) });
+    window.DelavnicaAgent = Object.freeze({ apiVersion: API_VERSION, appVersion: "caeeb3e000a6d0f26d32177c0e35523232a2b95c9e91f796df225c44937dec24", execute: (name, input, { signal } = {}) => api.execute(name, input, { signal }) });
     const lifetime = new AbortController();
     window.addEventListener("pagehide", (event) => {
       if (!event.persisted) {

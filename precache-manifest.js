@@ -1,18 +1,18 @@
 "use strict";
 
 self.DELAVNICA_PRECACHE = Object.freeze({
-    "version": "9aa30249c51bb7a4236249e1e988da18196df7fc6900a0f512533a390bae2aac",
-    "totalBytes": 9970151,
+    "version": "36afbf42895c75cd262220e2882c9070de2edbc7553e0205919734e311927699",
+    "totalBytes": 9970275,
     "entries": [
         {
             "url": "./agents/index.html",
-            "revision": "670f15352dea0298943bc7babab0d8e6cb9bd6c21d07d9540e83e8217e6364f4",
+            "revision": "7673fb74717b71bca1b8c6e62c3c516eb209585061065f571629ad0bd72f0e1e",
             "size": 18707
         },
         {
             "url": "./assets/css/toolbox.css",
-            "revision": "8f1b16af0fcd7ef837997da09e82974bf69a3b3a2ef784c01ea902ee1593ab9b",
-            "size": 54804
+            "revision": "fb1099cc2970f9fa4887c664747aaba817e50c8d59ff2b730a51a3fef12b4f77",
+            "size": 54866
         },
         {
             "url": "./assets/icons/apple-touch-icon.png",
@@ -96,7 +96,7 @@ self.DELAVNICA_PRECACHE = Object.freeze({
         },
         {
             "url": "./assets/js/toolbox-ui.js",
-            "revision": "32c2ae6deecd2b3fa74b0dac950607e3c22dfb9963e7b330028cf75f8d9988c3",
+            "revision": "300bf6f48932095068b1413ba2fd317d2c5cc5aafd993111c9963a2af3682950",
             "size": 82675
         },
         {
@@ -131,13 +131,13 @@ self.DELAVNICA_PRECACHE = Object.freeze({
         },
         {
             "url": "./assets/v2/toolbox-ui.js",
-            "revision": "32c2ae6deecd2b3fa74b0dac950607e3c22dfb9963e7b330028cf75f8d9988c3",
+            "revision": "300bf6f48932095068b1413ba2fd317d2c5cc5aafd993111c9963a2af3682950",
             "size": 82675
         },
         {
             "url": "./assets/v2/toolbox.css",
-            "revision": "8f1b16af0fcd7ef837997da09e82974bf69a3b3a2ef784c01ea902ee1593ab9b",
-            "size": 54804
+            "revision": "fb1099cc2970f9fa4887c664747aaba817e50c8d59ff2b730a51a3fef12b4f77",
+            "size": 54866
         },
         {
             "url": "./assets/vendor/README.md",
@@ -1246,7 +1246,7 @@ self.DELAVNICA_PRECACHE = Object.freeze({
         },
         {
             "url": "./tools.json",
-            "revision": "c415047752a0ed6689b0cf2a2046e1c3a490a8d130f84d210716ded4589d9214",
+            "revision": "e0ee9ca4ea1e4ed48df13b5030ec6947eccc8b8f983f8fb459a2ec69024efe98",
             "size": 12221
         },
         {
