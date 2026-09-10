@@ -1,0 +1,12 @@
+        <section class="tool-panel" data-panel="xml" aria-labelledby="xml-title" hidden>
+            <div class="tool-header"><div><p class="eyebrow">07 / UREJANJE PODATKOV</p><h1 id="xml-title">Formatiranje XML</h1></div><p>Prilepite XML in uredite zamike. Izvirne oznake, komentarji in mešana vsebina ostanejo ohranjeni.</p></div>
+            <div class="json-toolbar control-panel compact-panel">
+                <label class="field compact-field"><span>Zamik</span><select id="xml-indent"><option value="2">2 presledka</option><option value="4">4 presledki</option><option value="tab">Tabulator</option></select></label>
+                <div class="toolbar-actions"><button id="xml-format" class="button primary" type="button">OBLIKUJ</button><button class="button" type="button" data-copy-target="xml-output">KOPIRAJ IZPIS</button><button id="xml-clear" class="button" type="button">POČISTI</button></div>
+            </div>
+            <div class="decoded-grid json-grid">
+                <div class="output-panel"><div class="panel-label"><label for="xml-input">VNOS XML</label></div><textarea id="xml-input" class="code-input json-editor" spellcheck="false" autocomplete="off" placeholder="&lt;primer&gt;&lt;element/&gt;&lt;/primer&gt;"></textarea></div>
+                <div class="output-panel"><div class="panel-label"><label for="xml-output">OBLIKOVAN IZPIS</label></div><textarea id="xml-output" class="code-output json-editor" readonly spellcheck="false"></textarea></div>
+            </div>
+            <p id="xml-status" class="inline-status prominent-status" role="status" aria-live="polite">Prilepite XML za oblikovanje.</p>
+        </section>

@@ -32,21 +32,39 @@
             id: "pdf", path: "pdf/", title: "Združevanje PDF-jev", name: "PDF", subtitle: "Združevanje",
             category: "DOKUMENTI", symbol: "PDF", cardTitle: ["ZDRUŽEVANJE", "PDF-JEV"], inverted: true,
             description: "Združite dokumente, uredite vrstni red strani, jih zavrtite ali izbrišite in prenesite nov PDF."
+        },
+        {
+            id: "xml", path: "xml/", title: "Formatiranje XML", name: "XML", subtitle: "Formatiranje",
+            category: "PODATKI", symbol: "</>", cardTitle: ["FORMATIRANJE", "XML"],
+            description: "Oblikujte XML z ohranjenimi oznakami, komentarji in mešano vsebino."
+        },
+        {
+            id: "jwt-generator", path: "jwt-generator/", title: "Generator JWT", name: "JWT+", subtitle: "Generator",
+            category: "ŽETONI", symbol: "HS", cardTitle: ["GENERATOR", "JWT"],
+            description: "Ustvarite žeton z zahtevki in podpisom HMAC prek Web Crypto."
+        },
+        {
+            id: "image-resizer", path: "image-resizer/", title: "Sprememba velikosti slik", name: "SLIKE", subtitle: "Sprememba velikosti",
+            category: "SLIKE", symbol: "↔", cardTitle: ["VELIKOST", "SLIK"], inverted: true,
+            description: "Prilagodite več slik JPEG, PNG ali WebP ter jih prenesite posamezno ali kot ZIP."
         }
     ];
 
     tools.overview = {
         id: "overview", path: "", title: "Delavnica",
-        description: "Hitra in zasebna spletna delavnica za slovenske testne podatke, PDF-je, preverjanje JWT, formatiranje JSON in pretvorbo Sparkasse CSV."
+        description: "Zasebna spletna orodja za testne podatke, PDF, pregled in ustvarjanje JWT, oblikovanje JSON in XML, Sparkasse CSV ter velikost slik."
     };
     const pageTitles = {
-        overview: "EMŠO, davčne številke, JSON, JWT, CSV in PDF — Delavnica",
+        overview: "EMŠO, JSON, XML, JWT, CSV, PDF in slike — Delavnica",
         emso: "EMŠO generator za testne podatke — Delavnica",
         vat: "Generator slovenskih davčnih številk — Delavnica",
         jwt: "JWT: razčlenitev, zahtevki in preverjanje podpisa — Delavnica",
         json: "Oblikovanje JSON brez izgube številskih zapisov — Delavnica",
         qif: "Pretvorba Sparkasse CSV v QIF — Delavnica",
-        pdf: "Združevanje, vrstni red in vrtenje strani PDF — Delavnica"
+        pdf: "Združevanje, vrstni red in vrtenje strani PDF — Delavnica",
+        xml: "Oblikovanje XML z ohranjeno vsebino — Delavnica",
+        'jwt-generator': "Generator podpisanih JWT s HMAC — Delavnica",
+        'image-resizer': "Sprememba velikosti slik in prenos ZIP — Delavnica"
     };
     [tools.overview].concat(tools).forEach(function (page) {
         page.pageTitle = pageTitles[page.id];

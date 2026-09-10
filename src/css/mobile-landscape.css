@@ -1,7 +1,7 @@
 @media (max-width: 640px) {
     body {
-        --mobile-info-width: calc(100vw / var(--tool-route-count, 7));
-        --mobile-nav-height: calc((100vw / var(--tool-route-count, 7)) + var(--line-width));
+        --mobile-info-width: calc(100vw / 7);
+        --mobile-nav-height: calc((100vw / 7) + var(--line-width));
     }
 
     .masthead {
@@ -14,8 +14,8 @@
     }
 
     .tool-nav {
-        grid-template-columns: repeat(var(--tool-route-count, 7), minmax(0, 1fr));
-        grid-template-rows: calc(100vw / var(--tool-route-count, 7));
+        grid-template-columns: repeat(var(--tool-route-count, 7), calc(100vw / 7));
+        grid-template-rows: calc(100vw / 7);
     }
 
     .tool-nav-link {
@@ -442,7 +442,7 @@
 
 @media (orientation: landscape) and (max-height: 500px) and (pointer: coarse) {
     body {
-        --mobile-info-width: calc(100dvh / var(--tool-route-count, 7));
+        --mobile-info-width: calc(100dvh / 7);
         overflow-x: clip;
     }
 
@@ -464,8 +464,8 @@
         min-height: 100dvh;
         margin: 0;
         border: 0;
-        grid-template-columns: calc((100vh / var(--tool-route-count, 7)) + var(--line-width)) minmax(0, 1fr);
-        grid-template-columns: calc((100dvh / var(--tool-route-count, 7)) + var(--line-width)) minmax(0, 1fr);
+        grid-template-columns: calc((100vh / 7) + var(--line-width)) minmax(0, 1fr);
+        grid-template-columns: calc((100dvh / 7) + var(--line-width)) minmax(0, 1fr);
     }
 
     .sidebar {
@@ -476,7 +476,9 @@
         width: 100%;
         height: 100vh;
         height: 100dvh;
-        overflow: hidden;
+        overflow-x: hidden;
+        overflow-y: auto;
+        scrollbar-width: none;
         border-top: 0;
         border-right: var(--line);
         border-bottom: 0;
@@ -493,7 +495,7 @@
         height: 100%;
         min-width: 0;
         grid-template-columns: 1fr;
-        grid-template-rows: repeat(var(--tool-route-count, 7), minmax(0, 1fr));
+        grid-template-rows: repeat(var(--tool-route-count, 7), calc(100dvh / 7));
     }
 
     .tool-nav-link {
@@ -597,7 +599,7 @@
         position: fixed;
         z-index: 31;
         top: calc(var(--safe-top) + 50%);
-        left: calc((100dvh / var(--tool-route-count, 7)) + var(--line-width));
+        left: calc((100dvh / 7) + var(--line-width));
         display: grid;
         width: 16px;
         height: 34px;
@@ -665,7 +667,7 @@
         top: var(--safe-top);
         right: auto;
         bottom: var(--safe-bottom);
-        left: calc((100dvh / var(--tool-route-count, 7)) + var(--line-width));
+        left: calc((100dvh / 7) + var(--line-width));
         display: block;
         width: var(--mobile-info-width);
         border-right: var(--line);

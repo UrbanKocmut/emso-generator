@@ -1,13 +1,13 @@
 {
-  "apiVersion": "1.0.0",
-  "appVersion": "caeeb3e000a6d0f26d32177c0e35523232a2b95c9e91f796df225c44937dec24",
+  "apiVersion": "1.1.0",
+  "appVersion": "2d292fa7f0932e360da5d63a62b8dd0809b7fb6121a70481a3a5f9148e7cb81c",
   "documentation": "https://delavnica.kocmut.com/agents/",
   "pages": [
     {
       "id": "overview",
       "url": "https://delavnica.kocmut.com/",
-      "title": "EMŠO, davčne številke, JSON, JWT, CSV in PDF — Delavnica",
-      "description": "Hitra in zasebna spletna delavnica za slovenske testne podatke, PDF-je, preverjanje JWT, formatiranje JSON in pretvorbo Sparkasse CSV."
+      "title": "EMŠO, JSON, XML, JWT, CSV, PDF in slike — Delavnica",
+      "description": "Zasebna spletna orodja za testne podatke, PDF, pregled in ustvarjanje JWT, oblikovanje JSON in XML, Sparkasse CSV ter velikost slik."
     },
     {
       "id": "emso",
@@ -44,6 +44,24 @@
       "url": "https://delavnica.kocmut.com/pdf/",
       "title": "Združevanje, vrstni red in vrtenje strani PDF — Delavnica",
       "description": "Združite dokumente, uredite vrstni red strani, jih zavrtite ali izbrišite in prenesite nov PDF."
+    },
+    {
+      "id": "xml",
+      "url": "https://delavnica.kocmut.com/xml/",
+      "title": "Oblikovanje XML z ohranjeno vsebino — Delavnica",
+      "description": "Oblikujte XML z ohranjenimi oznakami, komentarji in mešano vsebino."
+    },
+    {
+      "id": "jwt-generator",
+      "url": "https://delavnica.kocmut.com/jwt-generator/",
+      "title": "Generator podpisanih JWT s HMAC — Delavnica",
+      "description": "Ustvarite žeton z zahtevki in podpisom HMAC prek Web Crypto."
+    },
+    {
+      "id": "image-resizer",
+      "url": "https://delavnica.kocmut.com/image-resizer/",
+      "title": "Sprememba velikosti slik in prenos ZIP — Delavnica",
+      "description": "Prilagodite več slik JPEG, PNG ali WebP ter jih prenesite posamezno ali kot ZIP."
     }
   ],
   "limits": {
@@ -61,6 +79,9 @@
     "INVALID_JWT",
     "INVALID_CSV",
     "INVALID_PDF",
+    "INVALID_XML",
+    "INVALID_IMAGE",
+    "UNSUPPORTED_FORMAT",
     "FILE_NOT_FOUND",
     "ARTIFACT_NOT_FOUND",
     "LIMIT_EXCEEDED",
@@ -375,8 +396,187 @@
       }
     },
     {
+      "name": "format_xml",
+      "tool": "xml",
+      "description": "Validate and format original XML tokens. Preserves mixed-content subtrees and xml:space=\"preserve\"; rejects DTD/entity declarations. Returns text without importing or inserting XML into the page.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "maxLength": 16777216
+          },
+          "indent": {
+            "enum": [
+              2,
+              4,
+              "tab"
+            ],
+            "default": 2
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "text": "<root><item id=\"1\"/></root>",
+        "indent": 2
+      }
+    },
+    {
+      "name": "generate_jwt",
+      "tool": "jwt-generator",
+      "description": "Sign a JWT locally using Web Crypto HMAC. Requires at least 32/48/64 decoded secret bytes for HS256/384/512. Guided timestamps use local YYYY-MM-DDTHH:mm[:ss] and convert to Unix seconds. Blank claims are omitted. Custom JSON must be an object without iss/sub/aud/iat/nbf/exp. Returns token, header and payload; keeps inputs only in memory.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "algorithm": {
+            "type": "string",
+            "enum": [
+              "HS256",
+              "HS384",
+              "HS512"
+            ],
+            "default": "HS256"
+          },
+          "secret": {
+            "type": "string",
+            "maxLength": 16777216
+          },
+          "secretEncoding": {
+            "type": "string",
+            "enum": [
+              "text",
+              "base64"
+            ],
+            "default": "text"
+          },
+          "issuer": {
+            "type": "string",
+            "maxLength": 16777216,
+            "default": ""
+          },
+          "subject": {
+            "type": "string",
+            "maxLength": 16777216,
+            "default": ""
+          },
+          "audience": {
+            "type": "string",
+            "maxLength": 16777216,
+            "default": ""
+          },
+          "issuedAt": {
+            "type": "string",
+            "maxLength": 19,
+            "default": ""
+          },
+          "notBefore": {
+            "type": "string",
+            "maxLength": 19,
+            "default": ""
+          },
+          "expiresAt": {
+            "type": "string",
+            "maxLength": 19,
+            "default": ""
+          },
+          "customClaims": {
+            "type": "string",
+            "maxLength": 16777216,
+            "default": "{}"
+          }
+        },
+        "required": [
+          "secret"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "secret": "example-only-32-byte-secret-12345",
+        "subject": "demo",
+        "customClaims": "{\"role\":\"test\"}"
+      }
+    },
+    {
+      "name": "resize_images",
+      "tool": "image-resizer",
+      "description": "Resize up to 50 selected JPEG/PNG/WebP images sequentially with shared settings. Oriented decoding; 40 MP input, 16 MP output and 8192 pixels per output side. Lossy quality is 90%, JPEG background white. Outputs are still images without original metadata. Returns per-image success/error and local artifacts, plus a ZIP of successes when possible. Never downloads automatically.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "fileIds": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 50,
+            "items": {
+              "type": "string",
+              "maxLength": 80,
+              "minLength": 1
+            }
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "fit",
+              "percentage"
+            ],
+            "default": "fit"
+          },
+          "maxWidth": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 8192,
+            "default": 1920
+          },
+          "maxHeight": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 8192,
+            "default": 1080
+          },
+          "enlarge": {
+            "type": "boolean",
+            "default": false
+          },
+          "percentage": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 400,
+            "default": 100
+          },
+          "format": {
+            "type": "string",
+            "enum": [
+              "source",
+              "image/jpeg",
+              "image/png",
+              "image/webp"
+            ],
+            "default": "source"
+          }
+        },
+        "required": [
+          "fileIds"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "fileIds": [
+          "file-1"
+        ],
+        "mode": "fit",
+        "maxWidth": 1920,
+        "maxHeight": 1080,
+        "enlarge": false,
+        "format": "source"
+      }
+    },
+    {
       "name": "list_selected_files",
-      "description": "List metadata and session-local file IDs from native CSV/PDF selection. No file contents, local paths, remote fetching or file-picker access.",
+      "description": "List metadata and session-local file IDs from native CSV/PDF/image selection. No file contents, local paths, remote fetching or file-picker access.",
       "readOnly": true,
       "inputSchema": {
         "type": "object",

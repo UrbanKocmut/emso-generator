@@ -13,7 +13,10 @@ export function initKeyboardShortcuts() {
             jwt: function () { byId("jwt-parse").click(); },
             json: function () { byId("json-format").click(); },
             qif: function () { byId("qif-form").requestSubmit(); },
-            pdf: function () { byId("pdf-download").click(); }
+            pdf: function () { byId("pdf-download").click(); },
+            xml: function () { byId("xml-format").click(); },
+            'jwt-generator': function () { byId("jwt-generator-form").requestSubmit(); },
+            'image-resizer': function () { byId("image-resizer-form").requestSubmit(); }
         }[route];
 
         if (action) {

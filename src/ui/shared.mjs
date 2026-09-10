@@ -6,6 +6,7 @@ export function byId(id) {
 }
 
 export function localizedError(error) {
+    if (error?.localized) return error.message;
     const operationErrors = {
         INVALID_ARGUMENT: "Parametri niso veljavni. Preverite obvezna polja, dovoljene možnosti in obsege v navodilih za agente.",
         FILE_NOT_FOUND: "Izbrana datoteka ni več na voljo v tej delovni površini. Izberite jo znova.",

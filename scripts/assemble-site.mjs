@@ -4,7 +4,7 @@ import { help } from '../src/html/help.mjs';
 import { structuredData, PUBLIC_ORIGIN } from '../src/metadata.mjs';
 import { OPERATIONS, API_VERSION, LIMITS, ERROR_CODES } from '../src/operations/catalog.mjs';
 
-export const cssSources = ['shared', 'desktop-tablet', 'mobile-landscape', 'standalone', 'mobile-standalone', 'accessibility-print', 'help'];
+export const cssSources = ['shared', 'desktop-tablet', 'mobile-landscape', 'standalone', 'mobile-standalone', 'accessibility-print', 'help', 'new-tools'];
 const read = async path => (await readFile(new URL('../' + path, import.meta.url), 'utf8')).replaceAll('\r\n', '\n');
 export const escapeHtml = value => String(value).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 
@@ -30,7 +30,7 @@ export async function assembleSite() {
         }
         return panel.replace(/        <\/section>\s*$/, explanation + '\n        </section>\n');
     }));
-    let html = (await read('src/html/shell.html')).replace('{{PANELS}}', panels.join('\n').trimEnd());
+    let html = (await read('src/html/shell.html')).replace('{{PANELS}}', panels.join('\n').trimEnd()).replace('{{TOOL_COUNTS}}', `--tool-count:${tools.length};--tool-route-count:${tools.length + 1}`);
     html = html.replace('</nav>', navigation() + '</nav>')
         .replace('<span id="tool-count"></span>', `<span id="tool-count">${String(tools.length).padStart(2, '0')}</span>`)
         .replace('<div class="overview-grid" aria-label="Razpoložljiva orodja"></div>', `<div class="overview-grid" aria-label="Razpoložljiva orodja">${cards()}</div>`);
@@ -52,7 +52,7 @@ export async function assembleSite() {
         outputs.set(page.path + 'index.html', entry);
     }
     const operationDocs = OPERATIONS.map(operation => `<section id="${operation.name}"><h2><code>${operation.name}</code></h2><p>${escapeHtml(operation.description)}</p><p>${operation.tool ? `<a href="../${tools.find(tool => tool.id === operation.tool).path}">Open workspace</a> · ` : ''}${operation.readOnly ? 'Reads local session state.' : 'Updates the visible workspace.'}</p><h3>Example input</h3><pre>${escapeHtml(JSON.stringify(operation.example, null, 2))}</pre><details><summary>Input schema and defaults</summary><pre>${escapeHtml(JSON.stringify(operation.inputSchema, null, 2))}</pre></details></section>`).join('\n');
-    outputs.set('agents/index.html', (await read('src/html/agents.html')).replace('{{OPERATIONS}}', operationDocs).replace('{{ERROR_CODES}}', ERROR_CODES.map(code => `<code>${code}</code>`).join(', ')));
+    outputs.set('agents/index.html', (await read('src/html/agents.html')).replace('{{API_VERSION}}', API_VERSION).replace('{{OPERATIONS}}', operationDocs).replace('{{ERROR_CODES}}', ERROR_CODES.map(code => `<code>${code}</code>`).join(', ')));
     outputs.set('tools.json', JSON.stringify({ apiVersion: API_VERSION, appVersion: '__DELAVNICA_APP_VERSION__', documentation: PUBLIC_ORIGIN + 'agents/', pages: [tools.overview, ...tools].map(page => ({ id: page.id, url: PUBLIC_ORIGIN + page.path, title: page.pageTitle, description: page.description })), limits: LIMITS, errorCodes: ERROR_CODES, operations: OPERATIONS }, null, 2) + '\n');
     outputs.set('robots.txt', 'User-agent: *\nAllow: /\n\nSitemap: ' + PUBLIC_ORIGIN + 'sitemap.xml\n');
     outputs.set('sitemap.xml', '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + ['', ...tools.map(tool => tool.path), 'agents/', 'zasebnost.html'].map(path => '  <url><loc>' + PUBLIC_ORIGIN + path + '</loc></url>').join('\n') + '\n</urlset>\n');

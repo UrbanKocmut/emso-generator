@@ -34,6 +34,7 @@ export function navigate(route, { replace = false, resetScroll = true } = {}) {
 }
 export function initToolNavigation() {
     document.documentElement.style.setProperty("--tool-route-count", String(ROUTE_SEQUENCE.length));
+    document.documentElement.style.setProperty("--tool-count", String(tools.length));
     document.querySelectorAll("[data-route]").forEach(link => { link.href = routeUrl(link.dataset.route); });
 }
 
@@ -64,6 +65,9 @@ export function renderRoute() {
     if (activeLink && sidebar && sidebar.scrollWidth > sidebar.clientWidth) {
         sidebar.scrollLeft = activeLink.offsetLeft - (sidebar.clientWidth - activeLink.offsetWidth) / 2;
     }
+    if (activeLink && sidebar && sidebar.scrollHeight > sidebar.clientHeight) {
+        sidebar.scrollTop = activeLink.offsetTop - (sidebar.clientHeight - activeLink.offsetHeight) / 2;
+    }
     const changed = renderedRoute !== route;
     renderedRoute = route;
     const metadata = pages.find(page => page.id === route);
@@ -91,5 +95,6 @@ export function initRouter() {
     });
     window.addEventListener("popstate", fromLocation);
     window.addEventListener("hashchange", fromLocation);
+    window.addEventListener("resize", renderRoute);
     fromLocation();
 }

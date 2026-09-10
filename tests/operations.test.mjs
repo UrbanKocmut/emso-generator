@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import core from '../assets/js/toolbox-core.js';
-import { OPERATIONS } from '../src/operations/catalog.mjs';
+import { OPERATIONS, API_VERSION } from '../src/operations/catalog.mjs';
 import { createAdapter } from '../src/operations/adapter.mjs';
 import { createFileStore, createArtifactStore } from '../src/operations/session.mjs';
 
@@ -18,7 +18,7 @@ test('all operations return versioned envelopes and preserve text/validation sco
     const h = harness();
     for (const name of ['generate_emso', 'generate_si_tax_numbers']) {
         const result = await h.api.execute(name, { count: 3 });
-        assert.equal(result.success, true); assert.equal(result.apiVersion, '1.0.0'); assert.equal(result.appVersion, 'test-version');
+        assert.equal(result.success, true); assert.equal(result.apiVersion, API_VERSION); assert.equal(result.appVersion, 'test-version');
         assert.equal(result.result.identifiers.length, 3); assert.ok(result.result.identifiers.every(value => typeof value === 'string'));
     }
     const text = '{"n":9007199254740993,"n":-0,"a":1.2300}';

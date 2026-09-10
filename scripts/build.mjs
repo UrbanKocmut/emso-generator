@@ -10,8 +10,9 @@ const check = process.argv.includes('--check');
 // That worker ignores query strings, so retain original URLs and also emit
 // migration paths for assets whose old versions cannot run the new HTML.
 const migrationAssets = new Map([
-    ['assets/css/toolbox.css', 'assets/v2/toolbox.css'],
-    ...['tool-registry', 'pdf-loader', 'toolbox-ui', 'pwa', 'pdf-merger'].map(name => ['assets/js/' + name + '.js', 'assets/v2/' + name + '.js'])
+    ['assets/css/toolbox.css', 'assets/v3/toolbox.css'],
+    ...['tool-registry', 'toolbox-ui'].map(name => ['assets/js/' + name + '.js', 'assets/v3/' + name + '.js']),
+    ...['pdf-loader', 'pwa', 'pdf-merger'].map(name => ['assets/js/' + name + '.js', 'assets/v2/' + name + '.js'])
 ]);
 async function contentVersion(outputs) {
     const hash = createHash('sha256');
@@ -43,11 +44,15 @@ async function bundle(entry, minify) {
 
 async function main() {
     if (esbuildVersion !== '0.28.1') throw new Error('Expected esbuild 0.28.1.');
+    const fflate = JSON.parse(await fs.readFile(path.join(projectRoot, 'node_modules/fflate/package.json'), 'utf8'));
+    if (fflate.version !== '0.8.3') throw new Error('Expected fflate 0.8.3.');
     const outputs = await assembleSite();
+    outputs.set('assets/vendor/fflate/LICENSE', (await fs.readFile(path.join(projectRoot, 'node_modules/fflate/LICENSE'), 'utf8')).replaceAll('\r\n', '\n'));
     outputs.set('assets/js/pdf-merger.js', await bundle('assets/js/pdf-merger.mjs', true));
     outputs.set('assets/js/toolbox-ui.js', await bundle('src/ui/bootstrap.mjs', false));
     for (const [original, alias] of migrationAssets) {
         outputs.set(alias, outputs.get(original) ?? (await fs.readFile(path.join(projectRoot, original), 'utf8')).replaceAll('\r\n', '\n'));
+        if (alias.startsWith('assets/v3/')) outputs.set(alias.replace('assets/v3/', 'assets/v2/'), outputs.get(alias));
     }
     for (const [name, content] of outputs) if (name.endsWith('.html')) {
         let html = content;

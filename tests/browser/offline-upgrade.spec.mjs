@@ -1,3 +1,4 @@
+import tools from '../../assets/js/tool-registry.js';
 import { test, expect } from '@playwright/test';
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
@@ -75,7 +76,7 @@ test('a new deep link works under the previous worker without interrupting an ol
         server.current();
         const fresh = await context.newPage(); await fresh.goto(server.origin + '/json/');
         await expect(fresh.locator('[data-panel]:visible')).toHaveAttribute('data-panel', 'json');
-        await expect(fresh.locator('.tool-nav a')).toHaveCount(7);
+        await expect(fresh.locator('.tool-nav a')).toHaveCount(tools.length + 1);
         const result = await fresh.evaluate(() => window.DelavnicaAgent.execute('format_json', {text:'{"n":9007199254740993}'}));
         expect(result.success).toBe(true);
         await expect(fresh.locator('#json-output')).toHaveValue(/9007199254740993/);

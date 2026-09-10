@@ -84,7 +84,7 @@ async function run() {
     assert.match(uiScript, /delavnica\.qif\.settings\.v1/);
     assert.match(uiScript, /localStorage\.setItem/);
     assert.match(uiScript, /localStorage\.removeItem/);
-    assert.deepEqual(tools.map((tool) => tool.id), ["emso", "vat", "jwt", "json", "qif", "pdf"]);
+    assert.deepEqual(tools.slice(0, 6).map((tool) => tool.id), ["emso", "vat", "jwt", "json", "qif", "pdf"]);
     assert.equal(new Set(tools.map((tool) => tool.id)).size, tools.length);
     for (const tool of tools) {
         assert.ok(indexHtml.includes('data-panel="' + tool.id + '"'), "Every registered tool needs a panel");
@@ -107,12 +107,12 @@ async function run() {
     assert.match(uiScript, /dateInput\.value = ""/);
     assert.doesNotMatch(uiScript, /closest\("a, button, input, select, textarea/);
     assert.match(toolboxCss, /\.sidebar\s*\{[\s\S]*?position:\s*sticky;[\s\S]*?top:\s*0;[\s\S]*?border-bottom:\s*var\(--line\);/);
-    assert.match(toolboxCss, /@media \(max-width: 640px\)[\s\S]*?\.tool-nav\s*\{[\s\S]*?grid-template-columns:\s*repeat\(var\(--tool-route-count, 7\), minmax\(0, 1fr\)\);/);
+    assert.match(toolboxCss, /@media \(max-width: 640px\)[\s\S]*?\.tool-nav\s*\{[\s\S]*?grid-template-columns:\s*repeat\(var\(--tool-route-count, 7\), calc\(100vw \/ 7\)\);/);
     assert.match(toolboxCss, /\.mobile-home-link\s*\{[\s\S]*?display:\s*flex;[\s\S]*?aspect-ratio:\s*auto;/);
     assert.match(toolboxCss, /@media \(orientation: landscape\) and \(max-height: 500px\) and \(pointer: coarse\)/);
     assert.match(toolboxCss, /@media \(orientation: landscape\) and \(max-width: 640px\),[\s\S]*?\.mobile-info-hint,[\s\S]*?\.mobile-info-rail\s*\{\s*display:\s*none;/);
-    assert.match(toolboxCss, /grid-template-rows:\s*calc\(100vw \/ var\(--tool-route-count, 7\)\);/);
-    assert.match(toolboxCss, /grid-template-columns:\s*calc\(\(100dvh \/ var\(--tool-route-count, 7\)\) \+ var\(--line-width\)\) minmax\(0, 1fr\);/);
+    assert.match(toolboxCss, /grid-template-rows:\s*calc\(100vw \/ 7\);/);
+    assert.match(toolboxCss, /grid-template-columns:\s*calc\(\(100dvh \/ 7\) \+ var\(--line-width\)\) minmax\(0, 1fr\);/);
     assert.match(toolboxCss, /\.site-footer\s*\{[\s\S]*?flex-wrap:\s*nowrap;[\s\S]*?font-size:\s*clamp\(7px, 2vw, 9px\);/);
     assert.match(toolboxCss, /\.toast\s*\{[\s\S]*?border:\s*var\(--line\);[\s\S]*?color:\s*var\(--ink\);[\s\S]*?background:\s*var\(--white\);/);
     assert.match(toolboxCss, /@media \(hover: hover\) and \(pointer: fine\)/);

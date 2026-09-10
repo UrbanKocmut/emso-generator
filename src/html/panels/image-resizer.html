@@ -1,0 +1,17 @@
+        <section class="tool-panel" data-panel="image-resizer" aria-labelledby="image-resizer-title" hidden>
+            <div class="tool-header"><div><p class="eyebrow">09 / OBDELAVA SLIK</p><h1 id="image-resizer-title">Sprememba velikosti slik</h1></div><p>Prilagodite več slik z enakimi nastavitvami ter jih prenesite posamezno ali kot ZIP. Vse poteka lokalno.</p></div>
+            <div id="image-resizer-drop" class="control-panel image-drop"><label class="field"><span>Izberite ali sem povlecite slike JPEG, PNG in WebP</span><input id="image-resizer-file" type="file" accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp" multiple></label><p>Največ 50 slik, 64 MiB na datoteko in 128 MiB izbranih datotek v zavihku.</p></div>
+            <form id="image-resizer-form" class="control-panel">
+                <div class="field-grid">
+                    <label class="field"><span>Način</span><select id="image-resizer-mode"><option value="fit">Prilagodi največjim meram</option><option value="percentage">Spremeni za odstotek</option></select></label>
+                    <label class="field"><span>Izhodni format</span><select id="image-resizer-format"><option value="source">Format izvirnika</option><option value="image/jpeg">JPEG</option><option value="image/png">PNG</option><option value="image/webp">WebP</option></select></label>
+                </div>
+                <div id="image-resizer-fit" class="field-grid"><label class="field"><span>Največja širina (px)</span><input id="image-resizer-maxWidth" type="number" min="1" max="8192" value="1920" required></label><label class="field"><span>Največja višina (px)</span><input id="image-resizer-maxHeight" type="number" min="1" max="8192" value="1080" required></label><label class="check-field field-wide"><input id="image-resizer-enlarge" type="checkbox"><span>Dovoli povečanje manjših slik</span></label></div>
+                <div id="image-resizer-percent" hidden><label class="field"><span>Velikost glede na izvirnik (%)</span><input id="image-resizer-percentage" type="number" min="1" max="400" value="100" required disabled></label></div>
+                <p>Razmerje stranic se ohrani. JPEG in WebP: kakovost 90 %. JPEG dobi belo ozadje. Animacija in izvirni metapodatki se ne ohranijo.</p>
+                <div class="form-actions"><button id="image-resizer-resize" class="button primary" type="submit">SPREMENI VELIKOST</button><button id="image-resizer-clear" class="button" type="button">POČISTI</button></div>
+            </form>
+            <p id="image-resizer-status" class="inline-status prominent-status" role="status" aria-live="polite">Izberite slike za obdelavo.</p>
+            <div id="image-resizer-downloads"></div>
+            <div id="image-resizer-list" class="image-list" aria-label="Izbrane slike"></div>
+        </section>

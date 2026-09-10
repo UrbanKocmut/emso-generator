@@ -1,5 +1,8 @@
 import { API_VERSION, OPERATIONS } from './catalog.mjs';
 import { fail, validateOperation } from './validation.mjs';
+import { formatXml } from '../processing/xml.mjs';
+import { generateJwt } from '../processing/jwt-generator.mjs';
+import { resizeImages } from '../processing/images.mjs';
 
 export function createAdapter({ core, files, artifacts, pdf, navigate = () => {}, appVersion, onInvalidate = () => {} }) {
     const definitions = new Map(OPERATIONS.map(operation => [operation.name, operation]));
@@ -10,8 +13,12 @@ export function createAdapter({ core, files, artifacts, pdf, navigate = () => {}
         jobs.get(tool)?.abort();
         artifacts.clear(tool);
         onInvalidate(tool);
+        controllers.get(tool)?.invalidate?.();
     }
     async function process(name, args, check) {
+        if (name === 'format_xml') return { text: formatXml(args.text, args) };
+        if (name === 'generate_jwt') return generateJwt(args, check);
+        if (name === 'resize_images') return resizeImages(args, { files, artifacts, check, progress: update => { check(); controllers.get('image-resizer')?.fileProgress?.(update); } });
         if (name === 'generate_emso') {
             const identifiers = core.generateEmsos(args.count, { date: args.date ? core.parseIsoDate(args.date) : null, gender: args.gender, adultOnly: args.adultOnly });
             if (!identifiers.every(value => core.validateEmso(value).valid)) fail('PROCESSING_FAILED', 'Internal EMŠO checksum check failed.');
@@ -90,7 +97,8 @@ export function createAdapter({ core, files, artifacts, pdf, navigate = () => {}
                 if (tool && source !== 'manual') navigate(tool);
                 if (argumentError) throw argumentError;
                 const args = argumentsSnapshot;
-                controller?.apply?.(args, source);
+                await controller?.apply?.(args, source);
+                check();
                 controller?.progress?.(args);
                 // Yield before work so a same-turn clear/cancel can take effect.
                 await Promise.resolve(); check();

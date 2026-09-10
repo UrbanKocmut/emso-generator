@@ -9,6 +9,9 @@ import { initVatTool } from './tools/vat.mjs';
 import { initJwtTool } from './tools/jwt.mjs';
 import { initJsonTool } from './tools/json.mjs';
 import { initQifTool } from './tools/qif.mjs';
+import { initXmlTool } from './tools/xml.mjs';
+import { initJwtGenerator } from './tools/jwt-generator.mjs';
+import { initImageResizer } from './tools/image-resizer.mjs';
 function init() {
     initOperations();
     initToolNavigation();
@@ -19,6 +22,9 @@ function init() {
     initJwtTool();
     initJsonTool();
     initQifTool();
+    initXmlTool();
+    initJwtGenerator();
+    initImageResizer();
     initKeyboardShortcuts();
     initMobileInfoRail();
     initSwipeNavigation();

@@ -1,0 +1,25 @@
+        <section class="tool-panel" data-panel="jwt-generator" aria-labelledby="jwt-generator-title" hidden>
+            <div class="tool-header"><div><p class="eyebrow">08 / PODPISOVANJE ŽETONOV</p><h1 id="jwt-generator-title">Generator JWT</h1></div><p>Ustvarite podpisan žeton HMAC z izbranimi zahtevki. Skrivnost in žeton ostaneta v pomnilniku tega zavihka.</p></div>
+            <form id="jwt-generator-form" class="control-panel" autocomplete="off">
+                <div class="field-grid">
+                    <label class="field"><span>Algoritem</span><select id="jwt-generator-algorithm"><option>HS256</option><option>HS384</option><option>HS512</option></select></label>
+                    <label class="field"><span>Kodiranje skrivnosti</span><select id="jwt-generator-secretEncoding"><option value="text">Besedilo UTF-8</option><option value="base64">Base64 / base64url</option></select></label>
+                    <label class="field field-wide"><span>Skrivnost HMAC</span><input id="jwt-generator-secret" type="password" autocomplete="new-password" spellcheck="false" required aria-describedby="jwt-generator-secret-help"><small id="jwt-generator-secret-help">Najmanj 32 dekodiranih bajtov.</small></label>
+                </div>
+                <div class="form-actions"><button id="jwt-generator-random" class="button" type="button">NAKLJUČNA SKRIVNOST BASE64</button></div>
+                <div class="field-grid">
+                    <label class="field"><span>Izdajatelj (iss, neobvezno)</span><input id="jwt-generator-issuer" type="text"></label>
+                    <label class="field"><span>Subjekt (sub, neobvezno)</span><input id="jwt-generator-subject" type="text"></label>
+                    <label class="field field-wide"><span>Občinstvo (aud, neobvezno)</span><input id="jwt-generator-audience" type="text"></label>
+                    <label class="field"><span>Čas izdaje (iat, lokalni čas)</span><input id="jwt-generator-issuedAt" type="datetime-local" step="1"></label>
+                    <label class="field"><span>Začetek veljavnosti (nbf, lokalni čas)</span><input id="jwt-generator-notBefore" type="datetime-local" step="1"></label>
+                    <label class="field field-wide"><span>Potek (exp, lokalni čas)</span><input id="jwt-generator-expiresAt" type="datetime-local" step="1"></label>
+                </div>
+                <div class="form-actions"><button id="jwt-generator-now" class="button" type="button">ČAS IZDAJE: ZDAJ</button><button id="jwt-generator-hour" class="button" type="button">POTEČE ČEZ ENO URO</button></div>
+                <label class="field"><span>Dodatni zahtevki (objekt JSON)</span><textarea id="jwt-generator-customClaims" class="code-input" spellcheck="false">{}</textarea></label>
+                <div class="form-actions"><button id="jwt-generator-generate" class="button primary" type="submit">USTVARI JWT</button><button class="button" type="button" data-copy-target="jwt-generator-output">KOPIRAJ JWT</button><button id="jwt-generator-clear" class="button" type="button">POČISTI</button></div>
+            </form>
+            <p id="jwt-generator-status" class="inline-status prominent-status" role="status" aria-live="polite">Vnesite skrivnost in želene zahtevke.</p>
+            <div class="output-panel"><div class="panel-label"><label for="jwt-generator-output">PODPISAN ŽETON</label></div><textarea id="jwt-generator-output" class="code-output" readonly spellcheck="false"></textarea></div>
+            <div class="decoded-grid"><div class="output-panel"><div class="panel-label">GLAVA</div><pre id="jwt-generator-header" class="code-output" aria-label="Glava JWT"></pre></div><div class="output-panel"><div class="panel-label">VSEBINA</div><pre id="jwt-generator-payload" class="code-output" aria-label="Vsebina JWT"></pre></div></div>
+        </section>

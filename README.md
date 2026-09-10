@@ -4,7 +4,7 @@ Delavnica is a static, installable PWA. Its application files are cached for off
 
 ## Development
 
-Install the exactly pinned development dependencies once:
+Install the exactly pinned dependencies once:
 
 ```powershell
 npm install
@@ -24,7 +24,7 @@ npm test
 
 Install Chromium with `npx playwright install chromium`, then run browser regressions with `npm run test:browser`.
 
-The production site has no runtime package dependency or server component; GitHub Pages serves the checked static files. The pinned esbuild step bundles the UI modules and the lazy PDF controller. PDF scripts execute when the PDF tool is opened; their files and auxiliary assets are still precached for a first PDF visit while offline. Direct `file:` opening retains the classic PDF worker fallback.
+The production site has no remote runtime dependency or server component; GitHub Pages serves the checked static files. The pinned esbuild step bundles the UI modules, fflate 0.8.3 ZIP code and the lazy PDF controller. PDF scripts execute when the PDF tool is opened; their files and auxiliary assets are still precached for a first PDF visit while offline. Direct `file:` opening retains the classic PDF worker fallback.
 
 ## Adding a tool
 
@@ -40,9 +40,9 @@ Edit source files, not generated outputs:
 - Styles: `src/css/*.css`; assembly order is explicit in `scripts/assemble-site.mjs`. Shared, desktop/tablet, mobile/landscape, standalone, mobile standalone, then accessibility/print rules retain the original cascade.
 - PDF composition: `assets/js/pdf-composition.mjs`; thumbnail/workspace UI: `assets/js/pdf-merger.mjs`.
 - Operations and schemas: `src/operations/`; controller integration and WebMCP: `src/ui/services.mjs`.
-- Generated: root/tool/agent HTML, `robots.txt`, `sitemap.xml`, `llms.txt`, `tools.json`, `assets/css/toolbox.css`, `assets/js/toolbox-ui.js`, `assets/js/pdf-merger.js`, compatibility copies in `assets/v2/` and `precache-manifest.js`. All are checked by `build:check`.
+- Generated: root/tool/agent HTML, `robots.txt`, `sitemap.xml`, `llms.txt`, `tools.json`, `assets/css/toolbox.css`, `assets/js/toolbox-ui.js`, `assets/js/pdf-merger.js`, compatibility copies in `assets/v2/` and `assets/v3/`, the fflate license and `precache-manifest.js`. All are checked by `build:check`.
 
-Workspace baselines exclude intentionally added help below the controls. Full-page original screenshots are retained separately under `tests/browser/baseline-pages/`.
+Workspace baselines exclude intentionally added help below the controls. Full-page original screenshots are retained separately under `tests/browser/baseline-pages/`. The expanded overview and new tools are checked separately in `new-tools.spec.mjs`, including screenshots in the test output; historical overview baselines remain unchanged.
 CI captures matching-platform workspace references from the immutable original revision `5c369f3db4aaf6934a34c73ff513135459be13ca` before comparing the new implementation. This accommodates platform font/control rendering without accepting current-page screenshots or relaxing the 1% threshold.
 There is no plugin system or runtime framework.
 
@@ -69,11 +69,13 @@ For browser regressions, open `/tests/mobile-navigation.html` on the preview ser
 
 ## Public pages and local agent API
 
-The build emits `/`, `/emso/`, `/davcna-stevilka/`, `/jwt/`, `/json/`, `/sparkasse-csv-qif/`, `/pdf/` and English documentation at `/agents/`. Each tool entry has real HTML, metadata and navigation. The router preserves original hashes and root `file://` opening. Unknown paths remain missing pages.
+The build emits `/`, `/emso/`, `/davcna-stevilka/`, `/jwt/`, `/json/`, `/sparkasse-csv-qif/`, `/pdf/`, `/xml/`, `/jwt-generator/`, `/image-resizer/` and English documentation at `/agents/`. Each tool entry has real HTML, metadata and navigation. The router preserves original hashes and root `file://` opening. Unknown paths remain missing pages. Navigation retains its original cell sizes and scrolls horizontally on phones/tablets and vertically in mobile landscape.
 
-New HTML loads changed runtime assets through generated `assets/v2/` compatibility paths. The original public asset URLs remain available. This prevents the previous service worker (which ignores query strings) from combining new deep-link HTML with old scripts while existing tabs await an explicit update.
+New HTML loads the expanded UI, registry and styles through generated `assets/v3/` compatibility paths; unchanged loaders retain `assets/v2/`. Original public asset URLs and v2 copies remain available. This prevents previous service workers (which ignore query strings) from combining new deep-link HTML with old scripts while existing tabs await an explicit update.
 
 Read `/agents/` and `/tools.json` for the versioned schemas, limits, examples, error codes, local file lifecycle and bounded artifact reads. `window.DelavnicaAgent.execute(name, input, { signal })` and optional `document.modelContext.registerTool` registrations use the same adapter as manual controls. Runtime dependencies, files and processing remain local. Processing never triggers saving/sharing automatically.
+
+API 1.1.0 adds `format_xml`, `generate_jwt` and `resize_images` while retaining existing operations and the JWT inspector. Processing lives in `src/processing/`; UI controllers use the shared session stores and cancellation. XML preserves original tokens, mixed content and preserved whitespace, and rejects DTD/entity declarations before parsing. JWT generation supports HS256/384/512 with guided claims and RFC 7518 minimum key sizes. Image batches use native oriented decoding and canvas encoding, preserve partial successes and create a local ZIP; animation and original metadata are not retained. See the generated help/catalog for byte and pixel limits.
 
 App versions hash generated templates/bundles and runtime sources/assets after newline normalization. The precache separately hashes deployed runtime content. `scripts/stage-site.mjs` uses the precache allowlist to stage the site into a fresh `_site` directory in CI; `src/`, tests, build tooling and selected/generated user files are excluded.
 

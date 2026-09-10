@@ -99,7 +99,8 @@
         z-index: 45;
         top: 0;
         display: block;
-        overflow: hidden;
+        overflow-x: auto;
+        scrollbar-width: none;
         border-top: 0;
         border-right: 0;
         border-bottom: var(--line);
@@ -114,7 +115,7 @@
         display: grid;
         width: 100%;
         min-width: 0;
-        grid-template-columns: repeat(6, minmax(0, 1fr));
+        grid-template-columns: repeat(var(--tool-count, 6), calc(100% / 6));
     }
 
     .tool-nav-link {

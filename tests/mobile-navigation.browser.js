@@ -113,10 +113,10 @@ const checks = [
     }],
     ["Tool registry renders matching navigation, cards, titles, and routes", async () => {
         const page = await openPage();
-        const ids = ["emso", "vat", "jwt", "json", "qif", "pdf"];
+        const ids = page.win.ToolboxTools.map(tool => tool.id);
         const links = [...page.doc.querySelectorAll('.tool-nav [data-route]')];
         assert(links.map((link) => link.dataset.route).join() === ["overview", ...ids].join(), "Navigation order changed");
-        assert(page.doc.getElementById("tool-count").textContent === "06", "Tool count is incorrect");
+        assert(page.doc.getElementById("tool-count").textContent === String(page.win.ToolboxTools.length).padStart(2, "0"), "Tool count is incorrect");
         const cards = [...page.doc.querySelectorAll(".overview-grid .tool-card")];
         assert(cards.map((card) => card.dataset.route).join() === ids.join(), "Overview cards do not match navigation");
         assert(!page.doc.querySelector('script[src$="pdf-merger.js"]'), "PDF was executed before opening the tool");

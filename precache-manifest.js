@@ -1,18 +1,18 @@
 "use strict";
 
 self.DELAVNICA_PRECACHE = Object.freeze({
-    "version": "36afbf42895c75cd262220e2882c9070de2edbc7553e0205919734e311927699",
-    "totalBytes": 9970275,
+    "version": "fc314856f513d7f0b9189e1bac18d14770629f84d8b62476b9fe443527b70379",
+    "totalBytes": 10577893,
     "entries": [
         {
             "url": "./agents/index.html",
-            "revision": "7673fb74717b71bca1b8c6e62c3c516eb209585061065f571629ad0bd72f0e1e",
-            "size": 18707
+            "revision": "06e3e5cdd03ec4ad9b90ab982463c647f7169d999874151f489eb1f96d58e447",
+            "size": 27437
         },
         {
             "url": "./assets/css/toolbox.css",
-            "revision": "fb1099cc2970f9fa4887c664747aaba817e50c8d59ff2b730a51a3fef12b4f77",
-            "size": 54866
+            "revision": "265a338c5ca22c10d72ef3e847428581f1a028454a092a5013bce015ced23ecc",
+            "size": 55948
         },
         {
             "url": "./assets/icons/apple-touch-icon.png",
@@ -86,8 +86,8 @@ self.DELAVNICA_PRECACHE = Object.freeze({
         },
         {
             "url": "./assets/js/tool-registry.js",
-            "revision": "bf40e2ca3c02c6f53c12e48ba5ff3c80888ba723e02bcf69bd32d60b636546e0",
-            "size": 3218
+            "revision": "5f3b89078c4da5d8bb5708a372e1745345b18452528c6ec9d00d73653112631a",
+            "size": 4407
         },
         {
             "url": "./assets/js/toolbox-core.js",
@@ -96,8 +96,8 @@ self.DELAVNICA_PRECACHE = Object.freeze({
         },
         {
             "url": "./assets/js/toolbox-ui.js",
-            "revision": "300bf6f48932095068b1413ba2fd317d2c5cc5aafd993111c9963a2af3682950",
-            "size": 82675
+            "revision": "57cfdfd1bfb42e90ce3995f44a9d4e035aad51c9f6ef1d15c759cfb12c7603db",
+            "size": 131483
         },
         {
             "url": "./assets/screenshots/delavnica-mobile.png",
@@ -126,23 +126,43 @@ self.DELAVNICA_PRECACHE = Object.freeze({
         },
         {
             "url": "./assets/v2/tool-registry.js",
-            "revision": "bf40e2ca3c02c6f53c12e48ba5ff3c80888ba723e02bcf69bd32d60b636546e0",
-            "size": 3218
+            "revision": "5f3b89078c4da5d8bb5708a372e1745345b18452528c6ec9d00d73653112631a",
+            "size": 4407
         },
         {
             "url": "./assets/v2/toolbox-ui.js",
-            "revision": "300bf6f48932095068b1413ba2fd317d2c5cc5aafd993111c9963a2af3682950",
-            "size": 82675
+            "revision": "57cfdfd1bfb42e90ce3995f44a9d4e035aad51c9f6ef1d15c759cfb12c7603db",
+            "size": 131483
         },
         {
             "url": "./assets/v2/toolbox.css",
-            "revision": "fb1099cc2970f9fa4887c664747aaba817e50c8d59ff2b730a51a3fef12b4f77",
-            "size": 54866
+            "revision": "265a338c5ca22c10d72ef3e847428581f1a028454a092a5013bce015ced23ecc",
+            "size": 55948
+        },
+        {
+            "url": "./assets/v3/tool-registry.js",
+            "revision": "5f3b89078c4da5d8bb5708a372e1745345b18452528c6ec9d00d73653112631a",
+            "size": 4407
+        },
+        {
+            "url": "./assets/v3/toolbox-ui.js",
+            "revision": "57cfdfd1bfb42e90ce3995f44a9d4e035aad51c9f6ef1d15c759cfb12c7603db",
+            "size": 131483
+        },
+        {
+            "url": "./assets/v3/toolbox.css",
+            "revision": "265a338c5ca22c10d72ef3e847428581f1a028454a092a5013bce015ced23ecc",
+            "size": 55948
         },
         {
             "url": "./assets/vendor/README.md",
-            "revision": "9d699d7926f8c7c41e4fc116adc93a09177469f32e0719973950c2ceac4a3e6f",
-            "size": 452
+            "revision": "1ae6447e8c425f421cfdd2cef4bb8dfd02db4ff3274a3a731812dff9877af828",
+            "size": 674
+        },
+        {
+            "url": "./assets/vendor/fflate/LICENSE",
+            "revision": "0a1df3a083d0c010560aa342e87959c8c1070e6fd54545741f083f22d0c8b551",
+            "size": 1069
         },
         {
             "url": "./assets/vendor/pdf-lib/LICENSE.md",
@@ -1176,13 +1196,13 @@ self.DELAVNICA_PRECACHE = Object.freeze({
         },
         {
             "url": "./davcna-stevilka/index.html",
-            "revision": "6ec468d675855bd4dc363cd1d4796991707dc2cbe97365224fc8d4dacc1f5f02",
-            "size": 47591
+            "revision": "55709733f6aa257b84ee1bbec09644e8b3c9b3a9a49ef7c7002b696d97610e0a",
+            "size": 63060
         },
         {
             "url": "./emso/index.html",
-            "revision": "246ca7949d449a4175c9d687d1c2cde2a96892433fdaa8bcb93840ba5621ff2f",
-            "size": 47556
+            "revision": "8dd44d19ddf9650f99bef5dbdb37519345dec84d0511a7365475a596baa96572",
+            "size": 63025
         },
         {
             "url": "./fonts/IBMPlexMono-Regular.woff2",
@@ -1200,24 +1220,34 @@ self.DELAVNICA_PRECACHE = Object.freeze({
             "size": 55380
         },
         {
+            "url": "./image-resizer/index.html",
+            "revision": "4e69caccf10abc7a54892bb79323f6f14792df6133ed83ed727b3fde530011f3",
+            "size": 63074
+        },
+        {
             "url": "./index.html",
-            "revision": "d130f3c9b2639599e67422391262e897d63b1ddfe8d42878229579ed410d8789",
-            "size": 47735
+            "revision": "094ea2c68d6475e930b4d1840c2594542f8bb6f5d11619bdc2790b4be4f2725d",
+            "size": 63208
         },
         {
             "url": "./json/index.html",
-            "revision": "21c4e4d0026894d3a1b00a1c8383df52e6b4a991c0302bdeee163ee14ddcdd6d",
-            "size": 47528
+            "revision": "5a7841a4964a06a6ca52d5aa264fecbc55dafa7e182835a7639c6e7758a86c6f",
+            "size": 62997
+        },
+        {
+            "url": "./jwt-generator/index.html",
+            "revision": "81058005d5ce8772a2eaee3c2776aa186f06e8cb895044b15b9a6e074877a3d9",
+            "size": 62989
         },
         {
             "url": "./jwt/index.html",
-            "revision": "80ff47b7818463de62af9f204abbb511a77b3b7697b6ec3a023a3cdc86a1b6a5",
-            "size": 47572
+            "revision": "3d9dc3fef51838a379d50c566b3e7b5d39b983bc488e4ef62bf36c935ed47353",
+            "size": 63041
         },
         {
             "url": "./llms.txt",
-            "revision": "5fcd2a5745e941e41b855c26c89bbae7084b44bfd26769e3e500640fafbd4702",
-            "size": 631
+            "revision": "ce089398d3f009826855808a60f85b16b0946caf0a0f5cb10fce2371b6e13b9d",
+            "size": 824
         },
         {
             "url": "./manifest.webmanifest",
@@ -1226,8 +1256,8 @@ self.DELAVNICA_PRECACHE = Object.freeze({
         },
         {
             "url": "./pdf/index.html",
-            "revision": "5bde84d4bd2425618788d4ef23f1d7015cbb99d131b487b6902c4bd7e0aec438",
-            "size": 47635
+            "revision": "61ad48a770e0cc125a1e9681ec6d15c48d3b08c82c2d8f5ebff8a200b06a9aa8",
+            "size": 63104
         },
         {
             "url": "./robots.txt",
@@ -1236,18 +1266,23 @@ self.DELAVNICA_PRECACHE = Object.freeze({
         },
         {
             "url": "./sitemap.xml",
-            "revision": "9ab8ef9edd8ff149894c39636d7db0efea95b27081f2b5c9c4ad1fbc13be8282",
-            "size": 669
+            "revision": "695eb427a79bc9f23e199b5756217cdd71b09ad6333d624b04bf3b73a0e8c8ed",
+            "size": 863
         },
         {
             "url": "./sparkasse-csv-qif/index.html",
-            "revision": "ca98cdfba26dd95ddf255309db06a873f7c40990b32c52e059b3b49266c9154b",
-            "size": 47561
+            "revision": "34b1c3274e5bb83fc2d9c7e519da8b8c7ba620095b7bfe9a311415b45513773a",
+            "size": 63030
         },
         {
             "url": "./tools.json",
-            "revision": "e0ee9ca4ea1e4ed48df13b5030ec6947eccc8b8f983f8fb459a2ec69024efe98",
-            "size": 12221
+            "revision": "624d4f596c720a08f40c4a8e4255e3bf3c3583fe61731e15313e948fa84d931d",
+            "size": 18094
+        },
+        {
+            "url": "./xml/index.html",
+            "revision": "a5ee85df2fea188310c36930fb8c19466692ab4646af03bf63514c2d77eea54f",
+            "size": 62991
         },
         {
             "url": "./zasebnost.html",

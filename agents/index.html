@@ -6,13 +6,13 @@
     <title>Local tool API and browser-agent guide — Delavnica</title>
     <meta name="description" content="English guide to Delavnica’s versioned local operations, schemas, selected files, PDF composition, cancellation and bounded artifact reads.">
     <link rel="canonical" href="https://delavnica.kocmut.com/agents/">
-    <link rel="stylesheet" href="../assets/v2/toolbox.css">
+    <link rel="stylesheet" href="../assets/v3/toolbox.css">
     <link rel="icon" href="../assets/icons/favicon.png">
 </head>
 <body><main class="agent-documentation">
     <p class="eyebrow"><a href="../">DELAVNICA / LOCAL TOOLS</a></p>
     <h1>Browser-agent guide</h1>
-    <p>API version <code>1.0.0</code>. App version <code>caeeb3e000a6d0f26d32177c0e35523232a2b95c9e91f796df225c44937dec24</code> is derived from application content. This static site processes inputs in the current browser tab. It has no processing HTTP endpoint or standalone MCP server.</p>
+    <p>API version <code>1.1.0</code>. App version <code>2d292fa7f0932e360da5d63a62b8dd0809b7fb6121a70481a3a5f9148e7cb81c</code> is derived from application content. This static site processes inputs in the current browser tab. It has no processing HTTP endpoint or standalone MCP server.</p>
     <p><a href="../tools.json">Machine-readable catalog</a> · <a href="../llms.txt">Short index</a> · <a href="../zasebnost.html">Site privacy information (Slovenian)</a></p>
     <section><h2>Use the visible workspace</h2>
         <p>Open any tool page. In browsers implementing the imperative WebMCP API, Delavnica registers the operations below on <code>document.modelContext</code>. Registration is optional and restricted to the default same-origin scope. Ordinary controls remain usable if registration is absent or fails.</p>
@@ -24,19 +24,26 @@
     </section>
     <section><h2>File and artifact lifecycle</h2>
         <ol>
-            <li>Use the site’s native <code>#qif-file</code> or <code>#pdf-file</code> input with authorized browser-agent file selection. Selection is a user/agent permission boundary. Operations never accept filesystem paths or remote URLs.</li>
-            <li>Call <code>list_selected_files</code> to obtain session IDs, names, types, sizes, tool ownership and available PDF page counts. CSV selection starts the same automatic conversion as manual selection. Wait for PDF import to finish before composing.</li>
+            <li>Use the site’s native <code>#qif-file</code>, <code>#pdf-file</code> or <code>#image-resizer-file</code> input with authorized browser-agent file selection. Selection is a user/agent permission boundary. Operations never accept filesystem paths or remote URLs.</li>
+            <li>Call <code>list_selected_files</code> to obtain session IDs, names, types, sizes, tool ownership and available PDF page counts or oriented image dimensions. CSV selection starts the same automatic conversion as manual selection. Wait for PDF import to finish before composing.</li>
             <li>For PDFs, specify an ordered list of <code>{ fileId, page, quarterTurns }</code>. Pages start at 1. Quarter turns are clockwise relative to each original page. Repeated page references are allowed. The resulting order and rotation appear on the existing cards.</li>
-            <li>CSV/PDF results include artifact metadata: ID, filename, MIME type, byte size, relevant counts and a local download URL. A persistent download link remains visible while valid. Processing itself never invokes an OS save/share dialog.</li>
+            <li>CSV/PDF/image results include artifact metadata: ID, filename, MIME type, byte size, relevant counts and a local download URL. A persistent download link remains visible while valid. Processing itself never invokes an OS save/share dialog.</li>
             <li>Clients unable to consume downloads can call <code>read_artifact</code> with a raw-byte offset and length. The result includes base64, bytesRead, nextOffset and eof. Each call returns at most 65,536 raw bytes. Decode each chunk separately and concatenate bytes.</li>
             <li>Explicit clearing, changing source/options/page composition and document teardown invalidate affected output artifacts and revoke URLs. Selected files stay in memory only while needed. IDs are meaningful only within this document session and cannot be reused after reload.</li>
         </ol>
         <p>Limits: 16 MiB text characters per operation, 5,000 generated identifiers or PDF output pages, 64 MiB per input file, 128 MiB total selected-file bytes, 128 MiB total artifact bytes. Very deeply nested JSON, complex PDFs and resource-constrained devices may fail earlier. No inputs, filenames, tokens, keys or output contents are stored in URLs, analytics, service-worker caches or persistent storage. Opt-in CSV option preferences are the only processing-related persistent state.</p>
     </section>
+    <section><h2>XML, JWT signing and images</h2>
+        <p>format_xml returns { text }. Validation uses DOMParser after rejecting DTD/entity declarations. Formatting preserves original tokens, mixed-content subtrees and xml:space="preserve" content. There is no XML import, download or minification. Indentation defaults to two spaces; four spaces and tabs are available.</p>
+        <p>generate_jwt returns { token, header, payload }. The header is generated from the selected HMAC algorithm with typ: JWT. Secret encodings are UTF-8 text and Base64/base64url. Minimum decoded lengths are 32/48/64 bytes for HS256/384/512. Optional issuer/subject/audience are strings; issuedAt/notBefore/expiresAt use the controls’ local YYYY-MM-DDTHH:mm[:ss] values and become Unix seconds. Empty fields are omitted. customClaims is JSON text for an object, excluding iss, sub, aud, iat, nbf and exp even when their guided fields are blank. Inputs, secrets and tokens stay in memory.</p>
+        <p>resize_images accepts selected image fileIds and the shared controls’ settings. Fit defaults to 1920 × 1080 without enlargement; percentage is an integer from 1 to 400. JPEG, PNG and WebP are accepted and source format is the default output. Lossy quality is 90%; transparency is preserved in PNG/WebP and composited on white for JPEG. Native decoding respects orientation. Outputs are still images; animation and original metadata are not retained.</p>
+        <p>Image batches allow 50 files, each at most 64 MiB, with 40 million decoded pixels. Each output is limited to 16 million pixels and 8192 pixels on either side. Selected-file and artifact session byte limits still apply. Results contain images (each with fileId, success, dimensions and artifact, or error), count, zipArtifact and warnings. A successful envelope may contain failed images: always inspect images[].success. ZIP includes successful outputs with collision-safe names; ZIP failure leaves individual artifacts available. No save action occurs until a download link is activated.</p>
+        <p>References: <a href="https://www.w3.org/TR/xml/#sec-white-space">XML whitespace</a>, <a href="https://www.rfc-editor.org/rfc/rfc7518.html#section-3.2">HMAC key sizes</a>, <a href="https://html.spec.whatwg.org/multipage/canvas.html">canvas encoding</a>. ZIP creation bundles locally pinned <a href="https://github.com/101arrowz/fflate/releases/tag/v0.8.3">fflate 0.8.3</a>.</p>
+    </section>
     <section><h2>Cancellation and errors</h2>
         <p>Pass an AbortSignal for cancellation. Operations serialize within each tool; a newer operation supersedes older queued/running work for that tool. Clearing or editing the affected workspace invalidates pending results. Work that cannot be physically interrupted (such as an in-flight Web Crypto call) may finish internally, but cannot publish stale results or artifacts.</p>
         <p>Missing values use documented defaults. Wrong types, unknown properties, unsupported options, out-of-range values and ambiguous CSV sources are rejected. EMŠO dates must be real dates from 1900 through today, and an explicit date cannot be combined with adultOnly. Date-format tokens for CSV are %d, %m, %Y and %y. Explicit filenames cannot contain path separators, control characters or leading/trailing whitespace. The appropriate .qif or .pdf extension is appended when absent.</p>
-        <p>Stable error codes: <code>INVALID_ARGUMENT</code>, <code>UNKNOWN_OPERATION</code>, <code>INVALID_JSON</code>, <code>INVALID_JWT</code>, <code>INVALID_CSV</code>, <code>INVALID_PDF</code>, <code>FILE_NOT_FOUND</code>, <code>ARTIFACT_NOT_FOUND</code>, <code>LIMIT_EXCEEDED</code>, <code>CANCELLED</code>, <code>PROCESSING_FAILED</code>.</p>
+        <p>Stable error codes: <code>INVALID_ARGUMENT</code>, <code>UNKNOWN_OPERATION</code>, <code>INVALID_JSON</code>, <code>INVALID_JWT</code>, <code>INVALID_CSV</code>, <code>INVALID_PDF</code>, <code>INVALID_XML</code>, <code>INVALID_IMAGE</code>, <code>UNSUPPORTED_FORMAT</code>, <code>FILE_NOT_FOUND</code>, <code>ARTIFACT_NOT_FOUND</code>, <code>LIMIT_EXCEEDED</code>, <code>CANCELLED</code>, <code>PROCESSING_FAILED</code>.</p>
     </section>
     <section id="generate_emso"><h2><code>generate_emso</code></h2><p>Generate synthetic Slovenian EMŠO strings in the visible workspace. Checksums only; no population-register lookup or proof that an identifier is unassigned.</p><p><a href="../emso/">Open workspace</a> · Updates the visible workspace.</p><h3>Example input</h3><pre>{
   &quot;count&quot;: 3,
@@ -308,7 +315,168 @@
   ],
   &quot;additionalProperties&quot;: false
 }</pre></details></section>
-<section id="list_selected_files"><h2><code>list_selected_files</code></h2><p>List metadata and session-local file IDs from native CSV/PDF selection. No file contents, local paths, remote fetching or file-picker access.</p><p>Reads local session state.</p><h3>Example input</h3><pre>{}</pre><details><summary>Input schema and defaults</summary><pre>{
+<section id="format_xml"><h2><code>format_xml</code></h2><p>Validate and format original XML tokens. Preserves mixed-content subtrees and xml:space=&quot;preserve&quot;; rejects DTD/entity declarations. Returns text without importing or inserting XML into the page.</p><p><a href="../xml/">Open workspace</a> · Updates the visible workspace.</p><h3>Example input</h3><pre>{
+  &quot;text&quot;: &quot;&lt;root&gt;&lt;item id=\&quot;1\&quot;/&gt;&lt;/root&gt;&quot;,
+  &quot;indent&quot;: 2
+}</pre><details><summary>Input schema and defaults</summary><pre>{
+  &quot;type&quot;: &quot;object&quot;,
+  &quot;properties&quot;: {
+    &quot;text&quot;: {
+      &quot;type&quot;: &quot;string&quot;,
+      &quot;maxLength&quot;: 16777216
+    },
+    &quot;indent&quot;: {
+      &quot;enum&quot;: [
+        2,
+        4,
+        &quot;tab&quot;
+      ],
+      &quot;default&quot;: 2
+    }
+  },
+  &quot;required&quot;: [
+    &quot;text&quot;
+  ],
+  &quot;additionalProperties&quot;: false
+}</pre></details></section>
+<section id="generate_jwt"><h2><code>generate_jwt</code></h2><p>Sign a JWT locally using Web Crypto HMAC. Requires at least 32/48/64 decoded secret bytes for HS256/384/512. Guided timestamps use local YYYY-MM-DDTHH:mm[:ss] and convert to Unix seconds. Blank claims are omitted. Custom JSON must be an object without iss/sub/aud/iat/nbf/exp. Returns token, header and payload; keeps inputs only in memory.</p><p><a href="../jwt-generator/">Open workspace</a> · Updates the visible workspace.</p><h3>Example input</h3><pre>{
+  &quot;secret&quot;: &quot;example-only-32-byte-secret-12345&quot;,
+  &quot;subject&quot;: &quot;demo&quot;,
+  &quot;customClaims&quot;: &quot;{\&quot;role\&quot;:\&quot;test\&quot;}&quot;
+}</pre><details><summary>Input schema and defaults</summary><pre>{
+  &quot;type&quot;: &quot;object&quot;,
+  &quot;properties&quot;: {
+    &quot;algorithm&quot;: {
+      &quot;type&quot;: &quot;string&quot;,
+      &quot;enum&quot;: [
+        &quot;HS256&quot;,
+        &quot;HS384&quot;,
+        &quot;HS512&quot;
+      ],
+      &quot;default&quot;: &quot;HS256&quot;
+    },
+    &quot;secret&quot;: {
+      &quot;type&quot;: &quot;string&quot;,
+      &quot;maxLength&quot;: 16777216
+    },
+    &quot;secretEncoding&quot;: {
+      &quot;type&quot;: &quot;string&quot;,
+      &quot;enum&quot;: [
+        &quot;text&quot;,
+        &quot;base64&quot;
+      ],
+      &quot;default&quot;: &quot;text&quot;
+    },
+    &quot;issuer&quot;: {
+      &quot;type&quot;: &quot;string&quot;,
+      &quot;maxLength&quot;: 16777216,
+      &quot;default&quot;: &quot;&quot;
+    },
+    &quot;subject&quot;: {
+      &quot;type&quot;: &quot;string&quot;,
+      &quot;maxLength&quot;: 16777216,
+      &quot;default&quot;: &quot;&quot;
+    },
+    &quot;audience&quot;: {
+      &quot;type&quot;: &quot;string&quot;,
+      &quot;maxLength&quot;: 16777216,
+      &quot;default&quot;: &quot;&quot;
+    },
+    &quot;issuedAt&quot;: {
+      &quot;type&quot;: &quot;string&quot;,
+      &quot;maxLength&quot;: 19,
+      &quot;default&quot;: &quot;&quot;
+    },
+    &quot;notBefore&quot;: {
+      &quot;type&quot;: &quot;string&quot;,
+      &quot;maxLength&quot;: 19,
+      &quot;default&quot;: &quot;&quot;
+    },
+    &quot;expiresAt&quot;: {
+      &quot;type&quot;: &quot;string&quot;,
+      &quot;maxLength&quot;: 19,
+      &quot;default&quot;: &quot;&quot;
+    },
+    &quot;customClaims&quot;: {
+      &quot;type&quot;: &quot;string&quot;,
+      &quot;maxLength&quot;: 16777216,
+      &quot;default&quot;: &quot;{}&quot;
+    }
+  },
+  &quot;required&quot;: [
+    &quot;secret&quot;
+  ],
+  &quot;additionalProperties&quot;: false
+}</pre></details></section>
+<section id="resize_images"><h2><code>resize_images</code></h2><p>Resize up to 50 selected JPEG/PNG/WebP images sequentially with shared settings. Oriented decoding; 40 MP input, 16 MP output and 8192 pixels per output side. Lossy quality is 90%, JPEG background white. Outputs are still images without original metadata. Returns per-image success/error and local artifacts, plus a ZIP of successes when possible. Never downloads automatically.</p><p><a href="../image-resizer/">Open workspace</a> · Updates the visible workspace.</p><h3>Example input</h3><pre>{
+  &quot;fileIds&quot;: [
+    &quot;file-1&quot;
+  ],
+  &quot;mode&quot;: &quot;fit&quot;,
+  &quot;maxWidth&quot;: 1920,
+  &quot;maxHeight&quot;: 1080,
+  &quot;enlarge&quot;: false,
+  &quot;format&quot;: &quot;source&quot;
+}</pre><details><summary>Input schema and defaults</summary><pre>{
+  &quot;type&quot;: &quot;object&quot;,
+  &quot;properties&quot;: {
+    &quot;fileIds&quot;: {
+      &quot;type&quot;: &quot;array&quot;,
+      &quot;minItems&quot;: 1,
+      &quot;maxItems&quot;: 50,
+      &quot;items&quot;: {
+        &quot;type&quot;: &quot;string&quot;,
+        &quot;maxLength&quot;: 80,
+        &quot;minLength&quot;: 1
+      }
+    },
+    &quot;mode&quot;: {
+      &quot;type&quot;: &quot;string&quot;,
+      &quot;enum&quot;: [
+        &quot;fit&quot;,
+        &quot;percentage&quot;
+      ],
+      &quot;default&quot;: &quot;fit&quot;
+    },
+    &quot;maxWidth&quot;: {
+      &quot;type&quot;: &quot;integer&quot;,
+      &quot;minimum&quot;: 1,
+      &quot;maximum&quot;: 8192,
+      &quot;default&quot;: 1920
+    },
+    &quot;maxHeight&quot;: {
+      &quot;type&quot;: &quot;integer&quot;,
+      &quot;minimum&quot;: 1,
+      &quot;maximum&quot;: 8192,
+      &quot;default&quot;: 1080
+    },
+    &quot;enlarge&quot;: {
+      &quot;type&quot;: &quot;boolean&quot;,
+      &quot;default&quot;: false
+    },
+    &quot;percentage&quot;: {
+      &quot;type&quot;: &quot;integer&quot;,
+      &quot;minimum&quot;: 1,
+      &quot;maximum&quot;: 400,
+      &quot;default&quot;: 100
+    },
+    &quot;format&quot;: {
+      &quot;type&quot;: &quot;string&quot;,
+      &quot;enum&quot;: [
+        &quot;source&quot;,
+        &quot;image/jpeg&quot;,
+        &quot;image/png&quot;,
+        &quot;image/webp&quot;
+      ],
+      &quot;default&quot;: &quot;source&quot;
+    }
+  },
+  &quot;required&quot;: [
+    &quot;fileIds&quot;
+  ],
+  &quot;additionalProperties&quot;: false
+}</pre></details></section>
+<section id="list_selected_files"><h2><code>list_selected_files</code></h2><p>List metadata and session-local file IDs from native CSV/PDF/image selection. No file contents, local paths, remote fetching or file-picker access.</p><p>Reads local session state.</p><h3>Example input</h3><pre>{}</pre><details><summary>Input schema and defaults</summary><pre>{
   &quot;type&quot;: &quot;object&quot;,
   &quot;properties&quot;: {},
   &quot;required&quot;: [],

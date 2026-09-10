@@ -1,0 +1,15 @@
+.image-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: 16px; margin-top: 24px; }
+.image-card { min-width: 0; padding: 20px; border: var(--line); background: var(--white); }
+.image-card img { display: block; width: 100%; height: 160px; object-fit: contain; background: var(--paper); }
+.image-card h2 { margin-top: 16px; font-size: 18px; overflow-wrap: anywhere; }
+.image-card p, .image-card a { overflow-wrap: anywhere; }
+.image-drop.is-dragging { outline: 3px dashed var(--ink); outline-offset: -8px; }
+[data-panel="jwt-generator"] .control-panel,
+[data-panel="image-resizer"] .control-panel { padding-top: 20px; }
+[data-panel="image-resizer"] .image-drop { margin-bottom: 20px; }
+[data-panel="jwt-generator"] .form-actions + .field { display: block; margin-top: 24px; }
+[data-panel="jwt-generator"] .control-panel > .field-grid:not(:first-child),
+[data-panel="jwt-generator"] .decoded-grid { margin-top: 24px; }
+[data-panel="jwt-generator"] input[type="datetime-local"] { min-width: 0; max-width: 100%; }
+[data-panel="image-resizer"] .field-grid { margin-bottom: 20px; }
+.sidebar::-webkit-scrollbar { display: none; }

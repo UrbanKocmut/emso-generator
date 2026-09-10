@@ -7,6 +7,7 @@
     return document.getElementById(id);
   }
   function localizedError(error) {
+    if (error?.localized) return error.message;
     const operationErrors = {
       INVALID_ARGUMENT: "Parametri niso veljavni. Preverite obvezna polja, dovoljene mo\u017Enosti in obsege v navodilih za agente.",
       FILE_NOT_FOUND: "Izbrana datoteka ni ve\u010D na voljo v tej delovni povr\u0161ini. Izberite jo znova.",
@@ -154,7 +155,7 @@
   }
 
   // src/operations/catalog.mjs
-  var API_VERSION = "1.0.0";
+  var API_VERSION = "1.1.0";
   var LIMITS = Object.freeze({ textCharacters: 16 * 1024 * 1024, fileBytes: 64 * 1024 * 1024, sessionFileBytes: 128 * 1024 * 1024, artifactBytes: 128 * 1024 * 1024, chunkBytes: 65536, pages: 5e3 });
   var string = (maxLength = LIMITS.textCharacters) => ({ type: "string", maxLength });
   var boolean = (defaultValue) => ({ type: "boolean", default: defaultValue });
@@ -208,8 +209,29 @@
       example: { pages: [{ fileId: "file-1", page: 2, quarterTurns: 1 }, { fileId: "file-1", page: 1 }] }
     },
     {
+      name: "format_xml",
+      tool: "xml",
+      description: 'Validate and format original XML tokens. Preserves mixed-content subtrees and xml:space="preserve"; rejects DTD/entity declarations. Returns text without importing or inserting XML into the page.',
+      inputSchema: schema({ text: string(), indent: { enum: [2, 4, "tab"], default: 2 } }, ["text"]),
+      example: { text: '<root><item id="1"/></root>', indent: 2 }
+    },
+    {
+      name: "generate_jwt",
+      tool: "jwt-generator",
+      description: "Sign a JWT locally using Web Crypto HMAC. Requires at least 32/48/64 decoded secret bytes for HS256/384/512. Guided timestamps use local YYYY-MM-DDTHH:mm[:ss] and convert to Unix seconds. Blank claims are omitted. Custom JSON must be an object without iss/sub/aud/iat/nbf/exp. Returns token, header and payload; keeps inputs only in memory.",
+      inputSchema: schema({ algorithm: enumeration(["HS256", "HS384", "HS512"]), secret: string(), secretEncoding: enumeration(["text", "base64"]), issuer: { ...string(), default: "" }, subject: { ...string(), default: "" }, audience: { ...string(), default: "" }, issuedAt: { ...string(19), default: "" }, notBefore: { ...string(19), default: "" }, expiresAt: { ...string(19), default: "" }, customClaims: { ...string(), default: "{}" } }, ["secret"]),
+      example: { secret: "example-only-32-byte-secret-12345", subject: "demo", customClaims: '{"role":"test"}' }
+    },
+    {
+      name: "resize_images",
+      tool: "image-resizer",
+      description: "Resize up to 50 selected JPEG/PNG/WebP images sequentially with shared settings. Oriented decoding; 40 MP input, 16 MP output and 8192 pixels per output side. Lossy quality is 90%, JPEG background white. Outputs are still images without original metadata. Returns per-image success/error and local artifacts, plus a ZIP of successes when possible. Never downloads automatically.",
+      inputSchema: schema({ fileIds: { type: "array", minItems: 1, maxItems: 50, items: fileId }, mode: enumeration(["fit", "percentage"]), maxWidth: { type: "integer", minimum: 1, maximum: 8192, default: 1920 }, maxHeight: { type: "integer", minimum: 1, maximum: 8192, default: 1080 }, enlarge: boolean(false), percentage: { type: "integer", minimum: 1, maximum: 400, default: 100 }, format: enumeration(["source", "image/jpeg", "image/png", "image/webp"]) }, ["fileIds"]),
+      example: { fileIds: ["file-1"], mode: "fit", maxWidth: 1920, maxHeight: 1080, enlarge: false, format: "source" }
+    },
+    {
       name: "list_selected_files",
-      description: "List metadata and session-local file IDs from native CSV/PDF selection. No file contents, local paths, remote fetching or file-picker access.",
+      description: "List metadata and session-local file IDs from native CSV/PDF/image selection. No file contents, local paths, remote fetching or file-picker access.",
       readOnly: true,
       inputSchema: schema({}),
       example: {}
@@ -226,6 +248,9 @@
   // src/operations/validation.mjs
   function fail(code, message) {
     throw Object.assign(new Error(message), { code });
+  }
+  function failLocal(code, message) {
+    throw Object.assign(new Error(message), { code, localized: true });
   }
   function validate(schema2, value, location = "input") {
     if (schema2.enum && !schema2.enum.includes(value)) fail("INVALID_ARGUMENT", location + ": unsupported value.");
@@ -272,6 +297,874 @@
     return args;
   }
 
+  // src/processing/xml.mjs
+  function xmlTokens(text) {
+    const tokens = [];
+    let offset = 0;
+    while (offset < text.length) {
+      const start = offset;
+      let kind = "text";
+      if (text[offset] !== "<") {
+        offset = text.indexOf("<", offset);
+        if (offset < 0) offset = text.length;
+      } else {
+        const endMarker = text.startsWith("<!--", offset) ? "-->" : text.startsWith("<![CDATA[", offset) ? "]]>" : text.startsWith("<?", offset) ? "?>" : null;
+        if (endMarker) {
+          kind = endMarker === "]]>" ? "cdata" : "markup";
+          const end = text.indexOf(endMarker, offset + (endMarker === "-->" ? 4 : endMarker === "]]>" ? 9 : 2));
+          if (end < 0) failLocal("INVALID_XML", "XML vsebuje nezaklju\u010Den komentar, CDATA ali navodilo.");
+          offset = end + endMarker.length;
+        } else {
+          if (text.startsWith("<!", offset)) failLocal("INVALID_XML", "Deklaracije DTD in entitet niso dovoljene.");
+          kind = text.startsWith("</", offset) ? "close" : "open";
+          let quote = "";
+          for (offset++; offset < text.length; offset++) {
+            const c = text[offset];
+            if (quote) {
+              if (c === quote) quote = "";
+            } else if (c === '"' || c === "'") quote = c;
+            else if (c === ">") break;
+          }
+          if (offset === text.length) failLocal("INVALID_XML", "XML vsebuje nezaklju\u010Deno oznako.");
+          offset++;
+          if (kind === "open" && text[offset - 2] === "/") kind = "empty";
+        }
+      }
+      tokens.push({ kind, start, end: offset });
+    }
+    return tokens;
+  }
+  function formatXml(text, { indent = 2 } = {}, Parser = globalThis.DOMParser) {
+    if (typeof text !== "string" || text.length > LIMITS.textCharacters) failLocal("LIMIT_EXCEEDED", "XML lahko vsebuje najve\u010D 16 MiB znakov.");
+    if (![2, 4, "tab"].includes(indent)) failLocal("INVALID_ARGUMENT", "Izberite 2 ali 4 presledke oziroma tabulator.");
+    const bom = text.startsWith("\uFEFF") ? "\uFEFF" : "";
+    if (bom) text = text.slice(1);
+    const tokens = xmlTokens(text);
+    if (!Parser) failLocal("PROCESSING_FAILED", "Raz\u010Dlenjevalnik XML v tem brskalniku ni na voljo.");
+    const parser = new Parser();
+    let doc = parser.parseFromString(text, "application/xml");
+    const hasError = (value) => !value.documentElement || ["http://www.mozilla.org/newlayout/xml/parsererror.xml", "http://www.w3.org/1999/xhtml"].some((namespace) => value.getElementsByTagNameNS(namespace, "parsererror").length);
+    if (hasError(doc)) {
+      const probe = tokens.map((token) => {
+        const raw = text.slice(token.start, token.end);
+        return ["open", "empty", "close"].includes(token.kind) ? raw.replace(/^(<\/?)([^\s/>]+)/, (all, prefix, name) => name.split(":").at(-1) === "parsererror" ? prefix + name.replace(/parsererror$/, "delavnica-xml-validation") : all) : raw;
+      }).join("");
+      if (probe !== text) doc = parser.parseFromString(probe, "application/xml");
+    }
+    if (hasError(doc)) {
+      failLocal("INVALID_XML", "XML ni veljaven. Preverite oznake, atribute in imenske prostore.");
+    }
+    const elements = doc.getElementsByTagName("*");
+    let elementIndex = 0;
+    const root2 = { children: [], start: 0, end: text.length, preserve: false };
+    const stack = [root2];
+    for (const token of tokens) {
+      const parent = stack.at(-1);
+      if (token.kind === "close") {
+        const node = stack.pop();
+        node.close = token.start;
+        node.end = token.end;
+      } else {
+        const node = { ...token };
+        parent.children.push(node);
+        if (token.kind === "open" || token.kind === "empty") {
+          const space = elements[elementIndex++].getAttributeNS("http://www.w3.org/XML/1998/namespace", "space");
+          node.preserve = space === "preserve" || space !== "default" && parent.preserve;
+          node.children = [];
+          parent.hasElements = true;
+          if (token.kind === "open") {
+            node.openEnd = token.end;
+            stack.push(node);
+          }
+        } else if (token.kind === "cdata" || token.kind === "text" && /[^\x20\t\r\n]/.test(text.slice(token.start, token.end))) parent.mixed = true;
+      }
+    }
+    const unit = indent === "tab" ? "	" : " ".repeat(indent);
+    const output = [];
+    let length = 0;
+    const append = (value) => {
+      length += value.length;
+      if (length > LIMITS.textCharacters) failLocal("LIMIT_EXCEEDED", "Oblikovan XML presega omejitev 16 MiB znakov.");
+      output.push(value);
+    };
+    const work = [{ node: root2, depth: -1 }];
+    while (work.length) {
+      const { node, depth, closing } = work.pop();
+      if (closing) {
+        append("\n" + unit.repeat(depth) + text.slice(node.close, node.end));
+        continue;
+      }
+      if (node !== root2) append((output.length ? "\n" : "") + unit.repeat(depth));
+      if (node !== root2 && (node.kind !== "open" || node.preserve || node.mixed || !node.hasElements)) {
+        append(text.slice(node.start, node.end));
+        continue;
+      }
+      if (node !== root2) {
+        append(text.slice(node.start, node.openEnd));
+        work.push({ node, depth, closing: true });
+      }
+      const children = node.children.filter((child) => child.kind !== "text" || /[^\x20\t\r\n]/.test(text.slice(child.start, child.end)));
+      for (let i2 = children.length - 1; i2 >= 0; i2--) work.push({ node: children[i2], depth: depth + 1 });
+    }
+    return bom + output.join("");
+  }
+
+  // src/processing/jwt-generator.mjs
+  var HMAC = Object.freeze({ HS256: { hash: "SHA-256", bytes: 32 }, HS384: { hash: "SHA-384", bytes: 48 }, HS512: { hash: "SHA-512", bytes: 64 } });
+  var guided = { issuer: "iss", subject: "sub", audience: "aud", issuedAt: "iat", notBefore: "nbf", expiresAt: "exp" };
+  function base64(bytes) {
+    let binary = "";
+    for (const byte of bytes) binary += String.fromCharCode(byte);
+    return btoa(binary);
+  }
+  var base64url = (bytes) => base64(bytes).replaceAll("+", "-").replaceAll("/", "_").replace(/=+$/, "");
+  function decodeSecret(secret, encoding = "text") {
+    if (typeof secret !== "string" || secret.length > LIMITS.textCharacters) failLocal("LIMIT_EXCEEDED", "Skrivnost presega omejitev besedila.");
+    if (encoding === "text") return new TextEncoder().encode(secret);
+    if (encoding !== "base64") failLocal("INVALID_ARGUMENT", "Neveljavno kodiranje skrivnosti.");
+    const value = secret.trim();
+    if (!/^(?:[A-Za-z0-9+/]*|[A-Za-z0-9_-]*)={0,2}$/.test(value)) failLocal("INVALID_ARGUMENT", "Skrivnost ni veljaven Base64/base64url.");
+    const normalized = value.replaceAll("-", "+").replaceAll("_", "/");
+    const raw = normalized.replace(/=+$/, "");
+    if (raw.length % 4 === 1 || value.includes("=") && (value.length % 4 !== 0 || value.length - raw.length !== (4 - raw.length % 4) % 4)) failLocal("INVALID_ARGUMENT", "Skrivnost ni veljaven Base64/base64url.");
+    const bytes = Uint8Array.from(atob(raw), (c) => c.charCodeAt(0));
+    if (base64(bytes).replace(/=+$/, "") !== raw) failLocal("INVALID_ARGUMENT", "Skrivnost ni veljaven Base64/base64url.");
+    return bytes;
+  }
+  function localDateTime(date = /* @__PURE__ */ new Date()) {
+    const pad = (n) => String(n).padStart(2, "0");
+    return `${String(date.getFullYear()).padStart(4, "0")}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+  }
+  function unixSeconds(value) {
+    if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?$/.test(value)) failLocal("INVALID_ARGUMENT", "Vnesite veljaven lokalni datum in \u010Das.");
+    const date = new Date(value);
+    if (!Number.isFinite(date.getTime()) || localDateTime(date) !== (value.length === 16 ? value + ":00" : value) || date.getFullYear() < 1) failLocal("INVALID_ARGUMENT", "Vnesite veljaven lokalni datum in \u010Das.");
+    return Math.floor(date.getTime() / 1e3);
+  }
+  function randomSecret(algorithm = "HS256", crypto = globalThis.crypto) {
+    if (!HMAC[algorithm]) failLocal("INVALID_ARGUMENT", "Izberite HS256, HS384 ali HS512.");
+    if (!crypto?.getRandomValues) failLocal("PROCESSING_FAILED", "Varni generator naklju\u010Dnih vrednosti ni na voljo.");
+    return base64(crypto.getRandomValues(new Uint8Array(HMAC[algorithm].bytes)));
+  }
+  async function generateJwt(args, check = () => {
+  }, crypto = globalThis.crypto) {
+    check();
+    const algorithm = args.algorithm ?? "HS256";
+    if (!HMAC[algorithm]) failLocal("INVALID_ARGUMENT", "Izberite HS256, HS384 ali HS512.");
+    if (!crypto?.subtle) failLocal("PROCESSING_FAILED", "Web Crypto v tem okolju brskalnika ni na voljo.");
+    const secret = decodeSecret(args.secret, args.secretEncoding ?? "text");
+    try {
+      if (secret.length < HMAC[algorithm].bytes) failLocal("INVALID_ARGUMENT", `${algorithm} zahteva skrivnost z najmanj ${HMAC[algorithm].bytes} bajti.`);
+      const custom = args.customClaims ?? "{}";
+      if (typeof custom !== "string" || custom.length > LIMITS.textCharacters) failLocal("LIMIT_EXCEEDED", "Zahtevki presegajo omejitev besedila.");
+      let payload;
+      try {
+        payload = JSON.parse(custom);
+      } catch {
+        failLocal("INVALID_JSON", "Dodatni zahtevki morajo biti veljaven objekt JSON.");
+      }
+      if (!payload || Array.isArray(payload) || typeof payload !== "object") failLocal("INVALID_ARGUMENT", "Dodatni zahtevki morajo biti objekt JSON.");
+      for (const [field, claim] of Object.entries(guided)) {
+        if (Object.hasOwn(payload, claim)) failLocal("INVALID_ARGUMENT", `Zahtevek ${claim} vnesite v namensko polje, ne v dodatne zahtevke.`);
+        const value = args[field];
+        if (value !== void 0 && value !== "") payload[claim] = ["iat", "nbf", "exp"].includes(claim) ? unixSeconds(value) : value;
+      }
+      const header = { alg: algorithm, typ: "JWT" };
+      const encoder = new TextEncoder();
+      const unsigned = [header, payload].map((value) => base64url(encoder.encode(JSON.stringify(value)))).join(".");
+      if (unsigned.length > LIMITS.textCharacters) failLocal("LIMIT_EXCEEDED", "\u017Deton presega omejitev besedila.");
+      const key = await crypto.subtle.importKey("raw", secret, { name: "HMAC", hash: HMAC[algorithm].hash }, false, ["sign"]);
+      check();
+      const signature = await crypto.subtle.sign("HMAC", key, encoder.encode(unsigned));
+      check();
+      return { token: unsigned + "." + base64url(new Uint8Array(signature)), header, payload };
+    } finally {
+      secret.fill(0);
+    }
+  }
+
+  // node_modules/fflate/esm/browser.js
+  var u8 = Uint8Array;
+  var u16 = Uint16Array;
+  var i32 = Int32Array;
+  var fleb = new u8([
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    1,
+    1,
+    1,
+    2,
+    2,
+    2,
+    2,
+    3,
+    3,
+    3,
+    3,
+    4,
+    4,
+    4,
+    4,
+    5,
+    5,
+    5,
+    5,
+    0,
+    /* unused */
+    0,
+    0,
+    /* impossible */
+    0
+  ]);
+  var fdeb = new u8([
+    0,
+    0,
+    0,
+    0,
+    1,
+    1,
+    2,
+    2,
+    3,
+    3,
+    4,
+    4,
+    5,
+    5,
+    6,
+    6,
+    7,
+    7,
+    8,
+    8,
+    9,
+    9,
+    10,
+    10,
+    11,
+    11,
+    12,
+    12,
+    13,
+    13,
+    /* unused */
+    0,
+    0
+  ]);
+  var clim = new u8([16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15]);
+  var freb = function(eb, start) {
+    var b = new u16(31);
+    for (var i2 = 0; i2 < 31; ++i2) {
+      b[i2] = start += 1 << eb[i2 - 1];
+    }
+    var r = new i32(b[30]);
+    for (var i2 = 1; i2 < 30; ++i2) {
+      for (var j = b[i2]; j < b[i2 + 1]; ++j) {
+        r[j] = j - b[i2] << 5 | i2;
+      }
+    }
+    return { b, r };
+  };
+  var _a = freb(fleb, 2);
+  var fl = _a.b;
+  var revfl = _a.r;
+  fl[28] = 258, revfl[258] = 28;
+  var _b = freb(fdeb, 0);
+  var fd = _b.b;
+  var revfd = _b.r;
+  var rev = new u16(32768);
+  for (i = 0; i < 32768; ++i) {
+    x = (i & 43690) >> 1 | (i & 21845) << 1;
+    x = (x & 52428) >> 2 | (x & 13107) << 2;
+    x = (x & 61680) >> 4 | (x & 3855) << 4;
+    rev[i] = ((x & 65280) >> 8 | (x & 255) << 8) >> 1;
+  }
+  var x;
+  var i;
+  var flt = new u8(288);
+  for (i = 0; i < 144; ++i)
+    flt[i] = 8;
+  var i;
+  for (i = 144; i < 256; ++i)
+    flt[i] = 9;
+  var i;
+  for (i = 256; i < 280; ++i)
+    flt[i] = 7;
+  var i;
+  for (i = 280; i < 288; ++i)
+    flt[i] = 8;
+  var i;
+  var fdt = new u8(32);
+  for (i = 0; i < 32; ++i)
+    fdt[i] = 5;
+  var i;
+  var slc = function(v, s, e) {
+    if (s == null || s < 0)
+      s = 0;
+    if (e == null || e > v.length)
+      e = v.length;
+    return new u8(v.subarray(s, e));
+  };
+  var ec = [
+    "unexpected EOF",
+    "invalid block type",
+    "invalid length/literal",
+    "invalid distance",
+    "stream finished",
+    "no stream handler",
+    ,
+    // determined by compression function
+    "no callback",
+    "invalid UTF-8 data",
+    "extra field too long",
+    "date not in range 1980-2099",
+    "filename too long",
+    "stream finishing",
+    "invalid zip data"
+    // determined by unknown compression method
+  ];
+  var err = function(ind, msg, nt) {
+    var e = new Error(msg || ec[ind]);
+    e.code = ind;
+    if (Error.captureStackTrace)
+      Error.captureStackTrace(e, err);
+    if (!nt)
+      throw e;
+    return e;
+  };
+  var et = /* @__PURE__ */ new u8(0);
+  var crct = /* @__PURE__ */ (function() {
+    var t = new Int32Array(256);
+    for (var i2 = 0; i2 < 256; ++i2) {
+      var c = i2, k = 9;
+      while (--k)
+        c = (c & 1 && -306674912) ^ c >>> 1;
+      t[i2] = c;
+    }
+    return t;
+  })();
+  var crc = function() {
+    var c = -1;
+    return {
+      p: function(d) {
+        var cr = c;
+        for (var i2 = 0; i2 < d.length; ++i2)
+          cr = crct[cr & 255 ^ d[i2]] ^ cr >>> 8;
+        c = cr;
+      },
+      d: function() {
+        return ~c;
+      }
+    };
+  };
+  var mrg = function(a, b) {
+    var o = {};
+    for (var k in a)
+      o[k] = a[k];
+    for (var k in b)
+      o[k] = b[k];
+    return o;
+  };
+  var wbytes = function(d, b, v) {
+    for (; v; ++b)
+      d[b] = v, v >>>= 8;
+  };
+  var te = typeof TextEncoder != "undefined" && /* @__PURE__ */ new TextEncoder();
+  var td = typeof TextDecoder != "undefined" && /* @__PURE__ */ new TextDecoder();
+  var tds = 0;
+  try {
+    td.decode(et, { stream: true });
+    tds = 1;
+  } catch (e) {
+  }
+  function strToU8(str, latin1) {
+    if (latin1) {
+      var ar_1 = new u8(str.length);
+      for (var i2 = 0; i2 < str.length; ++i2)
+        ar_1[i2] = str.charCodeAt(i2);
+      return ar_1;
+    }
+    if (te)
+      return te.encode(str);
+    var l = str.length;
+    var ar = new u8(str.length + (str.length >> 1));
+    var ai = 0;
+    var w = function(v) {
+      ar[ai++] = v;
+    };
+    for (var i2 = 0; i2 < l; ++i2) {
+      if (ai + 5 > ar.length) {
+        var n = new u8(ai + 8 + (l - i2 << 1));
+        n.set(ar);
+        ar = n;
+      }
+      var c = str.charCodeAt(i2);
+      if (c < 128 || latin1)
+        w(c);
+      else if (c < 2048)
+        w(192 | c >> 6), w(128 | c & 63);
+      else if (c > 55295 && c < 57344)
+        c = 65536 + (c & 1023 << 10) | str.charCodeAt(++i2) & 1023, w(240 | c >> 18), w(128 | c >> 12 & 63), w(128 | c >> 6 & 63), w(128 | c & 63);
+      else
+        w(224 | c >> 12), w(128 | c >> 6 & 63), w(128 | c & 63);
+    }
+    return slc(ar, 0, ai);
+  }
+  var exfl = function(ex) {
+    var le = 0;
+    if (ex) {
+      for (var k in ex) {
+        var l = ex[k].length;
+        if (l > 65535)
+          err(9);
+        le += l + 4;
+      }
+    }
+    return le;
+  };
+  var wzh = function(d, b, f, fn, u, c, ce, co) {
+    var fl2 = fn.length, ex = f.extra, col = co && co.length;
+    var exl = exfl(ex);
+    wbytes(d, b, ce != null ? 33639248 : 67324752), b += 4;
+    if (ce != null)
+      d[b++] = 20, d[b++] = f.os;
+    d[b] = 20, b += 2;
+    d[b++] = f.flag << 1 | (c < 0 && 8), d[b++] = u && 8;
+    d[b++] = f.compression & 255, d[b++] = f.compression >> 8;
+    var dt = new Date(f.mtime == null ? Date.now() : f.mtime), y = dt.getFullYear() - 1980;
+    if (y < 0 || y > 119)
+      err(10);
+    wbytes(d, b, y << 25 | dt.getMonth() + 1 << 21 | dt.getDate() << 16 | dt.getHours() << 11 | dt.getMinutes() << 5 | dt.getSeconds() >> 1), b += 4;
+    if (c != -1) {
+      wbytes(d, b, f.crc);
+      wbytes(d, b + 4, c < 0 ? -c - 2 : c);
+      wbytes(d, b + 8, f.size);
+    }
+    wbytes(d, b + 12, fl2);
+    wbytes(d, b + 14, exl), b += 16;
+    if (ce != null) {
+      wbytes(d, b, col);
+      wbytes(d, b + 6, f.attrs);
+      wbytes(d, b + 10, ce), b += 14;
+    }
+    d.set(fn, b);
+    b += fl2;
+    if (exl) {
+      for (var k in ex) {
+        var exf = ex[k], l = exf.length;
+        wbytes(d, b, +k);
+        wbytes(d, b + 2, l);
+        d.set(exf, b + 4), b += 4 + l;
+      }
+    }
+    if (col)
+      d.set(co, b), b += col;
+    return b;
+  };
+  var wzf = function(o, b, c, d, e) {
+    wbytes(o, b, 101010256);
+    wbytes(o, b + 8, c);
+    wbytes(o, b + 10, c);
+    wbytes(o, b + 12, d);
+    wbytes(o, b + 16, e);
+  };
+  var ZipPassThrough = /* @__PURE__ */ (function() {
+    function ZipPassThrough2(filename2) {
+      this.filename = filename2;
+      this.c = crc();
+      this.size = 0;
+      this.compression = 0;
+    }
+    ZipPassThrough2.prototype.process = function(chunk, final) {
+      this.ondata(null, chunk, final);
+    };
+    ZipPassThrough2.prototype.push = function(chunk, final) {
+      if (!this.ondata)
+        err(5);
+      this.c.p(chunk);
+      this.size += chunk.length;
+      if (final)
+        this.crc = this.c.d();
+      this.process(chunk, final || false);
+    };
+    return ZipPassThrough2;
+  })();
+  var Zip = /* @__PURE__ */ (function() {
+    function Zip2(cb) {
+      this.ondata = cb;
+      this.u = [];
+      this.d = 1;
+    }
+    Zip2.prototype.add = function(file) {
+      var _this = this;
+      if (!this.ondata)
+        err(5);
+      if (this.d & 2)
+        this.ondata(err(4 + (this.d & 1) * 8, 0, 1), null, false);
+      else {
+        var f = strToU8(file.filename), fl_1 = f.length;
+        var com = file.comment, o = com && strToU8(com);
+        var u = fl_1 != file.filename.length || o && com.length != o.length;
+        var hl_1 = fl_1 + exfl(file.extra) + 30;
+        if (fl_1 > 65535)
+          this.ondata(err(11, 0, 1), null, false);
+        var header = new u8(hl_1);
+        wzh(header, 0, file, f, u, -1);
+        var chks_1 = [header];
+        var pAll_1 = function() {
+          for (var _i = 0, chks_2 = chks_1; _i < chks_2.length; _i++) {
+            var chk = chks_2[_i];
+            _this.ondata(null, chk, false);
+          }
+          chks_1 = [];
+        };
+        var tr_1 = this.d;
+        this.d = 0;
+        var ind_1 = this.u.length;
+        var uf_1 = mrg(file, {
+          f,
+          u,
+          o,
+          t: function() {
+            if (file.terminate)
+              file.terminate();
+          },
+          r: function() {
+            pAll_1();
+            if (tr_1) {
+              var nxt = _this.u[ind_1 + 1];
+              if (nxt)
+                nxt.r();
+              else
+                _this.d = 1;
+            }
+            tr_1 = 1;
+          }
+        });
+        var cl_1 = 0;
+        file.ondata = function(err2, dat, final) {
+          if (err2) {
+            _this.ondata(err2, dat, final);
+            _this.terminate();
+          } else {
+            cl_1 += dat.length;
+            chks_1.push(dat);
+            if (final) {
+              var dd = new u8(16);
+              wbytes(dd, 0, 134695760);
+              wbytes(dd, 4, file.crc);
+              wbytes(dd, 8, cl_1);
+              wbytes(dd, 12, file.size);
+              chks_1.push(dd);
+              uf_1.c = cl_1, uf_1.b = hl_1 + cl_1 + 16, uf_1.crc = file.crc, uf_1.size = file.size;
+              if (tr_1)
+                uf_1.r();
+              tr_1 = 1;
+            } else if (tr_1)
+              pAll_1();
+          }
+        };
+        this.u.push(uf_1);
+      }
+    };
+    Zip2.prototype.end = function() {
+      var _this = this;
+      if (this.d & 2) {
+        this.ondata(err(4 + (this.d & 1) * 8, 0, 1), null, true);
+        return;
+      }
+      if (this.d)
+        this.e();
+      else
+        this.u.push({
+          r: function() {
+            if (!(_this.d & 1))
+              return;
+            _this.u.splice(-1, 1);
+            _this.e();
+          },
+          t: function() {
+          }
+        });
+      this.d = 3;
+    };
+    Zip2.prototype.e = function() {
+      var bt = 0, l = 0, tl = 0;
+      for (var _i = 0, _a2 = this.u; _i < _a2.length; _i++) {
+        var f = _a2[_i];
+        tl += 46 + f.f.length + exfl(f.extra) + (f.o ? f.o.length : 0);
+      }
+      var out = new u8(tl + 22);
+      for (var _b2 = 0, _c = this.u; _b2 < _c.length; _b2++) {
+        var f = _c[_b2];
+        wzh(out, bt, f, f.f, f.u, -f.c - 2, l, f.o);
+        bt += 46 + f.f.length + exfl(f.extra) + (f.o ? f.o.length : 0), l += f.b;
+      }
+      wzf(out, bt, this.u.length, tl, l);
+      this.ondata(null, out, true);
+      this.d = 2;
+    };
+    Zip2.prototype.terminate = function() {
+      for (var _i = 0, _a2 = this.u; _i < _a2.length; _i++) {
+        var f = _a2[_i];
+        f.t();
+      }
+      this.d = 2;
+    };
+    return Zip2;
+  })();
+
+  // src/processing/images.mjs
+  var IMAGE_LIMITS = Object.freeze({ files: 50, decodedPixels: 4e7, outputPixels: 16e6, side: 8192 });
+  var IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
+  var yieldTask = () => new Promise((resolve) => setTimeout(resolve, 0));
+  function decodedLimit(width, height) {
+    if (!width || !height) failLocal("INVALID_IMAGE", "Slika nima veljavnih dimenzij.");
+    if (width * height > IMAGE_LIMITS.decodedPixels) failLocal("LIMIT_EXCEEDED", "Slika presega 40 milijonov slikovnih pik.");
+  }
+  function imageHeader(bytes) {
+    const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+    const tag = (offset, value) => [...value].every((c, i2) => bytes[offset + i2] === c.charCodeAt(0));
+    let width, height, mimeType;
+    if (bytes.length >= 24 && bytes[0] === 137 && tag(1, "PNG\r\n\n") && tag(12, "IHDR")) {
+      mimeType = "image/png";
+      width = view.getUint32(16);
+      height = view.getUint32(20);
+    } else if (bytes.length >= 12 && tag(0, "RIFF") && tag(8, "WEBP")) {
+      mimeType = "image/webp";
+      for (let offset = 12; offset + 8 <= bytes.length; ) {
+        const size = view.getUint32(offset + 4, true), p = offset + 8;
+        if (p + size > bytes.length) break;
+        if (tag(offset, "VP8X") && size >= 10) {
+          width = 1 + bytes[p + 4] + (bytes[p + 5] << 8) + (bytes[p + 6] << 16);
+          height = 1 + bytes[p + 7] + (bytes[p + 8] << 8) + (bytes[p + 9] << 16);
+          break;
+        }
+        if (tag(offset, "VP8 ") && size >= 10 && tag(p + 3, "\x9D*")) {
+          width = view.getUint16(p + 6, true) & 16383;
+          height = view.getUint16(p + 8, true) & 16383;
+          break;
+        }
+        if (tag(offset, "VP8L") && size >= 5 && bytes[p] === 47) {
+          const bits = view.getUint32(p + 1, true);
+          width = (bits & 16383) + 1;
+          height = (bits >>> 14 & 16383) + 1;
+          break;
+        }
+        offset = p + size + size % 2;
+      }
+    } else if (bytes[0] === 255 && bytes[1] === 216) {
+      mimeType = "image/jpeg";
+      let offset = 2;
+      while (offset + 3 < bytes.length) {
+        if (bytes[offset++] !== 255) break;
+        while (bytes[offset] === 255) offset++;
+        const marker = bytes[offset++];
+        if (marker === 217 || marker === 218) break;
+        if (marker === 1 || marker >= 208 && marker <= 215) continue;
+        if (offset + 2 > bytes.length) break;
+        const size = view.getUint16(offset);
+        if (size < 2 || offset + size > bytes.length) break;
+        if ([192, 193, 194, 195, 197, 198, 199, 201, 202, 203, 205, 206, 207].includes(marker) && size >= 8) {
+          height = view.getUint16(offset + 3);
+          width = view.getUint16(offset + 5);
+          break;
+        }
+        offset += size;
+      }
+    }
+    if (!mimeType || !width || !height) failLocal("INVALID_IMAGE", "Datoteka ni veljavna slika JPEG, PNG ali WebP.");
+    decodedLimit(width, height);
+    return { width, height, mimeType };
+  }
+  function resizeDimensions(width, height, { mode = "fit", maxWidth = 1920, maxHeight = 1080, enlarge = false, percentage = 100 } = {}) {
+    decodedLimit(width, height);
+    let scale;
+    if (mode === "fit") {
+      if (![maxWidth, maxHeight].every((n) => Number.isInteger(n) && n >= 1 && n <= IMAGE_LIMITS.side)) failLocal("INVALID_ARGUMENT", "Najve\u010Dja \u0161irina in vi\u0161ina morata biti med 1 in 8192.");
+      scale = Math.min(maxWidth / width, maxHeight / height, enlarge ? Infinity : 1);
+    } else if (mode === "percentage") {
+      if (!Number.isInteger(percentage) || percentage < 1 || percentage > 400) failLocal("INVALID_ARGUMENT", "Odstotek mora biti celo \u0161tevilo med 1 in 400.");
+      scale = percentage / 100;
+    } else failLocal("INVALID_ARGUMENT", "Izberite prilagoditev meram ali odstotek.");
+    const result = { width: Math.max(1, Math.round(width * scale)), height: Math.max(1, Math.round(height * scale)) };
+    if (result.width > IMAGE_LIMITS.side || result.height > IMAGE_LIMITS.side || result.width * result.height > IMAGE_LIMITS.outputPixels) failLocal("LIMIT_EXCEEDED", "Izhod presega 16 milijonov slikovnih pik ali 8192 pik na stranico. Zmanj\u0161ajte mere ali odstotek.");
+    return result;
+  }
+  async function decodeImage(file, check = () => {
+  }) {
+    check();
+    if (file.size > LIMITS.fileBytes) failLocal("LIMIT_EXCEEDED", "Datoteka presega omejitev 64 MiB.");
+    const header = imageHeader(new Uint8Array(await file.arrayBuffer()));
+    check();
+    let bitmap;
+    try {
+      bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
+    } catch {
+      check();
+      failLocal("INVALID_IMAGE", "Slike ni mogo\u010De odpreti. Datoteka je po\u0161kodovana ali nepodprta.");
+    }
+    try {
+      check();
+      decodedLimit(bitmap.width, bitmap.height);
+    } catch (error) {
+      bitmap.close();
+      throw error;
+    }
+    return { bitmap, width: bitmap.width, height: bitmap.height, mimeType: header.mimeType };
+  }
+  function canvasBlob(canvas, mimeType, quality = 0.9) {
+    return new Promise((resolve, reject) => canvas.toBlob((blob) => {
+      if (!blob) reject(Object.assign(new Error("Kodiranje slike ni uspelo."), { code: "INVALID_IMAGE" }));
+      else if (blob.type !== mimeType) reject(Object.assign(new Error("Brskalnik ne podpira izbranega izhodnega formata: " + mimeType + "."), { code: "UNSUPPORTED_FORMAT" }));
+      else resolve(blob);
+    }, mimeType, quality));
+  }
+  async function encoderSupported(mimeType) {
+    const canvas = document.createElement("canvas");
+    canvas.width = canvas.height = 1;
+    try {
+      await canvasBlob(canvas, mimeType);
+      return true;
+    } catch {
+      return false;
+    } finally {
+      canvas.width = canvas.height = 0;
+    }
+  }
+  async function imagePreview(file, check = () => {
+  }) {
+    const image = await decodeImage(file, check);
+    const canvas = document.createElement("canvas");
+    try {
+      const scale = Math.min(256 / image.width, 256 / image.height, 1);
+      canvas.width = Math.max(1, Math.round(image.width * scale));
+      canvas.height = Math.max(1, Math.round(image.height * scale));
+      canvas.getContext("2d").drawImage(image.bitmap, 0, 0, canvas.width, canvas.height);
+      const blob = await canvasBlob(canvas, "image/png");
+      check();
+      return { blob, width: image.width, height: image.height, mimeType: image.mimeType };
+    } finally {
+      image.bitmap.close();
+      canvas.width = canvas.height = 0;
+    }
+  }
+  function outputFilename(name, mimeType, used) {
+    const extension = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" }[mimeType];
+    let stem = name.replace(/\.[^.]*$/, "").replace(/[<>:"/\\|?*\x00-\x1f]/g, "_").replace(/[. ]+$/, "").trim().slice(0, 120) || "slika";
+    if (/^(con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i.test(stem)) stem = "_" + stem;
+    let result = `${stem}.${extension}`, suffix = 1;
+    while (used.has(result.normalize("NFC").toLowerCase())) result = `${stem} (${++suffix}).${extension}`;
+    used.add(result.normalize("NFC").toLowerCase());
+    return result;
+  }
+  async function resizeImage(file, args, check = () => {
+  }) {
+    const image = await decodeImage(file, check);
+    const canvas = document.createElement("canvas");
+    try {
+      const dimensions = resizeDimensions(image.width, image.height, args);
+      const mimeType = args.format === "source" || !args.format ? image.mimeType : args.format;
+      if (!IMAGE_TYPES.includes(mimeType) || !await encoderSupported(mimeType)) failLocal("UNSUPPORTED_FORMAT", "Brskalnik ne podpira izbranega izhodnega formata: " + mimeType + ".");
+      check();
+      canvas.width = dimensions.width;
+      canvas.height = dimensions.height;
+      const context = canvas.getContext("2d");
+      if (!context) failLocal("PROCESSING_FAILED", "Risanje na platno v tem brskalniku ni na voljo.");
+      if (mimeType === "image/jpeg") {
+        context.fillStyle = "#fff";
+        context.fillRect(0, 0, canvas.width, canvas.height);
+      }
+      context.drawImage(image.bitmap, 0, 0, canvas.width, canvas.height);
+      const blob = await canvasBlob(canvas, mimeType);
+      check();
+      if (blob.size > LIMITS.fileBytes) failLocal("LIMIT_EXCEEDED", "Izhodna slika presega omejitev 64 MiB.");
+      return { blob, ...dimensions, sourceWidth: image.width, sourceHeight: image.height, mimeType };
+    } finally {
+      image.bitmap.close();
+      canvas.width = canvas.height = 0;
+    }
+  }
+  async function imageZip(entries, check = () => {
+  }) {
+    const chunks = [];
+    let size = 0;
+    const zip = new Zip((error, data) => {
+      if (error) throw error;
+      size += data.length;
+      if (size > LIMITS.artifactBytes) failLocal("LIMIT_EXCEEDED", "ZIP presega omejitev 128 MiB.");
+      chunks.push(data);
+    });
+    try {
+      for (const file of entries) {
+        check();
+        const entry = new ZipPassThrough(file.name);
+        zip.add(entry);
+        for (let offset = 0; offset < file.size; offset += 1024 * 1024) {
+          const bytes = new Uint8Array(await file.slice(offset, offset + 1024 * 1024).arrayBuffer());
+          check();
+          entry.push(bytes, offset + bytes.length === file.size);
+          await yieldTask();
+          check();
+        }
+        if (!file.size) entry.push(new Uint8Array(), true);
+      }
+      zip.end();
+      check();
+      return new File(chunks, "pomanjsane-slike.zip", { type: "application/zip" });
+    } catch (error) {
+      zip.terminate();
+      throw error;
+    }
+  }
+  async function resizeImages(args, { files: files2, artifacts: artifacts2, check = () => {
+  }, progress = () => {
+  }, resize = resizeImage, zip = imageZip }) {
+    if (!args.fileIds.length || args.fileIds.length > IMAGE_LIMITS.files) failLocal("LIMIT_EXCEEDED", "Izberite od 1 do 50 slik.");
+    const results = [], successful = [], used = /* @__PURE__ */ new Set(), warnings = [];
+    for (const fileId2 of args.fileIds) {
+      check();
+      progress({ fileId: fileId2, state: "processing" });
+      let result;
+      try {
+        const record = files2.get(fileId2, "image-resizer");
+        const resized = await resize(record.file, args, check);
+        check();
+        const file = new File([resized.blob], outputFilename(record.file.name, resized.mimeType, used), { type: resized.mimeType });
+        const { blob, ...dimensions } = resized;
+        const artifact = artifacts2.add(file, "image-resizer", dimensions);
+        successful.push(file);
+        result = { fileId: fileId2, success: true, ...dimensions, artifact };
+      } catch (error) {
+        check();
+        result = { fileId: fileId2, success: false, error: { code: error.code || "INVALID_IMAGE", message: error.message, localized: !!error.localized } };
+      }
+      results.push(result);
+      progress({ fileId: fileId2, state: result.success ? "complete" : "error", result });
+      await yieldTask();
+      check();
+    }
+    let zipArtifact = null;
+    if (successful.length) {
+      try {
+        const file = await zip(successful, check);
+        check();
+        zipArtifact = artifacts2.add(file, "image-resizer");
+      } catch (error) {
+        check();
+        warnings.push("ZIP ni bil ustvarjen: " + error.message + " Posamezni prenosi so \u0161e vedno na voljo.");
+      }
+    }
+    return { images: results, count: successful.length, zipArtifact, warnings };
+  }
+
   // src/operations/adapter.mjs
   function createAdapter({ core: core2, files: files2, artifacts: artifacts2, pdf, navigate: navigate2 = () => {
   }, appVersion, onInvalidate = () => {
@@ -284,8 +1177,15 @@
       jobs.get(tool)?.abort();
       artifacts2.clear(tool);
       onInvalidate(tool);
+      controllers.get(tool)?.invalidate?.();
     }
     async function process(name, args, check) {
+      if (name === "format_xml") return { text: formatXml(args.text, args) };
+      if (name === "generate_jwt") return generateJwt(args, check);
+      if (name === "resize_images") return resizeImages(args, { files: files2, artifacts: artifacts2, check, progress: (update) => {
+        check();
+        controllers.get("image-resizer")?.fileProgress?.(update);
+      } });
       if (name === "generate_emso") {
         const identifiers = core2.generateEmsos(args.count, { date: args.date ? core2.parseIsoDate(args.date) : null, gender: args.gender, adultOnly: args.adultOnly });
         if (!identifiers.every((value) => core2.validateEmso(value).valid)) fail("PROCESSING_FAILED", "Internal EM\u0160O checksum check failed.");
@@ -380,7 +1280,8 @@
           if (tool && source !== "manual") navigate2(tool);
           if (argumentError) throw argumentError;
           const args = argumentsSnapshot;
-          controller?.apply?.(args, source);
+          await controller?.apply?.(args, source);
+          check();
           controller?.progress?.(args);
           await Promise.resolve();
           check();
@@ -552,6 +1453,7 @@
   }
   function initToolNavigation() {
     document.documentElement.style.setProperty("--tool-route-count", String(ROUTE_SEQUENCE.length));
+    document.documentElement.style.setProperty("--tool-count", String(tools.length));
     document.querySelectorAll("[data-route]").forEach((link) => {
       link.href = routeUrl(link.dataset.route);
     });
@@ -579,6 +1481,9 @@
     if (activeLink && sidebar && sidebar.scrollWidth > sidebar.clientWidth) {
       sidebar.scrollLeft = activeLink.offsetLeft - (sidebar.clientWidth - activeLink.offsetWidth) / 2;
     }
+    if (activeLink && sidebar && sidebar.scrollHeight > sidebar.clientHeight) {
+      sidebar.scrollTop = activeLink.offsetTop - (sidebar.clientHeight - activeLink.offsetHeight) / 2;
+    }
     const changed = renderedRoute !== route;
     renderedRoute = route;
     const metadata = pages.find((page) => page.id === route);
@@ -605,6 +1510,7 @@
     });
     window.addEventListener("popstate", fromLocation);
     window.addEventListener("hashchange", fromLocation);
+    window.addEventListener("resize", renderRoute);
     fromLocation();
   }
 
@@ -627,7 +1533,7 @@
     files,
     artifacts,
     navigate,
-    appVersion: "caeeb3e000a6d0f26d32177c0e35523232a2b95c9e91f796df225c44937dec24",
+    appVersion: "2d292fa7f0932e360da5d63a62b8dd0809b7fb6121a70481a3a5f9148e7cb81c",
     onInvalidate: (tool) => showArtifact(tool, null),
     pdf: async (args, check) => {
       if (!await window.DelavnicaPdfLoader.load()) throw new Error("PDF engines could not be loaded.");
@@ -642,7 +1548,7 @@
       status.textContent = localizedError(error);
       status.classList.add("is-error");
     } });
-    window.DelavnicaAgent = Object.freeze({ apiVersion: API_VERSION, appVersion: "caeeb3e000a6d0f26d32177c0e35523232a2b95c9e91f796df225c44937dec24", execute: (name, input, { signal } = {}) => api.execute(name, input, { signal }) });
+    window.DelavnicaAgent = Object.freeze({ apiVersion: API_VERSION, appVersion: "2d292fa7f0932e360da5d63a62b8dd0809b7fb6121a70481a3a5f9148e7cb81c", execute: (name, input, { signal } = {}) => api.execute(name, input, { signal }) });
     const lifetime = new AbortController();
     window.addEventListener("pagehide", (event) => {
       if (!event.persisted) {
@@ -689,6 +1595,15 @@
         },
         pdf: function() {
           byId("pdf-download").click();
+        },
+        xml: function() {
+          byId("xml-format").click();
+        },
+        "jwt-generator": function() {
+          byId("jwt-generator-form").requestSubmit();
+        },
+        "image-resizer": function() {
+          byId("image-resizer-form").requestSubmit();
         }
       }[route];
       if (action) {
@@ -1886,6 +2801,300 @@
     }
   }
 
+  // src/ui/tools/xml.mjs
+  function initXmlTool() {
+    const input = byId("xml-input"), output = byId("xml-output"), indent = byId("xml-indent"), status = byId("xml-status");
+    api.register("xml", {
+      invalidate() {
+        output.value = "";
+      },
+      apply(args) {
+        input.value = args.text;
+        indent.value = String(args.indent);
+      },
+      progress() {
+        setStatus(status, "Oblikovanje XML\u2026", false);
+      },
+      render(result) {
+        output.value = result.text;
+        setStatus(status, "XML je veljaven in uspe\u0161no oblikovan.", false);
+      },
+      error(error) {
+        output.value = "";
+        setStatus(status, localizedError(error), true);
+      },
+      settled(cancelled) {
+        if (cancelled) setStatus(status, "Opravilo je preklicano.", false);
+      }
+    });
+    for (const control of [input, indent]) control.addEventListener("input", () => {
+      api.invalidate("xml");
+      setStatus(status, "Pritisnite OBLIKUJ za nov izpis.", false);
+    });
+    byId("xml-format").addEventListener("click", () => void api.execute("format_xml", { text: input.value, indent: indent.value === "tab" ? "tab" : Number(indent.value) }, { source: "manual" }));
+    byId("xml-clear").addEventListener("click", () => {
+      api.invalidate("xml");
+      input.value = "";
+      setStatus(status, "Prilepite XML za oblikovanje.", false);
+      input.focus();
+    });
+  }
+
+  // src/ui/tools/jwt-generator.mjs
+  function initJwtGenerator() {
+    const fields = Object.fromEntries(["algorithm", "secret", "secretEncoding", "issuer", "subject", "audience", "issuedAt", "notBefore", "expiresAt", "customClaims"].map((name) => [name, byId("jwt-generator-" + name)]));
+    const output = byId("jwt-generator-output"), header = byId("jwt-generator-header"), payload = byId("jwt-generator-payload"), status = byId("jwt-generator-status");
+    function secretHelp() {
+      byId("jwt-generator-secret-help").textContent = `Najmanj ${HMAC[fields.algorithm.value].bytes} dekodiranih bajtov. Besedilo se kodira kot UTF-8.`;
+    }
+    function invalidate() {
+      api.invalidate("jwt-generator");
+      secretHelp();
+      setStatus(status, "Pritisnite USTVARI JWT za nov \u017Eeton.", false);
+    }
+    api.register("jwt-generator", {
+      invalidate() {
+        output.value = "";
+        header.textContent = "";
+        payload.textContent = "";
+      },
+      apply(args) {
+        for (const [name, field] of Object.entries(fields)) field.value = args[name];
+        secretHelp();
+      },
+      progress() {
+        setStatus(status, "Podpisovanje \u017Eetona z Web Crypto\u2026", false);
+      },
+      render(result) {
+        output.value = result.token;
+        header.textContent = JSON.stringify(result.header, null, 2);
+        payload.textContent = JSON.stringify(result.payload, null, 2);
+        setStatus(status, "JWT je ustvarjen in podpisan.", false);
+      },
+      error(error) {
+        setStatus(status, localizedError(error), true);
+      },
+      settled(cancelled) {
+        if (cancelled) setStatus(status, "Opravilo je preklicano.", false);
+      }
+    });
+    for (const field of Object.values(fields)) field.addEventListener("input", invalidate);
+    byId("jwt-generator-random").addEventListener("click", () => {
+      invalidate();
+      try {
+        fields.secret.value = randomSecret(fields.algorithm.value);
+        fields.secretEncoding.value = "base64";
+      } catch (error) {
+        setStatus(status, localizedError(error), true);
+      }
+    });
+    byId("jwt-generator-now").addEventListener("click", () => {
+      invalidate();
+      fields.issuedAt.value = localDateTime();
+    });
+    byId("jwt-generator-hour").addEventListener("click", () => {
+      invalidate();
+      fields.expiresAt.value = localDateTime(new Date(Date.now() + 36e5));
+    });
+    byId("jwt-generator-form").addEventListener("submit", (event) => {
+      event.preventDefault();
+      void api.execute("generate_jwt", Object.fromEntries(Object.entries(fields).map(([name, field]) => [name, field.value])), { source: "manual" });
+    });
+    byId("jwt-generator-clear").addEventListener("click", () => {
+      api.invalidate("jwt-generator");
+      byId("jwt-generator-form").reset();
+      secretHelp();
+      setStatus(status, "Vnesite skrivnost in \u017Eelene zahtevke.", false);
+      fields.secret.focus();
+    });
+    secretHelp();
+  }
+
+  // src/ui/tools/image-resizer.mjs
+  function initImageResizer() {
+    const tool = "image-resizer", input = byId(tool + "-file"), list = byId(tool + "-list"), status = byId(tool + "-status"), downloads = byId(tool + "-downloads");
+    const controls = Object.fromEntries(["mode", "maxWidth", "maxHeight", "enlarge", "percentage", "format"].map((name) => [name, byId(tool + "-" + name)]));
+    const records = /* @__PURE__ */ new Map();
+    let generation = 0, previews = Promise.resolve();
+    function modeControls() {
+      const fit = controls.mode.value === "fit";
+      byId(tool + "-fit").hidden = !fit;
+      byId(tool + "-percent").hidden = fit;
+      controls.maxWidth.disabled = controls.maxHeight.disabled = controls.enlarge.disabled = !fit;
+      controls.percentage.disabled = fit;
+    }
+    function resetResults() {
+      downloads.replaceChildren();
+      for (const record of records.values()) {
+        record.download.replaceChildren();
+        record.state.textContent = record.problem || (record.width ? "Pripravljeno." : "Branje slike\u2026");
+      }
+    }
+    function release(record) {
+      if (record.url) URL.revokeObjectURL(record.url);
+      record.element.remove();
+      files.release(record.id);
+      records.delete(record.id);
+    }
+    function link(artifact) {
+      const a = document.createElement("a");
+      a.className = "text-link artifact-link";
+      a.href = artifact.downloadUrl;
+      a.download = artifact.filename;
+      a.textContent = "PRENESI " + artifact.filename;
+      return a;
+    }
+    function renderFile(result) {
+      const record = records.get(result.fileId);
+      if (!record) return;
+      record.download.replaceChildren();
+      record.state.textContent = result.success ? `${result.width} \xD7 ${result.height} px \xB7 Kon\u010Dano.` : localizedError(result.error);
+      if (result.success) record.download.append(link(result.artifact));
+    }
+    function addFiles(selected) {
+      api.invalidate(tool);
+      const revision = generation, idle = api.whenIdle(tool);
+      const problems = [];
+      let rejected = 0;
+      for (const file of selected) {
+        if (records.size >= IMAGE_LIMITS.files) {
+          rejected++;
+          continue;
+        }
+        let id;
+        try {
+          id = files.add(file, tool);
+        } catch (error) {
+          problems.push(file.name + ": " + (error.code === "LIMIT_EXCEEDED" ? "Najve\u010D 64 MiB na datoteko in 128 MiB izbranih datotek v zavihku." : localizedError(error)));
+          continue;
+        }
+        if (records.has(id)) continue;
+        const element = document.createElement("article");
+        element.className = "image-card";
+        const img = document.createElement("img");
+        img.alt = "";
+        img.hidden = true;
+        img.width = img.height = 128;
+        const title = document.createElement("h2");
+        title.textContent = file.name;
+        const dimensions = document.createElement("p"), state = document.createElement("p"), download = document.createElement("div");
+        state.textContent = "Branje slike\u2026";
+        state.setAttribute("role", "status");
+        const remove = document.createElement("button");
+        remove.className = "button";
+        remove.type = "button";
+        remove.textContent = "ODSTRANI";
+        remove.setAttribute("aria-label", "Odstrani " + file.name);
+        const record = { id, element, img, dimensions, state, download };
+        remove.addEventListener("click", () => {
+          api.invalidate(tool);
+          release(record);
+          setStatus(status, "Slika je odstranjena.", false);
+        });
+        element.append(img, title, dimensions, state, download, remove);
+        list.append(element);
+        records.set(id, record);
+        const check = () => {
+          if (revision !== generation || records.get(id) !== record) throw Object.assign(new Error("Preklicano."), { code: "CANCELLED" });
+        };
+        previews = previews.then(async () => {
+          await idle;
+          try {
+            check();
+            const preview = await imagePreview(file, check);
+            check();
+            record.url = URL.createObjectURL(preview.blob);
+            record.width = preview.width;
+            img.src = record.url;
+            img.hidden = false;
+            dimensions.textContent = `${preview.width} \xD7 ${preview.height} px`;
+            state.textContent = "Pripravljeno.";
+            files.update(id, { width: preview.width, height: preview.height, sourceMimeType: preview.mimeType });
+          } catch (error) {
+            if (error.code !== "CANCELLED" && records.get(id) === record) {
+              record.problem = localizedError(error);
+              state.textContent = record.problem;
+            }
+          }
+        });
+      }
+      if (rejected) problems.push(`Najve\u010D 50 slik. Izpu\u0161\u010Denih datotek: ${rejected}.`);
+      setStatus(status, problems.length ? problems.join(" ") : "Slike so dodane. Nastavite mere in za\u010Dnite obdelavo.", !!problems.length);
+      input.value = "";
+    }
+    api.register(tool, {
+      invalidate: resetResults,
+      async apply(args) {
+        for (const [name, control] of Object.entries(controls)) {
+          if (name === "enlarge") control.checked = args[name];
+          else control.value = String(args[name]);
+        }
+        modeControls();
+        await previews;
+      },
+      progress() {
+        setStatus(status, "Zaporedna obdelava slik\u2026", false);
+      },
+      fileProgress(update) {
+        if (update.result) renderFile(update.result);
+        else if (records.has(update.fileId)) records.get(update.fileId).state.textContent = "Obdelava\u2026";
+      },
+      render(result) {
+        for (const image of result.images) renderFile(image);
+        downloads.replaceChildren();
+        if (result.zipArtifact) downloads.append(link(result.zipArtifact));
+        setStatus(status, `Uspe\u0161no obdelanih slik: ${result.count}/${result.images.length}.` + (result.warnings.length ? " " + result.warnings.join(" ") : ""), result.count !== result.images.length || !!result.warnings.length);
+      },
+      error(error) {
+        resetResults();
+        setStatus(status, localizedError(error), true);
+      },
+      settled(cancelled) {
+        if (cancelled) {
+          resetResults();
+          setStatus(status, "Opravilo je preklicano.", false);
+        }
+      }
+    });
+    input.addEventListener("change", () => addFiles([...input.files]));
+    const drop = byId(tool + "-drop");
+    drop.addEventListener("dragover", (event) => {
+      event.preventDefault();
+      drop.classList.add("is-dragging");
+    });
+    drop.addEventListener("dragleave", () => drop.classList.remove("is-dragging"));
+    drop.addEventListener("drop", (event) => {
+      event.preventDefault();
+      drop.classList.remove("is-dragging");
+      addFiles([...event.dataTransfer.files]);
+    });
+    for (const control of Object.values(controls)) control.addEventListener("input", () => {
+      api.invalidate(tool);
+      modeControls();
+      setStatus(status, "Nastavitve so spremenjene. Ponovite obdelavo.", false);
+    });
+    byId(tool + "-form").addEventListener("submit", (event) => {
+      event.preventDefault();
+      const args = { fileIds: [...records.keys()], mode: controls.mode.value, format: controls.format.value, maxWidth: Number(controls.maxWidth.value), maxHeight: Number(controls.maxHeight.value), percentage: Number(controls.percentage.value), enlarge: controls.enlarge.checked };
+      void api.execute("resize_images", args, { source: "manual" });
+    });
+    function clear() {
+      generation++;
+      api.invalidate(tool);
+      for (const record of records.values()) release(record);
+      input.value = "";
+    }
+    byId(tool + "-clear").addEventListener("click", () => {
+      clear();
+      setStatus(status, "Izberite slike za obdelavo.", false);
+      input.focus();
+    });
+    window.addEventListener("pagehide", (event) => {
+      if (!event.persisted) clear();
+    });
+    modeControls();
+  }
+
   // src/ui/bootstrap.mjs
   function init() {
     initOperations();
@@ -1897,6 +3106,9 @@
     initJwtTool();
     initJsonTool();
     initQifTool();
+    initXmlTool();
+    initJwtGenerator();
+    initImageResizer();
     initKeyboardShortcuts();
     initMobileInfoRail();
     initSwipeNavigation();

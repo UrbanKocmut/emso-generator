@@ -7,6 +7,9 @@
   <url><loc>https://delavnica.kocmut.com/json/</loc></url>
   <url><loc>https://delavnica.kocmut.com/sparkasse-csv-qif/</loc></url>
   <url><loc>https://delavnica.kocmut.com/pdf/</loc></url>
+  <url><loc>https://delavnica.kocmut.com/xml/</loc></url>
+  <url><loc>https://delavnica.kocmut.com/jwt-generator/</loc></url>
+  <url><loc>https://delavnica.kocmut.com/image-resizer/</loc></url>
   <url><loc>https://delavnica.kocmut.com/agents/</loc></url>
   <url><loc>https://delavnica.kocmut.com/zasebnost.html</loc></url>
 </urlset>

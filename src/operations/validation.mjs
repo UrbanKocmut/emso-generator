@@ -1,4 +1,5 @@
 export function fail(code, message) { throw Object.assign(new Error(message), { code }); }
+export function failLocal(code, message) { throw Object.assign(new Error(message), { code, localized: true }); }
 
 // Implements exactly the schema features used by our small catalog. No coercion.
 export function validate(schema, value, location = 'input') {

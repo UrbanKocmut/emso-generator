@@ -7,7 +7,7 @@
     "build": "node scripts/build.mjs",
     "build:check": "node scripts/build.mjs --check",
     "preview": "node scripts/serve.mjs",
-    "test": "npm run build:check && node tests/toolbox.test.js && node --test tests/correctness.test.js tests/pdf-thumbnail.test.mjs tests/pdf-loader.test.js tests/file-output.test.js tests/pwa-ui.test.js tests/pwa-infra.test.mjs tests/discovery.test.mjs tests/operations.test.mjs",
+    "test": "npm run build:check && node tests/toolbox.test.js && node --test tests/correctness.test.js tests/pdf-thumbnail.test.mjs tests/pdf-loader.test.js tests/file-output.test.js tests/pwa-ui.test.js tests/pwa-infra.test.mjs tests/discovery.test.mjs tests/operations.test.mjs tests/new-tools.test.mjs",
     "test:browser": "playwright test"
   },
   "devDependencies": {
@@ -16,5 +16,8 @@
   },
   "engines": {
     "node": ">=20"
+  },
+  "dependencies": {
+    "fflate": "0.8.3"
   }
 }

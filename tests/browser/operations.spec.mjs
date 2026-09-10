@@ -112,7 +112,7 @@ test('WebMCP registers the current API with cancellation and same-origin default
             readOnly: entry.tool.annotations.readOnlyHint, untrusted: entry.tool.annotations.untrustedContentHint,
             success: JSON.parse(await entry.tool.execute({ text: '{"n":-0}' })), cancelled: JSON.parse(await entry.tool.execute({ text: '{}' }, { signal: controller.signal })) };
     });
-    expect(result.names).toHaveLength(8); expect(result.exposed).toBe(false); expect(result.readOnly).toBe(false); expect(result.untrusted).toBe(true);
+    expect(result.names).toHaveLength(OPERATIONS.length); expect(result.exposed).toBe(false); expect(result.readOnly).toBe(false); expect(result.untrusted).toBe(true);
     expect(result.success.result.text).toContain('-0'); expect(result.cancelled.error.code).toBe('CANCELLED');
 });
 

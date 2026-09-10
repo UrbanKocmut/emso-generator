@@ -10,3 +10,6 @@ Static, browser-local tools. No remote processing API. Agent/provider privacy is
 - [Formatiranje JSON](https://delavnica.kocmut.com/json/)
 - [Sparkasse CSV v QIF](https://delavnica.kocmut.com/sparkasse-csv-qif/)
 - [Združevanje PDF-jev](https://delavnica.kocmut.com/pdf/)
+- [Formatiranje XML](https://delavnica.kocmut.com/xml/)
+- [Generator JWT](https://delavnica.kocmut.com/jwt-generator/)
+- [Sprememba velikosti slik](https://delavnica.kocmut.com/image-resizer/)

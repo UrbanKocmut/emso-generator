@@ -1,6 +1,8 @@
+import tools from '../../assets/js/tool-registry.js';
 import { test, expect } from '@playwright/test';
 
-const routes = ['overview', 'emso', 'vat', 'jwt', 'json', 'qif', 'pdf'];
+// Historical workspace baselines remain immutable. Expanded overview is tested separately.
+const routes = [ 'emso', 'vat', 'jwt', 'json', 'qif', 'pdf'];
 const sizes = [[390, 844], [500, 844], [844, 390], [768, 1024], [1280, 720], [1440, 900]];
 
 async function fixture(page, route) {
@@ -42,11 +44,12 @@ for (const [width, height] of sizes) {
 for (const width of [639, 640, 641, 859, 860, 861, 1179, 1180, 1181]) {
     test(`layout boundary ${width}`, async ({ page }) => {
         await page.setViewportSize({ width, height: 900 });
-        for (const route of routes) {
+        for (const route of (process.env.BASELINE_SITE ? routes : [tools.overview, ...tools].map(tool => tool.id))) {
             await fixture(page, route);
             expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBeTruthy();
             await expect(page.locator('[data-panel]:visible')).toHaveCount(1);
-            await expect(page.locator('.tool-nav [data-route]')).toHaveCount(7);
+            const count = await page.evaluate(() => window.ToolboxTools.length + 1);
+            await expect(page.locator('.tool-nav [data-route]')).toHaveCount(count);
         }
     });
 }

@@ -11,9 +11,9 @@ test('each entry is real HTML with one correct panel and crawlable links before 
         const response = await page.goto('http://127.0.0.1:8876/' + route.path);
         expect(response.status()).toBe(200);
         await expect(page.locator('[data-panel]:visible')).toHaveAttribute('data-panel', route.id);
-        await expect(page.locator('[data-panel]')).toHaveCount(7);
+        await expect(page.locator('[data-panel]')).toHaveCount(routes.length);
         await expect(page.locator('link[rel=canonical]')).toHaveAttribute('href', 'https://delavnica.kocmut.com/' + route.path);
-        await expect(page.locator('.tool-nav a[href]')).toHaveCount(7);
+        await expect(page.locator('.tool-nav a[href]')).toHaveCount(routes.length);
     }
     expect((await page.goto('http://127.0.0.1:8876/missing-tool/')).status()).toBe(404);
     await context.close();
