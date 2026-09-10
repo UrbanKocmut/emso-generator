@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="sl">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#0a0a0a">
+    <meta name="color-scheme" content="light">
+    <meta name="application-name" content="Delavnica">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Delavnica">
+    <title>Delavnica</title>
+    <meta name="description" content="Hitra in zasebna spletna delavnica za slovenske testne podatke, PDF-je, preverjanje JWT, formatiranje JSON in pretvorbo Sparkasse CSV.">
+    <meta name="author" content="Urban Kocmut">
+    <meta property="og:title" content="Delavnica">
+    <meta property="og:description" content="Generatorja EMŠO in davčnih številk, urejanje PDF-jev, preverjanje JWT, formatiranje JSON ter pretvorba Sparkasse CSV v QIF. Vse deluje lokalno.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://delavnica.kocmut.com/">
+    <link rel="canonical" href="https://delavnica.kocmut.com/">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" href="assets/icons/favicon.png" type="image/png" sizes="64x64">
+    <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+    <link rel="stylesheet" href="assets/css/toolbox.css">
+    <script defer src="assets/js/app-root.js"></script>
+    <script defer src="assets/js/toolbox-core.js"></script>
+    <script defer src="assets/js/file-output.js"></script>
+    <script defer src="assets/js/tool-registry.js"></script>
+    <script defer src="assets/js/pdf-loader.js"></script>
+    <script defer src="assets/js/toolbox-ui.js"></script>
+    <script defer src="assets/js/pwa.js"></script>
+</head>
+<body>
+<a class="skip-link" href="#main-content">Preskoči na orodja</a>
+
+<header class="masthead">
+    <a class="wordmark" href="#overview" aria-label="Domov — Delavnica">
+        <span class="wordmark-mark" aria-hidden="true">U/</span>
+        <span>DELAVNICA</span>
+    </a>
+    <div class="masthead-meta">
+        <button id="pwa-header-action" class="button pwa-action pwa-header-action" type="button" data-pwa-action hidden>NAMESTI</button>
+    </div>
+</header>
+
+<div class="app-shell">
+    <aside class="sidebar">
+        <div class="sidebar-heading">
+            <span>ORODJA</span>
+            <span id="tool-count"></span>
+        </div>
+        <nav class="tool-nav" aria-label="Delavnica">
+            <a class="tool-nav-link mobile-home-link" href="#overview" data-route="overview" aria-label="Začetna stran">
+                <strong aria-hidden="true">U/</strong>
+            </a>
+        </nav>
+        <div class="sidebar-note">
+            <span class="eyebrow">SISTEM</span>
+            <p>Statična zasnova.<br>Brez zunanjih odvisnosti.<br>Po prvem obisku deluje brez povezave.</p>
+        </div>
+    </aside>
+
+    <main id="main-content" class="main-content" tabindex="-1">
+{{PANELS}}
+    </main>
+</div>
+
+<button id="mobile-info-hint" class="mobile-info-hint" type="button" aria-controls="mobile-info-rail" aria-expanded="false">
+    <span aria-hidden="true">→</span>
+    <span class="visually-hidden">Odpri informacije o Delavnici</span>
+</button>
+
+<aside id="mobile-info-rail" class="mobile-info-rail" aria-label="Informacije o Delavnici" aria-hidden="true" inert>
+    <button id="mobile-info-close" class="mobile-info-close" type="button" aria-label="Zapri informacije">←</button>
+    <div class="mobile-info-rail-content">
+        <a href="zasebnost.html">ZASEBNOST</a>
+        <a href="https://github.com/UrbanKocmut/emso-generator" rel="noreferrer">IZVORNA KODA ↗</a>
+        <span class="mobile-info-author">DELAVNICA / URBAN KOCMUT</span>
+    </div>
+</aside>
+
+<footer class="site-footer landing-footer">
+    <span>DELAVNICA / URBAN KOCMUT</span>
+    <nav class="site-footer-links" aria-label="Pravne in projektne povezave">
+        <a href="zasebnost.html">ZASEBNOST</a>
+        <a href="https://github.com/UrbanKocmut/emso-generator" rel="noreferrer">IZVORNA KODA ↗</a>
+    </nav>
+</footer>
+
+<div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true" hidden></div>
+</body>
+</html>

@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import tools from "../assets/js/tool-registry.js";
 
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 export const projectRoot = path.resolve(scriptDirectory, "..");
@@ -10,7 +11,9 @@ export const outputPath = path.join(projectRoot, "precache-manifest.js");
 const requiredRootFiles = [
     "index.html",
     "manifest.webmanifest",
-    "zasebnost.html"
+    "zasebnost.html",
+    ...tools.map(tool => tool.path + "index.html"),
+    "agents/index.html", "tools.json", "robots.txt", "sitemap.xml", "llms.txt"
 ];
 const runtimeDirectories = ["assets", "fonts", "sprites"];
 const hashAlgorithm = "sha256";
@@ -23,7 +26,8 @@ const textExtensions = new Set([
     ".mjs",
     ".svg",
     ".txt",
-    ".webmanifest"
+    ".webmanifest",
+    ".xml"
 ]);
 
 function comparePaths(left, right) {

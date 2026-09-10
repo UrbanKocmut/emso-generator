@@ -1,0 +1,86 @@
+        <section class="tool-panel" data-panel="qif" aria-labelledby="qif-title" hidden>
+            <div class="tool-header">
+                <div>
+                    <p class="eyebrow">05 / BANČNI PODATKI</p>
+                    <h1 id="qif-title">Sparkasse CSV → QIF</h1>
+                </div>
+                <p>Pretvorite izvoz transakcij Sparkasse v datoteko QIF, pripravljeno za uvoz. Podatki o računu se obdelajo samo v tem zavihku brskalnika.</p>
+            </div>
+
+            <div class="workspace-grid qif-workspace">
+                <form id="qif-form" class="control-panel">
+                    <div class="panel-label">VIR IN MOŽNOSTI</div>
+
+                    <label id="qif-drop-zone" class="file-drop" for="qif-file">
+                        <input id="qif-file" class="visually-hidden" type="file" accept=".csv,text/csv">
+                        <span class="file-drop-icon" aria-hidden="true">CSV</span>
+                        <span>
+                            <strong>SPUSTITE SPARKASSE CSV SEM</strong>
+                            <small id="qif-file-name">ali kliknite za izbiro</small>
+                        </span>
+                    </label>
+
+                    <div class="field-grid qif-options">
+                        <label class="field">
+                            <span>Kodiranje CSV</span>
+                            <select id="qif-csv-encoding">
+                                <option value="auto">Samodejna zaznava</option>
+                                <option value="utf-8">UTF-8</option>
+                                <option value="windows-1250">Windows-1250</option>
+                                <option value="latin1">Latinica-1</option>
+                            </select>
+                        </label>
+                        <label class="field">
+                            <span>Kodiranje QIF</span>
+                            <select id="qif-output-encoding">
+                                <option value="utf-8">UTF-8</option>
+                                <option value="windows-1250">Windows-1250</option>
+                            </select>
+                        </label>
+                        <label class="field">
+                            <span>Vrsta računa QIF</span>
+                            <select id="qif-type">
+                                <option value="Bank">Banka</option>
+                                <option value="CCard">Kreditna kartica</option>
+                                <option value="Cash">Gotovina</option>
+                            </select>
+                        </label>
+                        <label class="field">
+                            <span>Oblika datuma v CSV</span>
+                            <input id="qif-input-date" type="text" value="%d.%m.%Y" spellcheck="false">
+                        </label>
+                        <label class="field field-wide">
+                            <span>Oblika datuma v QIF</span>
+                            <input id="qif-output-date" type="text" value="%d.%m.%Y" spellcheck="false">
+                        </label>
+                        <label class="check-field field-wide">
+                            <input id="qif-append-code" type="checkbox">
+                            <span>Dodaj kode transakcij v opombe <small>INTE / COMM / REFU / OTHR</small></span>
+                        </label>
+                        <label class="check-field field-wide">
+                            <input id="qif-stop-errors" type="checkbox">
+                            <span>Ustavi se ob prvi napačni transakciji</span>
+                        </label>
+                        <label class="check-field field-wide">
+                            <input id="qif-remember-settings" type="checkbox">
+                            <span>Zapomni si nastavitve v tem brskalniku</span>
+                        </label>
+                    </div>
+
+                    <div class="form-actions">
+                        <button id="qif-convert" class="button primary" type="submit">PRETVORI CSV</button>
+                        <button id="qif-download" class="button" type="button" disabled>SHRANI QIF</button>
+                        <button id="qif-share" class="button" type="button" hidden disabled>DELI QIF</button>
+                        <button id="qif-copy" class="button" type="button" disabled>KOPIRAJ QIF</button>
+                        <button id="qif-clear" class="button" type="button">POČISTI</button>
+                    </div>
+                    <p id="qif-status" class="inline-status" role="status" aria-live="polite">Za začetek izberite izvoz Sparkasse CSV.</p>
+                </form>
+
+                <div class="output-panel">
+                    <div class="panel-label"><span>PREDOGLED QIF</span><span id="qif-output-count">0 TRANSAKCIJ</span></div>
+                    <textarea id="qif-output" class="code-output qif-output" readonly spellcheck="false" aria-label="Predogled pretvorjene datoteke QIF"></textarea>
+                    <p id="qif-output-note" class="panel-footnote">Pretvorjena ni še nobena datoteka.</p>
+                </div>
+            </div>
+        </section>

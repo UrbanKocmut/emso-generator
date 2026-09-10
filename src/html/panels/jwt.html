@@ -1,0 +1,63 @@
+        <section class="tool-panel" data-panel="jwt" aria-labelledby="jwt-title" hidden>
+            <div class="tool-header">
+                <div>
+                    <p class="eyebrow">03 / PREGLED ŽETONOV</p>
+                    <h1 id="jwt-title">Preverjanje JWT</h1>
+                </div>
+                <p>Razčlenite spletni žeton JSON, preverite njegove časovne zahtevke in po želji tudi podpis. Žeton in ključ nikoli ne zapustita tega zavihka.</p>
+            </div>
+
+            <div class="stacked-workspace">
+                <div class="control-panel compact-panel">
+                    <div class="panel-label"><label for="jwt-input">KODIRAN ŽETON</label><span id="jwt-size">0 B</span></div>
+                    <textarea id="jwt-input" class="code-input jwt-input" spellcheck="false" autocomplete="off" placeholder="Prilepite glava.vsebina.podpis"></textarea>
+                    <div class="form-actions">
+                        <button id="jwt-parse" class="button primary" type="button">RAZČLENI ŽETON</button>
+                        <button id="jwt-clear" class="button" type="button">POČISTI</button>
+                    </div>
+                </div>
+
+                <div class="validation-strip" aria-label="Povzetek preverjanja JWT">
+                    <div><span>SESTAVA</span><strong id="jwt-structure-state" class="state neutral">ČAKANJE</strong></div>
+                    <div><span>ČASOVNI ZAHTEVKI</span><strong id="jwt-time-state" class="state neutral">ČAKANJE</strong></div>
+                    <div><span>PODPIS</span><strong id="jwt-signature-state" class="state neutral">NI PREVERJEN</strong></div>
+                </div>
+                <p id="jwt-status" class="inline-status prominent-status" role="status" aria-live="polite">Za začetek prilepite žeton.</p>
+
+                <div id="jwt-results" hidden>
+                    <div class="decoded-grid">
+                        <div class="output-panel">
+                            <div class="panel-label"><span>GLAVA</span><button class="mini-button" type="button" data-copy-target="jwt-header-output">KOPIRAJ</button></div>
+                            <pre id="jwt-header-output" class="code-block" tabindex="0"></pre>
+                        </div>
+                        <div class="output-panel">
+                            <div class="panel-label"><span>VSEBINA</span><button class="mini-button" type="button" data-copy-target="jwt-payload-output">KOPIRAJ</button></div>
+                            <pre id="jwt-payload-output" class="code-block" tabindex="0"></pre>
+                        </div>
+                    </div>
+
+                    <div class="jwt-details-grid">
+                        <div class="control-panel">
+                            <div class="panel-label">PREVERJANJE ZAHTEVKOV</div>
+                            <div id="jwt-claims" class="claim-list"></div>
+                        </div>
+                        <div class="control-panel">
+                            <div class="panel-label">PREVERJANJE PODPISA</div>
+                            <label class="field">
+                                <span id="jwt-key-label">Ključ za preverjanje</span>
+                                <textarea id="jwt-key" class="key-input" spellcheck="false" autocomplete="off" placeholder="Skrivnost ali javni ključ PEM"></textarea>
+                            </label>
+                            <label id="jwt-key-encoding-field" class="field compact-field">
+                                <span>Kodiranje skrivnosti</span>
+                                <select id="jwt-key-encoding">
+                                    <option value="text">Besedilo UTF-8</option>
+                                    <option value="base64">Base64 / base64url</option>
+                                </select>
+                            </label>
+                            <button id="jwt-verify" class="button primary" type="button">PREVERI PODPIS</button>
+                            <p id="jwt-verify-help" class="panel-footnote">Podprte so družine HS, RS, PS in ES s SHA-256/384/512.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>

@@ -1,13 +1,18 @@
 "use strict";
 
 self.DELAVNICA_PRECACHE = Object.freeze({
-    "version": "f7e6ed71263b87a9a7f01df403599426f94326c1e3782dc0089e9e4b99d6cbb8",
-    "totalBytes": 8505460,
+    "version": "208f96266e31ecbbb655f3a3a879af8f608e6ef99d85a1e71ade0fc3c774945d",
+    "totalBytes": 8868642,
     "entries": [
         {
+            "url": "./agents/index.html",
+            "revision": "cbb5569aea7a27c15eede355a4cc9f9cb02fe0d793e8cc6cb320200dea29b3eb",
+            "size": 18708
+        },
+        {
             "url": "./assets/css/toolbox.css",
-            "revision": "5a58fa95a6f5022d36aee4a58613ccfe026381c439e33435dc694752a74164cc",
-            "size": 54227
+            "revision": "8f1b16af0fcd7ef837997da09e82974bf69a3b3a2ef784c01ea902ee1593ab9b",
+            "size": 54804
         },
         {
             "url": "./assets/icons/apple-touch-icon.png",
@@ -40,14 +45,24 @@ self.DELAVNICA_PRECACHE = Object.freeze({
             "size": 49695
         },
         {
+            "url": "./assets/js/app-root.js",
+            "revision": "283c2c9ca5562ab0f364d6725b9784e1292845d0a79025f11eb640177960926c",
+            "size": 194
+        },
+        {
             "url": "./assets/js/file-output.js",
             "revision": "c28c3b9e1e4b0fd627859b03252cb9e71d4f4ac5a50095bd6c723ee0675aced1",
             "size": 5170
         },
         {
+            "url": "./assets/js/pdf-composition.mjs",
+            "revision": "c84207e21814fa4719d8525729e7483294ee110e6c01fcbdbe69809dc1ac0611",
+            "size": 1690
+        },
+        {
             "url": "./assets/js/pdf-loader.js",
-            "revision": "d2fcab29f07b824d962f188f079010c9ef3fb74d6f6ca47d788d8c537100ee4d",
-            "size": 2258
+            "revision": "5954edf136c1d5e22915f18969e313c221ce4dbd93753a7db33262cdf0b90139",
+            "size": 2282
         },
         {
             "url": "./assets/js/pdf-merger-core.mjs",
@@ -56,23 +71,23 @@ self.DELAVNICA_PRECACHE = Object.freeze({
         },
         {
             "url": "./assets/js/pdf-merger.js",
-            "revision": "5b2cd8b6ebac8ac5a741ed31bff1e4f5e544c2f0429aa3f97dc097006caaeaac",
-            "size": 949783
+            "revision": "2c7ce5cf171d7742dc086662063192fe311fb70dc675ab6f57d6bc207bf3b79b",
+            "size": 952345
         },
         {
             "url": "./assets/js/pdf-merger.mjs",
-            "revision": "7a246daba9205fdd48ef306549a1ebac759f0b6de4ea557f7d702adc727dba79",
-            "size": 30466
+            "revision": "e0e0142e996330c7c03c4b7dd74c45f0240bb821693c3e8b2cf579ee1afd5428",
+            "size": 34234
         },
         {
             "url": "./assets/js/pwa.js",
-            "revision": "33423b2ae0a935f3cb95e53891892d87bf4666706f182af9c594f868321abc7d",
-            "size": 6101
+            "revision": "5577aaeb14ccad80d50d99d9f060dbdac34accd819561b25a8222a1e371cef96",
+            "size": 6193
         },
         {
             "url": "./assets/js/tool-registry.js",
-            "revision": "22dd7f90ecb55f81778d915fa1716ffa2d38fd0a7802e26301e46285a080a1da",
-            "size": 2203
+            "revision": "bf40e2ca3c02c6f53c12e48ba5ff3c80888ba723e02bcf69bd32d60b636546e0",
+            "size": 3218
         },
         {
             "url": "./assets/js/toolbox-core.js",
@@ -81,8 +96,8 @@ self.DELAVNICA_PRECACHE = Object.freeze({
         },
         {
             "url": "./assets/js/toolbox-ui.js",
-            "revision": "94c479448aa89eda57c90c8e7e026a7d8c40541e3b657b28e848c1a7b3b6ae64",
-            "size": 62999
+            "revision": "6877dd400a35e49057e478a6604406733dd7115a60786822d33f9c4c82474a6b",
+            "size": 82675
         },
         {
             "url": "./assets/screenshots/delavnica-mobile.png",
@@ -1130,6 +1145,16 @@ self.DELAVNICA_PRECACHE = Object.freeze({
             "size": 469105
         },
         {
+            "url": "./davcna-stevilka/index.html",
+            "revision": "4383ee21e71928c6e1f5e6d7de2c63a939e886ce18f5c749e5ec87c1f5bb3789",
+            "size": 47592
+        },
+        {
+            "url": "./emso/index.html",
+            "revision": "ecc8a67384d464c0832c644d527acb11947b1b49c3d9ee21a307e080b0495772",
+            "size": 47557
+        },
+        {
             "url": "./fonts/IBMPlexMono-Regular.woff2",
             "revision": "f5e0e7b367a02ac91b9f0e0e4aff131b2ca350471d48d7c9e46d5791bf59c430",
             "size": 38740
@@ -1146,13 +1171,53 @@ self.DELAVNICA_PRECACHE = Object.freeze({
         },
         {
             "url": "./index.html",
-            "revision": "a79379944d292af69b8471382c39167572b090e6413fde6861ffc6eb8879c9d1",
-            "size": 31904
+            "revision": "444511585bfb58819e408427e705fdc773f2238b45977b8f2bd9cd184a658b98",
+            "size": 47736
+        },
+        {
+            "url": "./json/index.html",
+            "revision": "ac759bbc2a94ed5a7dfd4701cafc9a7bdb19878decf7b3abab8c558c8ae0bf38",
+            "size": 47529
+        },
+        {
+            "url": "./jwt/index.html",
+            "revision": "4ad101b413eb6409f1f19e0ce5d5c79e9e4218743d6357620fd1a743fc449f58",
+            "size": 47573
+        },
+        {
+            "url": "./llms.txt",
+            "revision": "5fcd2a5745e941e41b855c26c89bbae7084b44bfd26769e3e500640fafbd4702",
+            "size": 631
         },
         {
             "url": "./manifest.webmanifest",
             "revision": "17a11df4052413d1bea3584522706a9d7158ad9d442a90e09daa23eab289422f",
             "size": 2491
+        },
+        {
+            "url": "./pdf/index.html",
+            "revision": "d07f902a7dcaf636f4bc1292aa62c70b6939ed8971f0fc6f6da0cc14c3f40f09",
+            "size": 47636
+        },
+        {
+            "url": "./robots.txt",
+            "revision": "299196f9156823ecd5a069492dbc3a4657b655d7424840fe23955e3c77a9afc2",
+            "size": 74
+        },
+        {
+            "url": "./sitemap.xml",
+            "revision": "9ab8ef9edd8ff149894c39636d7db0efea95b27081f2b5c9c4ad1fbc13be8282",
+            "size": 669
+        },
+        {
+            "url": "./sparkasse-csv-qif/index.html",
+            "revision": "dd8e213eb113ae0cc3a5aa3858b0eea08b14dd69bb6b1a69822adfa740872610",
+            "size": 47562
+        },
+        {
+            "url": "./tools.json",
+            "revision": "891f751f34f9625b01baf39e4af3484b99957299266c73547930200850320ef3",
+            "size": 12221
         },
         {
             "url": "./zasebnost.html",

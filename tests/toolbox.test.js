@@ -47,9 +47,9 @@ async function run() {
     const tools = require("../assets/js/tool-registry.js");
     const pdfCore = await import(pathToFileURL(path.join(projectRoot, "assets/js/pdf-merger-core.mjs")).href);
 
-    assert.match(indexHtml, /<title>Delavnica<\/title>/);
+    assert.ok(indexHtml.includes('<title>' + tools.overview.pageTitle + '</title>'));
     assert.match(indexHtml, />U\/<\/span>[\s\S]*?>DELAVNICA<\/span>/);
-    assert.match(indexHtml, /class="tool-nav-link mobile-home-link"[^>]+href="#overview"[^>]+data-route="overview"/);
+    assert.match(indexHtml, /class="tool-nav-link mobile-home-link"[^>]+href="\.\/"[^>]+data-route="overview"/);
     assert.doesNotMatch(indexHtml, /LOKALNA OBDELAVA/);
     assert.doesNotMatch(privacyHtml, /LOKALNA OBDELAVA/);
     assert.doesNotMatch(indexHtml, /ODPRI PRVO ORODJE/);
@@ -148,8 +148,9 @@ async function run() {
     assert.match(toolboxCss, /\.landing-footer\s*\{\s*display:\s*none;/);
     assert.match(toolboxCss, /@media \(max-width: 640px\)[\s\S]*?\.overview-grid \.tool-card:nth-child\(n\)\s*\{[\s\S]*?margin-left:\s*0;/);
     assert.match(toolboxCss, /\.pdf-page-grid\s*\{/);
-    assert.match(pdfScript, /output\.copyPages/);
-    assert.match(pdfScript, /copy\.setRotation\(degrees/);
+    const compositionScript = fs.readFileSync(path.join(projectRoot, "assets/js/pdf-composition.mjs"), "utf8");
+    assert.match(compositionScript, /output\.copyPages/);
+    assert.match(compositionScript, /copy\.setRotation\(degrees/);
     assert.match(pdfScript, /fileOutput\.writeOrDownload/);
     assert.match(fileOutputScript, /URL\.createObjectURL/);
     assert.ok(pdfBundle.length > 900000);

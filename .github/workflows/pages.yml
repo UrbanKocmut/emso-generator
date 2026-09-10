@@ -20,14 +20,19 @@ jobs:
           cache: npm
       - run: npm ci
       # Includes build:check, so stale committed assets fail before deployment.
+      - run: npm run build:check
+      - run: npm run build
       - run: npm test
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:browser
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: browser-regression-results
+          path: test-results/
       - name: Stage the static site
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/master'
-        run: |
-          mkdir _site
-          cp -R assets fonts _site/
-          if [ -d sprites ]; then cp -R sprites _site/; fi
-          cp index.html zasebnost.html manifest.webmanifest service-worker.js precache-manifest.js CNAME logo.png _site/
+        run: node scripts/stage-site.mjs
       - uses: actions/upload-pages-artifact@v4
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/master'
         with:

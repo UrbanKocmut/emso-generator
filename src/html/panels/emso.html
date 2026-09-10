@@ -1,0 +1,91 @@
+        <section class="tool-panel" data-panel="emso" aria-labelledby="emso-title" hidden>
+            <div class="tool-header">
+                <div>
+                    <p class="eyebrow">01 / SLOVENSKA IDENTITETA</p>
+                    <h1 id="emso-title">EMŠO generator</h1>
+                </div>
+                <p>Lokalno ustvarite testne identifikatorje z veljavno kontrolo. Rezultati so sintetični in niso preverjeni v Centralnem registru prebivalstva.</p>
+            </div>
+
+            <div class="workspace-grid">
+                <form id="emso-form" class="control-panel">
+                    <div class="panel-label">PARAMETRI</div>
+                    <div class="field-grid">
+                        <div class="field field-wide">
+                            <label for="emso-date">Datum rojstva <small>neobvezno</small></label>
+                            <div class="field-input-action">
+                                <input id="emso-date" type="date" min="1900-01-01">
+                                <button id="emso-date-clear" class="button" type="button" disabled>POČISTI</button>
+                            </div>
+                        </div>
+                        <label class="field">
+                            <span>Spol</span>
+                            <select id="emso-gender">
+                                <option value="random">Naključno</option>
+                                <option value="male">Moški (000–499)</option>
+                                <option value="female">Ženski (500–999)</option>
+                            </select>
+                        </label>
+                        <label class="field">
+                            <span>Starost</span>
+                            <select id="emso-age">
+                                <option value="any">Vse starosti</option>
+                                <option value="adult">Samo 18+</option>
+                            </select>
+                        </label>
+                        <label class="field field-wide">
+                            <span>Količina <small>največ 5.000</small></span>
+                            <input id="emso-count" type="number" min="1" max="5000" step="1" value="10" inputmode="numeric" required>
+                        </label>
+                    </div>
+                    <div class="form-actions">
+                        <button class="button primary" type="submit">GENERIRAJ EMŠO</button>
+                        <button class="button" type="button" data-copy-target="emso-output">KOPIRAJ</button>
+                    </div>
+                    <p id="emso-status" class="inline-status" role="status" aria-live="polite">Pripravljeno.</p>
+                </form>
+
+                <div class="output-panel">
+                    <div class="panel-label"><span>IZPIS</span><span id="emso-output-count">0 ZAPISOV</span></div>
+                    <textarea id="emso-output" class="code-output identifier-output" readonly spellcheck="false" aria-label="Generirane številke EMŠO"></textarea>
+                    <p class="panel-footnote">Oblika: DDMMYYY + register + zaporedje + kontrolna številka.</p>
+                </div>
+            </div>
+
+            <section class="reference-panel" aria-labelledby="emso-structure-title">
+                <div class="panel-label"><span>SESTAVA IN VIRI</span><span>13 ŠTEVK</span></div>
+                <div class="reference-content">
+                    <div class="structure-map emso-map" aria-label="Sestava EMŠO: datum rojstva, register, zaporedje in kontrolna številka">
+                        <div class="structure-part">
+                            <span>01–07</span>
+                            <strong>DDMMYYY</strong>
+                            <p>Datum rojstva: dan, mesec in trimestna letnica.</p>
+                        </div>
+                        <div class="structure-part">
+                            <span>08–09</span>
+                            <strong>RR</strong>
+                            <p>Šifra registra. Slovenija uporablja 50–59.</p>
+                        </div>
+                        <div class="structure-part">
+                            <span>10–12</span>
+                            <strong>SSS</strong>
+                            <p>Dnevno zaporedje: 000–499 moški, 500–999 ženske.</p>
+                        </div>
+                        <div class="structure-part">
+                            <span>13</span>
+                            <strong>C</strong>
+                            <p>Matematično izračunana kontrolna številka.</p>
+                        </div>
+                    </div>
+                    <div class="reference-copy">
+                        <p class="eyebrow">URADNI VIRI</p>
+                        <h2 id="emso-structure-title">Kako je sestavljen EMŠO</h2>
+                        <p>Generator sestavi vse dele in zavrne kombinacije, pri katerih ni mogoče izračunati veljavne kontrolne številke.</p>
+                        <ul class="reference-links">
+                            <li><a href="https://www.gov.si/teme/registri-in-evidence-prebivalstva/" target="_blank" rel="noreferrer">GOV.SI — opredelitev EMŠO <span aria-hidden="true">↗</span></a></li>
+                            <li><a href="https://www.pisrs.si/Pis.web/pregledPredpisa?id=URED342" target="_blank" rel="noreferrer">PISRS — uredba o identifikacijski številki <span aria-hidden="true">↗</span></a></li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+        </section>

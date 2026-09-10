@@ -1,0 +1,62 @@
+@media (prefers-reduced-motion: reduce) {
+    html {
+        scroll-behavior: auto;
+    }
+
+    .tool-card,
+    .text-link,
+    .reference-links a,
+    .button,
+    .pwa-header-action,
+    .mobile-info-hint,
+    .mobile-info-rail,
+    .mini-button,
+    .file-drop,
+    .text-link > span[aria-hidden="true"],
+    .reference-links a > span[aria-hidden="true"] {
+        transition: none;
+    }
+
+    .main-content.is-swipe-settling .tool-panel.is-swipe-active,
+    .main-content.is-swipe-settling .tool-panel.is-swipe-target {
+        transition-duration: 1ms;
+    }
+
+    .pwa-header-action[data-pwa-mode="install"]::before,
+    .pwa-header-action[data-pwa-mode="install"]::after {
+        opacity: 1;
+        animation: none;
+        transform: translate(0, -50%);
+    }
+
+    .mobile-info-hint,
+    .mobile-info-rail {
+        transition-duration: 1ms;
+    }
+
+    body.is-mobile-info-settling .overview-panel {
+        transition-duration: 1ms;
+    }
+}
+
+@media print {
+    .masthead,
+    .sidebar,
+    .site-footer,
+    .mobile-info-hint,
+    .mobile-info-rail,
+    .policy-back-button,
+    .form-actions,
+    .json-toolbar {
+        display: none;
+    }
+
+    .app-shell {
+        display: block;
+        border: 0;
+    }
+
+    .tool-panel {
+        padding: 0;
+    }
+}

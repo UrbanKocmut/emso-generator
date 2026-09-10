@@ -1,0 +1,531 @@
+<!doctype html>
+<html lang="sl">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#0a0a0a">
+    <meta name="color-scheme" content="light">
+    <meta name="application-name" content="Delavnica">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Delavnica">
+    <title>Delavnica</title>
+    <meta name="description" content="Hitra in zasebna spletna delavnica za slovenske testne podatke, PDF-je, preverjanje JWT, formatiranje JSON in pretvorbo Sparkasse CSV.">
+    <meta name="author" content="Urban Kocmut">
+    <meta property="og:title" content="Delavnica">
+    <meta property="og:description" content="Generatorja EMŠO in davčnih številk, urejanje PDF-jev, preverjanje JWT, formatiranje JSON ter pretvorba Sparkasse CSV v QIF. Vse deluje lokalno.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://delavnica.kocmut.com/">
+    <link rel="canonical" href="https://delavnica.kocmut.com/">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" href="assets/icons/favicon.png" type="image/png" sizes="64x64">
+    <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+    <link rel="stylesheet" href="assets/css/toolbox.css">
+    <script defer src="assets/js/toolbox-core.js"></script>
+    <script defer src="assets/js/file-output.js"></script>
+    <script defer src="assets/js/tool-registry.js"></script>
+    <script defer src="assets/js/pdf-loader.js"></script>
+    <script defer src="assets/js/toolbox-ui.js"></script>
+    <script defer src="assets/js/pwa.js"></script>
+</head>
+<body>
+<a class="skip-link" href="#main-content">Preskoči na orodja</a>
+
+<header class="masthead">
+    <a class="wordmark" href="#overview" aria-label="Domov — Delavnica">
+        <span class="wordmark-mark" aria-hidden="true">U/</span>
+        <span>DELAVNICA</span>
+    </a>
+    <div class="masthead-meta">
+        <button id="pwa-header-action" class="button pwa-action pwa-header-action" type="button" data-pwa-action hidden>NAMESTI</button>
+    </div>
+</header>
+
+<div class="app-shell">
+    <aside class="sidebar">
+        <div class="sidebar-heading">
+            <span>ORODJA</span>
+            <span id="tool-count"></span>
+        </div>
+        <nav class="tool-nav" aria-label="Delavnica">
+            <a class="tool-nav-link mobile-home-link" href="#overview" data-route="overview" aria-label="Začetna stran">
+                <strong aria-hidden="true">U/</strong>
+            </a>
+        </nav>
+        <div class="sidebar-note">
+            <span class="eyebrow">SISTEM</span>
+            <p>Statična zasnova.<br>Brez zunanjih odvisnosti.<br>Po prvem obisku deluje brez povezave.</p>
+        </div>
+    </aside>
+
+    <main id="main-content" class="main-content" tabindex="-1">
+        <section class="tool-panel overview-panel" data-panel="overview" aria-labelledby="overview-title">
+            <div class="hero-grid">
+                <div>
+                    <p class="eyebrow">OSEBNA SPLETNA ORODJA / V2</p>
+                    <h1 id="overview-title">Majhna orodja.<br>Brez trenja.</h1>
+                </div>
+                <div class="hero-copy">
+                    <p>Generirajte testne identifikatorje, preglejte žetone, uredite podatke in pretvorite bančne izvoze, ne da bi karkoli poslali strežniku.</p>
+                    <aside class="install-tip" data-pwa-surface hidden aria-label="Namig za aplikacijo">
+                        <div class="install-tip-heading">
+                            <span>NAMIG</span>
+                            <span aria-hidden="true">↘</span>
+                        </div>
+                        <div class="install-tip-body">
+                            <p class="install-tip-copy" data-pwa-copy="install">Dodajte <strong class="install-tip-name">Delavnico</strong> na začetni zaslon za delo brez povezave</p>
+                            <p class="install-tip-copy" data-pwa-copy="update" hidden>Posodobite <strong class="install-tip-name">Delavnico</strong>, ko vam ustreza.</p>
+                            <button id="pwa-overview-action" class="button pwa-action pwa-overview-action" type="button" data-pwa-action data-pwa-install-label="NAMESTI" data-pwa-update-label="POSODOBI" hidden>NAMESTI</button>
+                        </div>
+                    </aside>
+                </div>
+            </div>
+
+            <div class="overview-grid" aria-label="Razpoložljiva orodja"></div>
+        </section>
+
+        <section class="tool-panel" data-panel="emso" aria-labelledby="emso-title" hidden>
+            <div class="tool-header">
+                <div>
+                    <p class="eyebrow">01 / SLOVENSKA IDENTITETA</p>
+                    <h1 id="emso-title">EMŠO generator</h1>
+                </div>
+                <p>Lokalno ustvarite testne identifikatorje z veljavno kontrolo. Rezultati so sintetični in niso preverjeni v Centralnem registru prebivalstva.</p>
+            </div>
+
+            <div class="workspace-grid">
+                <form id="emso-form" class="control-panel">
+                    <div class="panel-label">PARAMETRI</div>
+                    <div class="field-grid">
+                        <div class="field field-wide">
+                            <label for="emso-date">Datum rojstva <small>neobvezno</small></label>
+                            <div class="field-input-action">
+                                <input id="emso-date" type="date" min="1900-01-01">
+                                <button id="emso-date-clear" class="button" type="button" disabled>POČISTI</button>
+                            </div>
+                        </div>
+                        <label class="field">
+                            <span>Spol</span>
+                            <select id="emso-gender">
+                                <option value="random">Naključno</option>
+                                <option value="male">Moški (000–499)</option>
+                                <option value="female">Ženski (500–999)</option>
+                            </select>
+                        </label>
+                        <label class="field">
+                            <span>Starost</span>
+                            <select id="emso-age">
+                                <option value="any">Vse starosti</option>
+                                <option value="adult">Samo 18+</option>
+                            </select>
+                        </label>
+                        <label class="field field-wide">
+                            <span>Količina <small>največ 5.000</small></span>
+                            <input id="emso-count" type="number" min="1" max="5000" step="1" value="10" inputmode="numeric" required>
+                        </label>
+                    </div>
+                    <div class="form-actions">
+                        <button class="button primary" type="submit">GENERIRAJ EMŠO</button>
+                        <button class="button" type="button" data-copy-target="emso-output">KOPIRAJ</button>
+                    </div>
+                    <p id="emso-status" class="inline-status" role="status" aria-live="polite">Pripravljeno.</p>
+                </form>
+
+                <div class="output-panel">
+                    <div class="panel-label"><span>IZPIS</span><span id="emso-output-count">0 ZAPISOV</span></div>
+                    <textarea id="emso-output" class="code-output identifier-output" readonly spellcheck="false" aria-label="Generirane številke EMŠO"></textarea>
+                    <p class="panel-footnote">Oblika: DDMMYYY + register + zaporedje + kontrolna številka.</p>
+                </div>
+            </div>
+
+            <section class="reference-panel" aria-labelledby="emso-structure-title">
+                <div class="panel-label"><span>SESTAVA IN VIRI</span><span>13 ŠTEVK</span></div>
+                <div class="reference-content">
+                    <div class="structure-map emso-map" aria-label="Sestava EMŠO: datum rojstva, register, zaporedje in kontrolna številka">
+                        <div class="structure-part">
+                            <span>01–07</span>
+                            <strong>DDMMYYY</strong>
+                            <p>Datum rojstva: dan, mesec in trimestna letnica.</p>
+                        </div>
+                        <div class="structure-part">
+                            <span>08–09</span>
+                            <strong>RR</strong>
+                            <p>Šifra registra. Slovenija uporablja 50–59.</p>
+                        </div>
+                        <div class="structure-part">
+                            <span>10–12</span>
+                            <strong>SSS</strong>
+                            <p>Dnevno zaporedje: 000–499 moški, 500–999 ženske.</p>
+                        </div>
+                        <div class="structure-part">
+                            <span>13</span>
+                            <strong>C</strong>
+                            <p>Matematično izračunana kontrolna številka.</p>
+                        </div>
+                    </div>
+                    <div class="reference-copy">
+                        <p class="eyebrow">URADNI VIRI</p>
+                        <h2 id="emso-structure-title">Kako je sestavljen EMŠO</h2>
+                        <p>Generator sestavi vse dele in zavrne kombinacije, pri katerih ni mogoče izračunati veljavne kontrolne številke.</p>
+                        <ul class="reference-links">
+                            <li><a href="https://www.gov.si/teme/registri-in-evidence-prebivalstva/" target="_blank" rel="noreferrer">GOV.SI — opredelitev EMŠO <span aria-hidden="true">↗</span></a></li>
+                            <li><a href="https://www.pisrs.si/Pis.web/pregledPredpisa?id=URED342" target="_blank" rel="noreferrer">PISRS — uredba o identifikacijski številki <span aria-hidden="true">↗</span></a></li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+        </section>
+
+        <section class="tool-panel" data-panel="vat" aria-labelledby="vat-title" hidden>
+            <div class="tool-header">
+                <div>
+                    <p class="eyebrow">02 / SLOVENSKI DAVKI</p>
+                    <h1 id="vat-title">Generator SI DDV</h1>
+                </div>
+                <p>Ustvarite izmišljene slovenske identifikacijske številke za DDV, ki prestanejo osemmestno kontrolo FURS po modulu 11.</p>
+            </div>
+
+            <div class="workspace-grid">
+                <form id="vat-form" class="control-panel">
+                    <div class="panel-label">PARAMETRI</div>
+                    <div class="field-grid">
+                        <label class="field field-wide">
+                            <span>Količina <small>največ 5.000</small></span>
+                            <input id="vat-count" type="number" min="1" max="5000" step="1" value="10" inputmode="numeric" required>
+                        </label>
+                        <label class="check-field field-wide">
+                            <input id="vat-prefix" type="checkbox" checked>
+                            <span>Dodaj predpono države <strong>SI</strong></span>
+                        </label>
+                    </div>
+                    <div class="form-actions">
+                        <button class="button primary" type="submit">GENERIRAJ DAVČNE ŠTEVILKE</button>
+                        <button class="button" type="button" data-copy-target="vat-output">KOPIRAJ</button>
+                    </div>
+                    <p id="vat-status" class="inline-status" role="status" aria-live="polite">Pripravljeno.</p>
+                </form>
+
+                <div class="output-panel">
+                    <div class="panel-label"><span>IZPIS</span><span id="vat-output-count">0 ZAPISOV</span></div>
+                    <textarea id="vat-output" class="code-output identifier-output" readonly spellcheck="false" aria-label="Generirane slovenske davčne številke"></textarea>
+                    <p class="panel-footnote">Osem števk; po izbiri s predpono SI.</p>
+                </div>
+            </div>
+
+            <section class="reference-panel" aria-labelledby="vat-structure-title">
+                <div class="panel-label"><span>SESTAVA IN VIRI</span><span>SI + 8 ŠTEVK</span></div>
+                <div class="reference-content">
+                    <div class="structure-map vat-map" aria-label="Sestava slovenske številke za DDV: predpona države, sedemmestno jedro in kontrolna številka">
+                        <div class="structure-part">
+                            <span>PREDPONA</span>
+                            <strong>SI</strong>
+                            <p>Predpona države za identifikacijo DDV.</p>
+                        </div>
+                        <div class="structure-part">
+                            <span>01–07</span>
+                            <strong>NNNNNNN</strong>
+                            <p>Sedemmestno jedro davčne številke.</p>
+                        </div>
+                        <div class="structure-part">
+                            <span>08</span>
+                            <strong>C</strong>
+                            <p>Kontrolna številka, izračunana po modulu 11.</p>
+                        </div>
+                    </div>
+                    <div class="reference-copy">
+                        <p class="eyebrow">URADNI VIRI</p>
+                        <h2 id="vat-structure-title">Kako je sestavljena slovenska številka za DDV</h2>
+                        <p>Uspešna lokalna kontrola potrdi le sestavo. Za preverjanje dodeljenosti in aktivnosti številke uporabite VIES.</p>
+                        <ul class="reference-links">
+                            <li><a href="https://www.fu.gov.si/davki_in_druge_dajatve/poslovanje_z_nami/vpis_v_davcni_register_in_davcna_stevilka" target="_blank" rel="noreferrer">FURS — opredelitev davčne številke <span aria-hidden="true">↗</span></a></li>
+                            <li><a href="https://ec.europa.eu/taxation_customs/vies/" target="_blank" rel="noreferrer">Evropska komisija — preverjanje VIES <span aria-hidden="true">↗</span></a></li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+        </section>
+
+        <section class="tool-panel" data-panel="jwt" aria-labelledby="jwt-title" hidden>
+            <div class="tool-header">
+                <div>
+                    <p class="eyebrow">03 / PREGLED ŽETONOV</p>
+                    <h1 id="jwt-title">Preverjanje JWT</h1>
+                </div>
+                <p>Razčlenite spletni žeton JSON, preverite njegove časovne zahtevke in po želji tudi podpis. Žeton in ključ nikoli ne zapustita tega zavihka.</p>
+            </div>
+
+            <div class="stacked-workspace">
+                <div class="control-panel compact-panel">
+                    <div class="panel-label"><label for="jwt-input">KODIRAN ŽETON</label><span id="jwt-size">0 B</span></div>
+                    <textarea id="jwt-input" class="code-input jwt-input" spellcheck="false" autocomplete="off" placeholder="Prilepite glava.vsebina.podpis"></textarea>
+                    <div class="form-actions">
+                        <button id="jwt-parse" class="button primary" type="button">RAZČLENI ŽETON</button>
+                        <button id="jwt-clear" class="button" type="button">POČISTI</button>
+                    </div>
+                </div>
+
+                <div class="validation-strip" aria-label="Povzetek preverjanja JWT">
+                    <div><span>SESTAVA</span><strong id="jwt-structure-state" class="state neutral">ČAKANJE</strong></div>
+                    <div><span>ČASOVNI ZAHTEVKI</span><strong id="jwt-time-state" class="state neutral">ČAKANJE</strong></div>
+                    <div><span>PODPIS</span><strong id="jwt-signature-state" class="state neutral">NI PREVERJEN</strong></div>
+                </div>
+                <p id="jwt-status" class="inline-status prominent-status" role="status" aria-live="polite">Za začetek prilepite žeton.</p>
+
+                <div id="jwt-results" hidden>
+                    <div class="decoded-grid">
+                        <div class="output-panel">
+                            <div class="panel-label"><span>GLAVA</span><button class="mini-button" type="button" data-copy-target="jwt-header-output">KOPIRAJ</button></div>
+                            <pre id="jwt-header-output" class="code-block" tabindex="0"></pre>
+                        </div>
+                        <div class="output-panel">
+                            <div class="panel-label"><span>VSEBINA</span><button class="mini-button" type="button" data-copy-target="jwt-payload-output">KOPIRAJ</button></div>
+                            <pre id="jwt-payload-output" class="code-block" tabindex="0"></pre>
+                        </div>
+                    </div>
+
+                    <div class="jwt-details-grid">
+                        <div class="control-panel">
+                            <div class="panel-label">PREVERJANJE ZAHTEVKOV</div>
+                            <div id="jwt-claims" class="claim-list"></div>
+                        </div>
+                        <div class="control-panel">
+                            <div class="panel-label">PREVERJANJE PODPISA</div>
+                            <label class="field">
+                                <span id="jwt-key-label">Ključ za preverjanje</span>
+                                <textarea id="jwt-key" class="key-input" spellcheck="false" autocomplete="off" placeholder="Skrivnost ali javni ključ PEM"></textarea>
+                            </label>
+                            <label id="jwt-key-encoding-field" class="field compact-field">
+                                <span>Kodiranje skrivnosti</span>
+                                <select id="jwt-key-encoding">
+                                    <option value="text">Besedilo UTF-8</option>
+                                    <option value="base64">Base64 / base64url</option>
+                                </select>
+                            </label>
+                            <button id="jwt-verify" class="button primary" type="button">PREVERI PODPIS</button>
+                            <p id="jwt-verify-help" class="panel-footnote">Podprte so družine HS, RS, PS in ES s SHA-256/384/512.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="tool-panel" data-panel="json" aria-labelledby="json-title" hidden>
+            <div class="tool-header">
+                <div>
+                    <p class="eyebrow">04 / UREJANJE PODATKOV</p>
+                    <h1 id="json-title">Formatiranje JSON</h1>
+                </div>
+                <p>Prilepite strnjen JSON in samodejno dobite berljiv izpis. Za hitrost in skladnost s standardi se uporablja vgrajeni razčlenjevalnik brskalnika.</p>
+            </div>
+
+            <div class="json-toolbar control-panel compact-panel">
+                <label class="field compact-field">
+                    <span>Zamik</span>
+                    <select id="json-indent">
+                        <option value="2">2 presledka</option>
+                        <option value="4">4 presledki</option>
+                        <option value="tab">Tabulator</option>
+                    </select>
+                </label>
+                <label class="check-field toolbar-check">
+                    <input id="json-sort" type="checkbox">
+                    <span>Razvrsti ključe objektov</span>
+                </label>
+                <div class="toolbar-actions">
+                    <button id="json-format" class="button primary" type="button">OBLIKUJ</button>
+                    <button id="json-minify" class="button" type="button">STRNI</button>
+                    <button class="button" type="button" data-copy-target="json-output">KOPIRAJ IZPIS</button>
+                    <button id="json-clear" class="button" type="button">POČISTI</button>
+                </div>
+            </div>
+
+            <div class="decoded-grid json-grid">
+                <div class="output-panel">
+                    <div class="panel-label"><label for="json-input">VNOS</label><span id="json-input-size">0 B</span></div>
+                    <textarea id="json-input" class="code-input json-editor" spellcheck="false" autocomplete="off" placeholder='Prilepite JSON, npr. {"pripravljeno":true,"elementi":[1,2,3]}'></textarea>
+                </div>
+                <div class="output-panel">
+                    <div class="panel-label"><label for="json-output">OBLIKOVAN IZPIS</label><span id="json-output-size">0 B</span></div>
+                    <textarea id="json-output" class="code-output json-editor" readonly spellcheck="false"></textarea>
+                </div>
+            </div>
+            <p id="json-status" class="inline-status prominent-status" role="status" aria-live="polite">Prilepite JSON za oblikovanje.</p>
+        </section>
+
+        <section class="tool-panel" data-panel="qif" aria-labelledby="qif-title" hidden>
+            <div class="tool-header">
+                <div>
+                    <p class="eyebrow">05 / BANČNI PODATKI</p>
+                    <h1 id="qif-title">Sparkasse CSV → QIF</h1>
+                </div>
+                <p>Pretvorite izvoz transakcij Sparkasse v datoteko QIF, pripravljeno za uvoz. Podatki o računu se obdelajo samo v tem zavihku brskalnika.</p>
+            </div>
+
+            <div class="workspace-grid qif-workspace">
+                <form id="qif-form" class="control-panel">
+                    <div class="panel-label">VIR IN MOŽNOSTI</div>
+
+                    <label id="qif-drop-zone" class="file-drop" for="qif-file">
+                        <input id="qif-file" class="visually-hidden" type="file" accept=".csv,text/csv">
+                        <span class="file-drop-icon" aria-hidden="true">CSV</span>
+                        <span>
+                            <strong>SPUSTITE SPARKASSE CSV SEM</strong>
+                            <small id="qif-file-name">ali kliknite za izbiro</small>
+                        </span>
+                    </label>
+
+                    <div class="field-grid qif-options">
+                        <label class="field">
+                            <span>Kodiranje CSV</span>
+                            <select id="qif-csv-encoding">
+                                <option value="auto">Samodejna zaznava</option>
+                                <option value="utf-8">UTF-8</option>
+                                <option value="windows-1250">Windows-1250</option>
+                                <option value="latin1">Latinica-1</option>
+                            </select>
+                        </label>
+                        <label class="field">
+                            <span>Kodiranje QIF</span>
+                            <select id="qif-output-encoding">
+                                <option value="utf-8">UTF-8</option>
+                                <option value="windows-1250">Windows-1250</option>
+                            </select>
+                        </label>
+                        <label class="field">
+                            <span>Vrsta računa QIF</span>
+                            <select id="qif-type">
+                                <option value="Bank">Banka</option>
+                                <option value="CCard">Kreditna kartica</option>
+                                <option value="Cash">Gotovina</option>
+                            </select>
+                        </label>
+                        <label class="field">
+                            <span>Oblika datuma v CSV</span>
+                            <input id="qif-input-date" type="text" value="%d.%m.%Y" spellcheck="false">
+                        </label>
+                        <label class="field field-wide">
+                            <span>Oblika datuma v QIF</span>
+                            <input id="qif-output-date" type="text" value="%d.%m.%Y" spellcheck="false">
+                        </label>
+                        <label class="check-field field-wide">
+                            <input id="qif-append-code" type="checkbox">
+                            <span>Dodaj kode transakcij v opombe <small>INTE / COMM / REFU / OTHR</small></span>
+                        </label>
+                        <label class="check-field field-wide">
+                            <input id="qif-stop-errors" type="checkbox">
+                            <span>Ustavi se ob prvi napačni transakciji</span>
+                        </label>
+                        <label class="check-field field-wide">
+                            <input id="qif-remember-settings" type="checkbox">
+                            <span>Zapomni si nastavitve v tem brskalniku</span>
+                        </label>
+                    </div>
+
+                    <div class="form-actions">
+                        <button id="qif-convert" class="button primary" type="submit">PRETVORI CSV</button>
+                        <button id="qif-download" class="button" type="button" disabled>SHRANI QIF</button>
+                        <button id="qif-share" class="button" type="button" hidden disabled>DELI QIF</button>
+                        <button id="qif-copy" class="button" type="button" disabled>KOPIRAJ QIF</button>
+                        <button id="qif-clear" class="button" type="button">POČISTI</button>
+                    </div>
+                    <p id="qif-status" class="inline-status" role="status" aria-live="polite">Za začetek izberite izvoz Sparkasse CSV.</p>
+                </form>
+
+                <div class="output-panel">
+                    <div class="panel-label"><span>PREDOGLED QIF</span><span id="qif-output-count">0 TRANSAKCIJ</span></div>
+                    <textarea id="qif-output" class="code-output qif-output" readonly spellcheck="false" aria-label="Predogled pretvorjene datoteke QIF"></textarea>
+                    <p id="qif-output-note" class="panel-footnote">Pretvorjena ni še nobena datoteka.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="tool-panel pdf-tool-panel" data-panel="pdf" aria-labelledby="pdf-title" hidden>
+            <div class="tool-header">
+                <div>
+                    <p class="eyebrow">06 / DOKUMENTI</p>
+                    <h1 id="pdf-title">Združevanje <span class="pdf-title-word">PDF-jev</span></h1>
+                </div>
+                <p>Dodajte poljubno število dokumentov, uredite posamezne strani in prenesite nov PDF. Datoteke ostanejo samo v tem zavihku brskalnika.</p>
+            </div>
+
+            <section class="pdf-import-panel" aria-labelledby="pdf-import-title">
+                <div class="panel-label"><span id="pdf-import-title">DODAJ DOKUMENTE</span><span>LOKALNO</span></div>
+                <div class="pdf-import-body">
+                    <label id="pdf-drop-zone" class="file-drop pdf-file-drop" for="pdf-file">
+                        <input id="pdf-file" class="visually-hidden" type="file" accept=".pdf,application/pdf" multiple disabled>
+                        <span class="file-drop-icon" aria-hidden="true">PDF</span>
+                        <span>
+                            <strong>SPUSTITE PDF-JE SEM</strong>
+                            <small id="pdf-file-hint">ali kliknite za izbiro več datotek</small>
+                        </span>
+                    </label>
+                    <div class="pdf-import-actions">
+                        <button id="pdf-clear" class="button" type="button" disabled>ODSTRANI VSE</button>
+                        <p id="pdf-status" class="inline-status" role="status" aria-live="polite">Dodajte enega ali več PDF-jev za začetek.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="pdf-workspace" aria-labelledby="pdf-pages-title">
+                <div class="pdf-workspace-header">
+                    <div>
+                        <p class="eyebrow">DELOVNA POVRŠINA</p>
+                        <h2 id="pdf-pages-title">Uredite strani</h2>
+                        <p>Povlecite strani v želeni vrstni red ali uporabite puščice. Vsako stran lahko zavrtite ali odstranite.</p>
+                    </div>
+                    <div class="pdf-workspace-counts" aria-live="polite">
+                        <span><strong id="pdf-page-count">0</strong> STRANI</span>
+                        <span><strong id="pdf-file-count">0</strong> DATOTEK</span>
+                    </div>
+                </div>
+
+                <div id="pdf-empty-state" class="pdf-empty-state">
+                    <span aria-hidden="true">01—</span>
+                    <strong>STRANI SE BODO PRIKAZALE TUKAJ</strong>
+                    <p>Dodate lahko več PDF-jev naenkrat ali jih vstavljate postopoma.</p>
+                </div>
+                <ol id="pdf-pages" class="pdf-page-grid" aria-label="Strani novega dokumenta" hidden></ol>
+            </section>
+
+            <section class="pdf-export-panel" aria-labelledby="pdf-export-title">
+                <div class="panel-label"><span id="pdf-export-title">IZVOZ</span><span>NOV PDF</span></div>
+                <div class="pdf-export-body">
+                    <label class="field pdf-name-field" for="pdf-output-name">
+                        <span>Ime datoteke</span>
+                        <input id="pdf-output-name" type="text" value="zdruzen-dokument.pdf" maxlength="180" spellcheck="false">
+                    </label>
+                    <button id="pdf-download" class="button primary pdf-download-button" type="button" disabled>USTVARI IN SHRANI PDF</button>
+                    <button id="pdf-share" class="button pdf-share-button" type="button" hidden disabled>PRIPRAVI ZA DELJENJE</button>
+                </div>
+                <p class="pdf-export-note">Izvoz ohrani velikost in kakovost izvirnih strani. Digitalni podpisi po združevanju niso več veljavni; zaščiteni PDF-ji niso podprti.</p>
+            </section>
+        </section>
+    </main>
+</div>
+
+<button id="mobile-info-hint" class="mobile-info-hint" type="button" aria-controls="mobile-info-rail" aria-expanded="false">
+    <span aria-hidden="true">→</span>
+    <span class="visually-hidden">Odpri informacije o Delavnici</span>
+</button>
+
+<aside id="mobile-info-rail" class="mobile-info-rail" aria-label="Informacije o Delavnici" aria-hidden="true" inert>
+    <button id="mobile-info-close" class="mobile-info-close" type="button" aria-label="Zapri informacije">←</button>
+    <div class="mobile-info-rail-content">
+        <a href="zasebnost.html">ZASEBNOST</a>
+        <a href="https://github.com/UrbanKocmut/emso-generator" rel="noreferrer">IZVORNA KODA ↗</a>
+        <span class="mobile-info-author">DELAVNICA / URBAN KOCMUT</span>
+    </div>
+</aside>
+
+<footer class="site-footer landing-footer">
+    <span>DELAVNICA / URBAN KOCMUT</span>
+    <nav class="site-footer-links" aria-label="Pravne in projektne povezave">
+        <a href="zasebnost.html">ZASEBNOST</a>
+        <a href="https://github.com/UrbanKocmut/emso-generator" rel="noreferrer">IZVORNA KODA ↗</a>
+    </nav>
+</footer>
+
+<div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true" hidden></div>
+</body>
+</html>

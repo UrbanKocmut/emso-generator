@@ -10,11 +10,11 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Delavnica">
-    <title>Delavnica</title>
+    <title>EMŠO, davčne številke, JSON, JWT, CSV in PDF — Delavnica</title>
     <meta name="description" content="Hitra in zasebna spletna delavnica za slovenske testne podatke, PDF-je, preverjanje JWT, formatiranje JSON in pretvorbo Sparkasse CSV.">
     <meta name="author" content="Urban Kocmut">
-    <meta property="og:title" content="Delavnica">
-    <meta property="og:description" content="Generatorja EMŠO in davčnih številk, urejanje PDF-jev, preverjanje JWT, formatiranje JSON ter pretvorba Sparkasse CSV v QIF. Vse deluje lokalno.">
+    <meta property="og:title" content="EMŠO, davčne številke, JSON, JWT, CSV in PDF — Delavnica">
+    <meta property="og:description" content="Hitra in zasebna spletna delavnica za slovenske testne podatke, PDF-je, preverjanje JWT, formatiranje JSON in pretvorbo Sparkasse CSV.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://delavnica.kocmut.com/">
     <link rel="canonical" href="https://delavnica.kocmut.com/">
@@ -22,18 +22,20 @@
     <link rel="icon" href="assets/icons/favicon.png" type="image/png" sizes="64x64">
     <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
     <link rel="stylesheet" href="assets/css/toolbox.css">
+    <script defer src="assets/js/app-root.js"></script>
     <script defer src="assets/js/toolbox-core.js"></script>
     <script defer src="assets/js/file-output.js"></script>
     <script defer src="assets/js/tool-registry.js"></script>
     <script defer src="assets/js/pdf-loader.js"></script>
     <script defer src="assets/js/toolbox-ui.js"></script>
     <script defer src="assets/js/pwa.js"></script>
+<script id="app-structured-data" type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Delavnica","url":"https://delavnica.kocmut.com/","description":"Hitra in zasebna spletna delavnica za slovenske testne podatke, PDF-je, preverjanje JWT, formatiranje JSON in pretvorbo Sparkasse CSV.","applicationCategory":"UtilitiesApplication","operatingSystem":"Any","browserRequirements":"Modern browser with JavaScript; Web Crypto for JWT signature verification","inLanguage":"sl","isAccessibleForFree":true,"offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"}}</script>
 </head>
 <body>
 <a class="skip-link" href="#main-content">Preskoči na orodja</a>
 
 <header class="masthead">
-    <a class="wordmark" href="#overview" aria-label="Domov — Delavnica">
+    <a class="wordmark" href="./" data-route="overview" aria-label="Domov — Delavnica" aria-current="page">
         <span class="wordmark-mark" aria-hidden="true">U/</span>
         <span>DELAVNICA</span>
     </a>
@@ -46,13 +48,13 @@
     <aside class="sidebar">
         <div class="sidebar-heading">
             <span>ORODJA</span>
-            <span id="tool-count"></span>
+            <span id="tool-count">06</span>
         </div>
         <nav class="tool-nav" aria-label="Delavnica">
-            <a class="tool-nav-link mobile-home-link" href="#overview" data-route="overview" aria-label="Začetna stran">
+            <a class="tool-nav-link mobile-home-link" href="./" data-route="overview" aria-label="Začetna stran" aria-current="page">
                 <strong aria-hidden="true">U/</strong>
             </a>
-        </nav>
+        <a class="tool-nav-link" href="emso/" data-route="emso"><span class="tool-number">01</span><span><strong>EMŠO</strong><small>Generator</small></span><span aria-hidden="true">↗</span></a><a class="tool-nav-link" href="davcna-stevilka/" data-route="vat"><span class="tool-number">02</span><span><strong>SI DDV</strong><small>Generator</small></span><span aria-hidden="true">↗</span></a><a class="tool-nav-link" href="jwt/" data-route="jwt"><span class="tool-number">03</span><span><strong>JWT</strong><small>Preverjanje</small></span><span aria-hidden="true">↗</span></a><a class="tool-nav-link" href="json/" data-route="json"><span class="tool-number">04</span><span><strong>JSON</strong><small>Formatiranje</small></span><span aria-hidden="true">↗</span></a><a class="tool-nav-link" href="sparkasse-csv-qif/" data-route="qif"><span class="tool-number">05</span><span><strong>CSV/QIF</strong><small>Pretvornik Sparkasse</small></span><span aria-hidden="true">↗</span></a><a class="tool-nav-link" href="pdf/" data-route="pdf"><span class="tool-number">06</span><span><strong>PDF</strong><small>Združevanje</small></span><span aria-hidden="true">↗</span></a></nav>
         <div class="sidebar-note">
             <span class="eyebrow">SISTEM</span>
             <p>Statična zasnova.<br>Brez zunanjih odvisnosti.<br>Po prvem obisku deluje brez povezave.</p>
@@ -82,7 +84,8 @@
                 </div>
             </div>
 
-            <div class="overview-grid" aria-label="Razpoložljiva orodja"></div>
+            <div class="overview-grid" aria-label="Razpoložljiva orodja"><a class="tool-card" href="emso/" data-route="emso"><span class="card-index">01 / IDENTITETA</span><span class="card-symbol" aria-hidden="true">13#</span><span class="card-title">EMŠO<br>GENERATOR</span><span class="card-description">Testni slovenski identifikatorji z veljavno kontrolo ter izbiro datuma in spola.</span><span class="card-action">ODPRI ORODJE <span aria-hidden="true">→</span></span></a><a class="tool-card inverted" href="davcna-stevilka/" data-route="vat"><span class="card-index">02 / DAVKI</span><span class="card-symbol" aria-hidden="true">SI</span><span class="card-title">GENERATOR<br>DAVČNIH ŠTEVILK</span><span class="card-description">Izmišljene slovenske davčne številke, ki prestanejo kontrolo po modulu 11.</span><span class="card-action">ODPRI ORODJE <span aria-hidden="true">→</span></span></a><a class="tool-card" href="jwt/" data-route="jwt"><span class="card-index">03 / ŽETONI</span><span class="card-symbol" aria-hidden="true">{·}</span><span class="card-title">PREVERJANJE<br>JWT</span><span class="card-description">Razčlenite zahtevke, preverite časovno veljavnost in podpis z Web Crypto.</span><span class="card-action">ODPRI ORODJE <span aria-hidden="true">→</span></span></a><a class="tool-card" href="json/" data-route="json"><span class="card-index">04 / PODATKI</span><span class="card-symbol" aria-hidden="true">{ }</span><span class="card-title">FORMATIRANJE<br>JSON</span><span class="card-description">Prilepite strnjen JSON in takoj dobite čist, berljiv izpis.</span><span class="card-action">ODPRI ORODJE <span aria-hidden="true">→</span></span></a><a class="tool-card" href="sparkasse-csv-qif/" data-route="qif"><span class="card-index">05 / BANČNI PODATKI</span><span class="card-symbol" aria-hidden="true">CSV</span><span class="card-title">SPARKASSE<br>CSV → QIF</span><span class="card-description">Lokalno pretvorite izvoze transakcij Sparkasse v datoteke QIF za uvoz.</span><span class="card-action">ODPRI ORODJE <span aria-hidden="true">→</span></span></a><a class="tool-card inverted" href="pdf/" data-route="pdf"><span class="card-index">06 / DOKUMENTI</span><span class="card-symbol" aria-hidden="true">PDF</span><span class="card-title">ZDRUŽEVANJE<br>PDF-JEV</span><span class="card-description">Združite dokumente, uredite vrstni red strani, jih zavrtite ali izbrišite in prenesite nov PDF.</span><span class="card-action">ODPRI ORODJE <span aria-hidden="true">→</span></span></a></div>
+<section class="reference-panel tool-help" aria-labelledby="overview-help"><h2 class="panel-label" id="overview-help">UPORABA IN POMOČ</h2><div class="reference-content"><div class="reference-copy"><h3>Orodja za testne podatke in dokumente</h3><p>Izberite generator EMŠO ali davčnih številk, pregled JWT, oblikovanje JSON, pretvorbo Sparkasse CSV v QIF ali urejanje strani PDF. Vsako orodje ima svoj naslov, ki ga lahko shranite med zaznamke.</p></div><div class="reference-copy"><h3>Primer uporabe</h3><p>Za izmišljeno preizkusno osebo pripravite testni identifikator, uredite vzorčni JSON in sestavite PDF iz svojih dokumentov. Ustvarjeni identifikatorji niso dokaz o vpisu v register.</p></div><div class="reference-copy"><h3>Zasebnost in delo brez povezave</h3><p>Obdelava podatkov in datotek poteka v tem zavihku. Spletno mesto jih ne pošilja v obdelavo strežniku. Statične datoteke aplikacije se lahko shranijo za delo brez povezave. Izbrane datoteke in rezultati se ne shranjujejo trajno. Nastavitve pretvornika se shranijo samo ob vaši izbiri.</p></div><div class="reference-copy"><h3>Pomoč in dostop za agente</h3><p>Spodaj pri vsakem orodju so opisane možnosti in omejitve. Če pri delu uporabite ponudnika umetne inteligence, lahko ta prejme podatke, ki mu jih posredujete ali omogočite prebrati. Njegova pravila obdelave in hrambe so ločena od lokalnega delovanja te strani.</p></div><div class="reference-copy"><a href="agents/">Navodila za agente (English)</a> · <a href="./" data-route="overview" aria-current="page">Vsa orodja</a></div></div></section>
         </section>
 
         <section class="tool-panel" data-panel="emso" aria-labelledby="emso-title" hidden>
@@ -174,6 +177,7 @@
                         </ul>
                     </div>
                 </div>
+<div class="tool-help"><h2 class="panel-label" id="emso-help">UPORABA IN POMOČ</h2><div class="reference-content"><div class="reference-copy"><h3>Namen in izmišljeni primer</h3><p>Generator je namenjen razvoju in preizkušanju obrazcev. Primer: izmišljena oseba, rojena 15. 6. 1990; izberite datum, ženski spol in količino 3. Rezultati so besedilni nizi s 13 števkami, da začetne ničle ostanejo ohranjene.</p></div><div class="reference-copy"><h3>Možnosti</h3><p>Ustvarite od 1 do 5.000 zapisov (privzeto 10). Datum od leta 1900 do danes lahko pustite prazen; izberete lahko naključni, moški ali ženski spol. Možnost »Samo 18+« izklopi izbiro datuma in ustvari naključne odrasle osebe.</p></div><div class="reference-copy"><h3>Kontrola in resnična registracija</h3><p>Veljavna kontrolna številka potrjuje matematično skladnost zapisa. Ne potrjuje identitete, vpisa v Centralni register prebivalstva ali tega, da številka še ni dodeljena. Sintetični rezultat lahko sovpada z resnično številko; uporabljajte ga v testnih podatkih.</p></div><div class="reference-copy"><h3>Odpravljanje težav</h3><p>Preverite koledarski datum in izključite datum v prihodnosti. Če je datum onemogočen, je vključena izbira 18+. Pri prenosu v preglednico ohranite besedilni tip celice.</p></div><div class="reference-copy"><a href="agents/">Navodila za agente (English)</a> · <a href="./" data-route="overview" aria-current="page">Vsa orodja</a></div></div></div>
             </section>
         </section>
 
@@ -243,6 +247,7 @@
                         </ul>
                     </div>
                 </div>
+<div class="tool-help"><h2 class="panel-label" id="vat-help">UPORABA IN POMOČ</h2><div class="reference-content"><div class="reference-copy"><h3>Namen in izmišljeni primer</h3><p>Za preizkus obrazca ustvarite 3 davčne številke s predpono SI. Primer kontrolno skladnega zapisa je SI15012557; ta primer ni trditev o resničnem davčnem zavezancu.</p></div><div class="reference-copy"><h3>Možnosti</h3><p>Količina je od 1 do 5.000 (privzeto 10), predpona SI je privzeto vključena. Rezultat je niz osmih števk oziroma SI in osem števk. Predpona ne spremeni izračuna kontrolne številke.</p></div><div class="reference-copy"><h3>Kaj je preverjeno</h3><p>Preverjena je osemmestna kontrola po modulu 11. Orodje ne preverja vpisa pri FURS ali v VIES, identitete imetnika ali statusa zavezanca za DDV. Predpona SI sama ne potrjuje registracije za DDV.</p></div><div class="reference-copy"><h3>Odpravljanje težav</h3><p>Če ciljni obrazec zahteva samo osem števk, izklopite predpono. Zavrnitev kontrolno pravilnega rezultata v uradni storitvi je pričakovana: sintetična številka ni dokaz registracije.</p></div><div class="reference-copy"><a href="agents/">Navodila za agente (English)</a> · <a href="./" data-route="overview" aria-current="page">Vsa orodja</a></div></div></div>
             </section>
         </section>
 
@@ -308,6 +313,7 @@
                     </div>
                 </div>
             </div>
+<section class="reference-panel tool-help" aria-labelledby="jwt-help"><h2 class="panel-label" id="jwt-help">UPORABA IN POMOČ</h2><div class="reference-content"><div class="reference-copy"><h3>Namen in izmišljeni primer</h3><p>Pregled je namenjen razčlenjevanju in preverjanju JWT. Izmišljeni nepodpisani primer eyJhbGciOiJub25lIn0.eyJzdWIiOiJkZW1vIn0. vsebuje algoritem none in zahtevek sub z vrednostjo demo; njegov podpis ostane nepreverjen.</p></div><div class="reference-copy"><h3>Tri ločena preverjanja</h3><p>Struktura preveri tri segmente, glavo in vsebino. Zahtevki exp, nbf in iat se presodijo glede na uro naprave; manjkajoči zahtevki ostanejo označeni. Preverjanje podpisa je ločen korak z vašim ključem. Samo razčlenitev ni potrditev pristnosti.</p></div><div class="reference-copy"><h3>Možnosti in zaupanje ključu</h3><p>Podprte so družine HS, RS, PS in ES s SHA-256/384/512. Za HMAC uporabite skrivnost UTF-8 ali Base64/base64url; za asimetrične algoritme javni ključ SPKI PEM. Ujemanje podpisa z dobavljenim ključem ne dokazuje, da ključ pripada zaupanemu izdajatelju. Izdajatelj, občinstvo in dovoljenja se ne preverjajo proti vaši aplikaciji.</p></div><div class="reference-copy"><h3>Odpravljanje težav</h3><p>Preverite celoten žeton, algoritem, obliko ključa in sistemsko uro. Podprto preverjanje potrebuje Web Crypto. Algoritem none in nepodprte kritične razširitve ne pomenijo veljavnega podpisa. Skrivnost in žeton se obdelata lokalno; ponudnik AI, ki mu omogočite dostop, ima svoja pravila zasebnosti.</p></div><div class="reference-copy"><a href="agents/">Navodila za agente (English)</a> · <a href="./" data-route="overview" aria-current="page">Vsa orodja</a></div></div></section>
         </section>
 
         <section class="tool-panel" data-panel="json" aria-labelledby="json-title" hidden>
@@ -351,6 +357,7 @@
                 </div>
             </div>
             <p id="json-status" class="inline-status prominent-status" role="status" aria-live="polite">Prilepite JSON za oblikovanje.</p>
+<section class="reference-panel tool-help" aria-labelledby="json-help"><h2 class="panel-label" id="json-help">UPORABA IN POMOČ</h2><div class="reference-content"><div class="reference-copy"><h3>Namen in izmišljeni primer</h3><p>Oblikujte ali strnite besedilo JSON brez izgube izvirnih številskih zapisov. Primer {&quot;n&quot;:9007199254740993,&quot;n&quot;:-0,&quot;cena&quot;:1.2300} ohrani veliko celo število, oba enaka ključa, negativno ničlo in zaključni ničli.</p></div><div class="reference-copy"><h3>Možnosti</h3><p>Izberite 2 presledka, 4 presledke ali tabulator, strnjen izpis in razvrščanje ključev objektov. Enaki ključi pri razvrščanju ohranijo medsebojni vrstni red; vrstni red polj se ne spremeni.</p></div><div class="reference-copy"><h3>Natančnost in omejitve</h3><p>Izvirne številske zapise, ubežna zaporedja in podvojene ključe ohrani oblikovalnik iz besedilnih gradnikov. Drugi programi jih lahko ob razčlenjevanju zaokrožijo ali združijo. Samodejno oblikovanje se nad 2 MiB znakov ustavi do pritiska OBLIKUJ; zelo globoko gnezdenje lahko preseže sklad brskalnika.</p></div><div class="reference-copy"><h3>Odpravljanje težav</h3><p>JSON zahteva dvojne narekovaje, nima komentarjev in ne dovoljuje zadnje vejice. Ob napaki popravite vnos; delni rezultat se ne izpiše. API sprejme največ 16 MiB znakov in vhod/izhod vedno vrača kot besedilo.</p></div><div class="reference-copy"><a href="agents/">Navodila za agente (English)</a> · <a href="./" data-route="overview" aria-current="page">Vsa orodja</a></div></div></section>
         </section>
 
         <section class="tool-panel" data-panel="qif" aria-labelledby="qif-title" hidden>
@@ -438,6 +445,7 @@
                     <p id="qif-output-note" class="panel-footnote">Pretvorjena ni še nobena datoteka.</p>
                 </div>
             </div>
+<section class="reference-panel tool-help" aria-labelledby="qif-help"><h2 class="panel-label" id="qif-help">UPORABA IN POMOČ</h2><div class="reference-content"><div class="reference-copy"><h3>Namen in izmišljeni primer</h3><p>Pretvorite izvoz prometa Sparkasse, ločen s podpičji. Primer: glava »Datum knjiženja;Naziv prejemnika;V breme;V dobro;Namen« in vrstica »10.09.2026;Izmišljena trgovina;12,34;;Test«. QIF vsebuje !Type:Bank, D10.09.2026, T-12.34, PIzmišljena trgovina, MTest in zaključek ^, vsako polje v svoji vrstici.</p></div><div class="reference-copy"><h3>Glave, zneski in datumi</h3><p>Prva celica glave mora biti Datum knjiženja. Stolpci V breme in V dobro določijo znesek, Naziv prejemnika prejemnika, Namen in reference pa opombo. Decimalna vejica in ločila tisočic se pretvorijo v cente; dobroimetje ima prednost, če sta oba zneska neničelna. Privzeti datum je %d.%m.%Y; podprti gradniki so %d, %m, %Y in %y.</p></div><div class="reference-copy"><h3>Možnosti in kodiranja</h3><p>Vhod: samodejna zaznava, UTF-8, Windows-1250 ali Latinica-1. Izhod: UTF-8 ali Windows-1250. Vrsta računa: Bank, CCard ali Cash. Po izbiri dodajte kode INTE/COMM/REFU/OTHR v opombe ali ustavite pretvorbo ob prvi napaki. Privzeto se napačne transakcije preskočijo z opozorilom.</p></div><div class="reference-copy"><h3>Opozorila in odpravljanje težav</h3><p>Preverite število transakcij in opozorila pred uvozom: uspešna delna pretvorba ni potrditev vseh vrstic. Prazni datumi se preskočijo; manjkajoči ali ničelni zneski in neveljavni datumi sprožijo opozorila. Če so šumniki napačni, izberite vhodno kodiranje. Znaki zunaj Windows-1250 zahtevajo UTF-8. Predogled nad 80.000 znakov je skrajšan, datoteka pa vsebuje celoten rezultat. Orodje ne uvaža transakcij v banko in ne prenaša denarja.</p></div><div class="reference-copy"><a href="agents/">Navodila za agente (English)</a> · <a href="./" data-route="overview" aria-current="page">Vsa orodja</a></div></div></section>
         </section>
 
         <section class="tool-panel pdf-tool-panel" data-panel="pdf" aria-labelledby="pdf-title" hidden>
@@ -500,6 +508,7 @@
                 </div>
                 <p class="pdf-export-note">Izvoz ohrani velikost in kakovost izvirnih strani. Digitalni podpisi po združevanju niso več veljavni; zaščiteni PDF-ji niso podprti.</p>
             </section>
+<section class="reference-panel tool-help" aria-labelledby="pdf-help"><h2 class="panel-label" id="pdf-help">UPORABA IN POMOČ</h2><div class="reference-content"><div class="reference-copy"><h3>Namen in izmišljeni primer</h3><p>Združite ali preuredite strani lokalnih PDF-jev. Primer: iz vzorčnega dvostranskega dokumenta postavite stran 2 pred stran 1 in jo zavrtite za 90° v desno, nato ustvarite nov dokument. Izvirna datoteka ostane na vaši napravi.</p></div><div class="reference-copy"><h3>Možnosti</h3><p>Dodajte več datotek, premikajte strani z vlečenjem ali puščicami, zavrtite jih po 90° in odstranite nepotrebne strani. Na kartici uporabite Alt+levo/desno za premik. Ime izhodne datoteke lahko spremenite. Agent uporablja iste kartice; številke strani so od 1, zasuk pa 0–3 četrt obrata glede na izvirnik.</p></div><div class="reference-copy"><h3>Omejitve</h3><p>Šifrirani PDF-ji niso podprti. Sestavljanje ustvari nov PDF in ne ohrani veljavnosti obstoječih digitalnih podpisov; orodje podpisov tudi ne preverja. Interaktivni obrazci, zaznamki in posebne funkcije niso zagotovljeni pri kopiranju strani. Velike datoteke potrebujejo dovolj pomnilnika.</p></div><div class="reference-copy"><h3>Odpravljanje težav</h3><p>Če se PDF ne odpre, preverite, ali je veljaven in brez šifriranja. Neuspešen predogled sam po sebi ne pomeni uspešnega ali neuspešnega izvoza; po ustvarjanju preverite preneseni dokument. Počisti sprosti izbrane datoteke in pripravljene prenose. Datoteko shranite ali delite z ločenim dejanjem.</p></div><div class="reference-copy"><a href="agents/">Navodila za agente (English)</a> · <a href="./" data-route="overview" aria-current="page">Vsa orodja</a></div></div></section>
         </section>
     </main>
 </div>

@@ -1,0 +1,61 @@
+        <section class="tool-panel pdf-tool-panel" data-panel="pdf" aria-labelledby="pdf-title" hidden>
+            <div class="tool-header">
+                <div>
+                    <p class="eyebrow">06 / DOKUMENTI</p>
+                    <h1 id="pdf-title">Združevanje <span class="pdf-title-word">PDF-jev</span></h1>
+                </div>
+                <p>Dodajte poljubno število dokumentov, uredite posamezne strani in prenesite nov PDF. Datoteke ostanejo samo v tem zavihku brskalnika.</p>
+            </div>
+
+            <section class="pdf-import-panel" aria-labelledby="pdf-import-title">
+                <div class="panel-label"><span id="pdf-import-title">DODAJ DOKUMENTE</span><span>LOKALNO</span></div>
+                <div class="pdf-import-body">
+                    <label id="pdf-drop-zone" class="file-drop pdf-file-drop" for="pdf-file">
+                        <input id="pdf-file" class="visually-hidden" type="file" accept=".pdf,application/pdf" multiple disabled>
+                        <span class="file-drop-icon" aria-hidden="true">PDF</span>
+                        <span>
+                            <strong>SPUSTITE PDF-JE SEM</strong>
+                            <small id="pdf-file-hint">ali kliknite za izbiro več datotek</small>
+                        </span>
+                    </label>
+                    <div class="pdf-import-actions">
+                        <button id="pdf-clear" class="button" type="button" disabled>ODSTRANI VSE</button>
+                        <p id="pdf-status" class="inline-status" role="status" aria-live="polite">Dodajte enega ali več PDF-jev za začetek.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="pdf-workspace" aria-labelledby="pdf-pages-title">
+                <div class="pdf-workspace-header">
+                    <div>
+                        <p class="eyebrow">DELOVNA POVRŠINA</p>
+                        <h2 id="pdf-pages-title">Uredite strani</h2>
+                        <p>Povlecite strani v želeni vrstni red ali uporabite puščice. Vsako stran lahko zavrtite ali odstranite.</p>
+                    </div>
+                    <div class="pdf-workspace-counts" aria-live="polite">
+                        <span><strong id="pdf-page-count">0</strong> STRANI</span>
+                        <span><strong id="pdf-file-count">0</strong> DATOTEK</span>
+                    </div>
+                </div>
+
+                <div id="pdf-empty-state" class="pdf-empty-state">
+                    <span aria-hidden="true">01—</span>
+                    <strong>STRANI SE BODO PRIKAZALE TUKAJ</strong>
+                    <p>Dodate lahko več PDF-jev naenkrat ali jih vstavljate postopoma.</p>
+                </div>
+                <ol id="pdf-pages" class="pdf-page-grid" aria-label="Strani novega dokumenta" hidden></ol>
+            </section>
+
+            <section class="pdf-export-panel" aria-labelledby="pdf-export-title">
+                <div class="panel-label"><span id="pdf-export-title">IZVOZ</span><span>NOV PDF</span></div>
+                <div class="pdf-export-body">
+                    <label class="field pdf-name-field" for="pdf-output-name">
+                        <span>Ime datoteke</span>
+                        <input id="pdf-output-name" type="text" value="zdruzen-dokument.pdf" maxlength="180" spellcheck="false">
+                    </label>
+                    <button id="pdf-download" class="button primary pdf-download-button" type="button" disabled>USTVARI IN SHRANI PDF</button>
+                    <button id="pdf-share" class="button pdf-share-button" type="button" hidden disabled>PRIPRAVI ZA DELJENJE</button>
+                </div>
+                <p class="pdf-export-note">Izvoz ohrani velikost in kakovost izvirnih strani. Digitalni podpisi po združevanju niso več veljavni; zaščiteni PDF-ji niso podprti.</p>
+            </section>
+        </section>

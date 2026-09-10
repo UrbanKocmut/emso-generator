@@ -1677,7 +1677,6 @@ body:has(.main-content.is-swipe-settling) .mobile-info-hint {
         color: #c7c7c2;
     }
 }
-
 @media (max-width: 1180px) {
     .overview-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1839,7 +1838,6 @@ body:has(.main-content.is-swipe-settling) .mobile-info-hint {
         grid-template-columns: 1fr;
     }
 }
-
 @media (max-width: 640px) {
     body {
         --mobile-info-width: calc(100vw / var(--tool-route-count, 7));
@@ -2603,7 +2601,6 @@ body:has(.main-content.is-swipe-settling) .mobile-info-hint {
         display: none;
     }
 }
-
 @media (display-mode: standalone) {
     body {
         min-height: 100vh;
@@ -2627,7 +2624,6 @@ body:has(.main-content.is-swipe-settling) .mobile-info-hint {
         bottom: max(22px, var(--safe-bottom));
     }
 }
-
 @media (display-mode: standalone) and (max-width: 640px) {
     .app-shell {
         padding-top: var(--safe-top);
@@ -2669,7 +2665,6 @@ body:has(.main-content.is-swipe-settling) .mobile-info-hint {
         transform: none;
     }
 }
-
 @media (prefers-reduced-motion: reduce) {
     html {
         scroll-behavior: auto;
@@ -2732,3 +2727,12 @@ body:has(.main-content.is-swipe-settling) .mobile-info-hint {
         padding: 0;
     }
 }
+/* New explanatory content only; original workspace rules remain unchanged. */
+.tool-help .reference-copy { min-width: 0; overflow-wrap: anywhere; }
+.tool-help h3 { font-size: 16px; margin: 0 0 12px; }
+.tool-help p { margin: 0 0 18px; }
+.agent-documentation pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+.agent-documentation { max-width: 1080px; margin: auto; padding: 36px 24px; }
+.agent-documentation section { margin-block: 32px; }
+.agent-documentation code { overflow-wrap: anywhere; }
+.artifact-link { max-width: 100%; white-space: normal; overflow-wrap: anywhere; }

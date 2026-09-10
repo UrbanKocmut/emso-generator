@@ -1,0 +1,425 @@
+{
+  "apiVersion": "1.0.0",
+  "appVersion": "eb26c2a124e1cb896832de0f52487dcfa14ec9e6cea86f500c4992cdc10b62af",
+  "documentation": "https://delavnica.kocmut.com/agents/",
+  "pages": [
+    {
+      "id": "overview",
+      "url": "https://delavnica.kocmut.com/",
+      "title": "EMŠO, davčne številke, JSON, JWT, CSV in PDF — Delavnica",
+      "description": "Hitra in zasebna spletna delavnica za slovenske testne podatke, PDF-je, preverjanje JWT, formatiranje JSON in pretvorbo Sparkasse CSV."
+    },
+    {
+      "id": "emso",
+      "url": "https://delavnica.kocmut.com/emso/",
+      "title": "EMŠO generator za testne podatke — Delavnica",
+      "description": "Testni slovenski identifikatorji z veljavno kontrolo ter izbiro datuma in spola."
+    },
+    {
+      "id": "vat",
+      "url": "https://delavnica.kocmut.com/davcna-stevilka/",
+      "title": "Generator slovenskih davčnih številk — Delavnica",
+      "description": "Izmišljene slovenske davčne številke, ki prestanejo kontrolo po modulu 11."
+    },
+    {
+      "id": "jwt",
+      "url": "https://delavnica.kocmut.com/jwt/",
+      "title": "JWT: razčlenitev, zahtevki in preverjanje podpisa — Delavnica",
+      "description": "Razčlenite zahtevke, preverite časovno veljavnost in podpis z Web Crypto."
+    },
+    {
+      "id": "json",
+      "url": "https://delavnica.kocmut.com/json/",
+      "title": "Oblikovanje JSON brez izgube številskih zapisov — Delavnica",
+      "description": "Prilepite strnjen JSON in takoj dobite čist, berljiv izpis."
+    },
+    {
+      "id": "qif",
+      "url": "https://delavnica.kocmut.com/sparkasse-csv-qif/",
+      "title": "Pretvorba Sparkasse CSV v QIF — Delavnica",
+      "description": "Lokalno pretvorite izvoze transakcij Sparkasse v datoteke QIF za uvoz."
+    },
+    {
+      "id": "pdf",
+      "url": "https://delavnica.kocmut.com/pdf/",
+      "title": "Združevanje, vrstni red in vrtenje strani PDF — Delavnica",
+      "description": "Združite dokumente, uredite vrstni red strani, jih zavrtite ali izbrišite in prenesite nov PDF."
+    }
+  ],
+  "limits": {
+    "textCharacters": 16777216,
+    "fileBytes": 67108864,
+    "sessionFileBytes": 134217728,
+    "artifactBytes": 134217728,
+    "chunkBytes": 65536,
+    "pages": 5000
+  },
+  "errorCodes": [
+    "INVALID_ARGUMENT",
+    "UNKNOWN_OPERATION",
+    "INVALID_JSON",
+    "INVALID_JWT",
+    "INVALID_CSV",
+    "INVALID_PDF",
+    "FILE_NOT_FOUND",
+    "ARTIFACT_NOT_FOUND",
+    "LIMIT_EXCEEDED",
+    "CANCELLED",
+    "PROCESSING_FAILED"
+  ],
+  "operations": [
+    {
+      "name": "generate_emso",
+      "tool": "emso",
+      "description": "Generate synthetic Slovenian EMŠO strings in the visible workspace. Checksums only; no population-register lookup or proof that an identifier is unassigned.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "count": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 5000,
+            "default": 10
+          },
+          "date": {
+            "type": "string",
+            "maxLength": 10,
+            "default": ""
+          },
+          "gender": {
+            "type": "string",
+            "enum": [
+              "random",
+              "male",
+              "female"
+            ],
+            "default": "random"
+          },
+          "adultOnly": {
+            "type": "boolean",
+            "default": false
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      },
+      "example": {
+        "count": 3,
+        "date": "1990-06-15",
+        "gender": "female"
+      }
+    },
+    {
+      "name": "generate_si_tax_numbers",
+      "tool": "vat",
+      "description": "Generate synthetic eight-digit Slovenian tax-number strings with an optional SI prefix. Validates modulo-11 checksums, not registration or VAT status.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "count": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 5000,
+            "default": 10
+          },
+          "prefix": {
+            "type": "boolean",
+            "default": true
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      },
+      "example": {
+        "count": 3,
+        "prefix": true
+      }
+    },
+    {
+      "name": "format_json",
+      "tool": "json",
+      "description": "Format original JSON text in the visible workspace, preserving numeric spelling, duplicate keys and string escapes. Returns text; optional stable object-key sorting.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "maxLength": 16777216
+          },
+          "indent": {
+            "enum": [
+              2,
+              4,
+              "tab"
+            ],
+            "default": 2
+          },
+          "minify": {
+            "type": "boolean",
+            "default": false
+          },
+          "sortKeys": {
+            "type": "boolean",
+            "default": false
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "text": "{\"n\":9007199254740993,\"n\":-0}",
+        "indent": 2
+      }
+    },
+    {
+      "name": "inspect_jwt",
+      "tool": "jwt",
+      "description": "Decode a JWT, check its time claims and optionally verify its signature with a supplied HMAC secret or SPKI public key. Returns separate structure, claims and signature states. Supplied-key verification does not establish issuer trust.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "maxLength": 16777216
+          },
+          "verifySignature": {
+            "type": "boolean",
+            "default": false
+          },
+          "key": {
+            "type": "string",
+            "maxLength": 16777216,
+            "default": ""
+          },
+          "keyEncoding": {
+            "type": "string",
+            "enum": [
+              "text",
+              "base64"
+            ],
+            "default": "text"
+          }
+        },
+        "required": [
+          "token"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "token": "eyJhbGciOiJub25lIn0.eyJzdWIiOiJkZW1vIn0."
+      }
+    },
+    {
+      "name": "convert_sparkasse_csv",
+      "tool": "qif",
+      "description": "Convert local Sparkasse CSV text or a selected CSV file ID into QIF. Exactly one source is required. Shows conversion warnings and returns a local artifact; never saves, shares or uploads automatically.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "maxLength": 16777216
+          },
+          "fileId": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1
+          },
+          "csvEncoding": {
+            "type": "string",
+            "enum": [
+              "auto",
+              "utf-8",
+              "windows-1250",
+              "latin1"
+            ],
+            "default": "auto"
+          },
+          "outputEncoding": {
+            "type": "string",
+            "enum": [
+              "utf-8",
+              "windows-1250"
+            ],
+            "default": "utf-8"
+          },
+          "qifType": {
+            "type": "string",
+            "enum": [
+              "Bank",
+              "CCard",
+              "Cash"
+            ],
+            "default": "Bank"
+          },
+          "inputDateFormat": {
+            "type": "string",
+            "maxLength": 32,
+            "minLength": 1,
+            "default": "%d.%m.%Y"
+          },
+          "outputDateFormat": {
+            "type": "string",
+            "maxLength": 32,
+            "minLength": 1,
+            "default": "%d.%m.%Y"
+          },
+          "appendCode": {
+            "type": "boolean",
+            "default": false
+          },
+          "stopOnError": {
+            "type": "boolean",
+            "default": false
+          },
+          "filename": {
+            "type": "string",
+            "maxLength": 180,
+            "minLength": 1,
+            "pattern": "^[^<>:\"/\\\\|?*\\u0000-\\u001f]+$"
+          }
+        },
+        "required": [],
+        "additionalProperties": false,
+        "oneOf": [
+          {
+            "required": [
+              "text"
+            ],
+            "not": {
+              "required": [
+                "fileId"
+              ]
+            }
+          },
+          {
+            "required": [
+              "fileId"
+            ],
+            "not": {
+              "required": [
+                "text"
+              ]
+            }
+          }
+        ]
+      },
+      "example": {
+        "text": "Datum knjiženja;Naziv prejemnika;V breme;V dobro;Namen\n10.09.2026;Izmišljena trgovina;12,34;;Test\n"
+      }
+    },
+    {
+      "name": "compose_pdf",
+      "tool": "pdf",
+      "description": "Compose a PDF from session-local IDs of already selected PDF files. Pages are one-based; quarterTurns is 0–3 clockwise relative to the original page. Replaces the visible page arrangement, preserving the source documents. Returns a local artifact without saving or sharing. Encrypted PDFs are unsupported; existing signatures are not preserved as valid.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "pages": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 5000,
+            "items": {
+              "type": "object",
+              "properties": {
+                "fileId": {
+                  "type": "string",
+                  "maxLength": 80,
+                  "minLength": 1
+                },
+                "page": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "quarterTurns": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 3,
+                  "default": 0
+                }
+              },
+              "required": [
+                "fileId",
+                "page"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "filename": {
+            "type": "string",
+            "maxLength": 180,
+            "minLength": 1,
+            "pattern": "^[^<>:\"/\\\\|?*\\u0000-\\u001f]+$",
+            "default": "zdruzen-dokument.pdf"
+          }
+        },
+        "required": [
+          "pages"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "pages": [
+          {
+            "fileId": "file-1",
+            "page": 2,
+            "quarterTurns": 1
+          },
+          {
+            "fileId": "file-1",
+            "page": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "list_selected_files",
+      "description": "List metadata and session-local file IDs from native CSV/PDF selection. No file contents, local paths, remote fetching or file-picker access.",
+      "readOnly": true,
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "example": {}
+    },
+    {
+      "name": "read_artifact",
+      "description": "Read a generated local artifact as base64, at most 65536 raw bytes per call. Offset and length are raw byte counts. Does not expose selected input-file contents.",
+      "readOnly": true,
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0,
+            "default": 0
+          },
+          "length": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 65536,
+            "default": 65536
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "id": "artifact-1",
+        "offset": 0,
+        "length": 65536
+      }
+    }
+  ]
+}

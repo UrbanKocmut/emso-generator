@@ -67,6 +67,11 @@ const server = createServer(async function (request, response) {
     try {
         let details = await fs.stat(filePath);
         if (details.isDirectory()) {
+            if (!pathname.endsWith("/")) {
+                response.writeHead(308, { Location: pathname + "/", "Cache-Control": "no-store" });
+                response.end();
+                return;
+            }
             filePath = path.join(filePath, "index.html");
             details = await fs.stat(filePath);
         }

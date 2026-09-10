@@ -1,0 +1,161 @@
+@media (max-width: 1180px) {
+    .overview-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .overview-grid .tool-card {
+        min-height: 350px;
+        margin-top: 0;
+        margin-left: 0;
+    }
+
+    .overview-grid .tool-card:nth-child(even) {
+        margin-left: calc(0px - var(--line-width));
+    }
+
+    .overview-grid .tool-card:nth-child(n + 3) {
+        margin-top: calc(0px - var(--line-width));
+    }
+
+    .json-toolbar {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .toolbar-actions {
+        justify-content: flex-start;
+        grid-column: 1 / -1;
+    }
+
+    .reference-content {
+        grid-template-columns: 1fr;
+    }
+
+    .reference-copy {
+        border-top: var(--line);
+        border-left: 0;
+    }
+
+    .pdf-export-body {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .pdf-name-field {
+        grid-column: 1 / -1;
+    }
+
+}
+
+@media (max-width: 860px) {
+    body {
+        /* Clip sideways swipes without creating an extra vertical scroll container. */
+        overflow-x: clip;
+    }
+
+    .masthead-meta {
+        padding: 0 16px;
+    }
+
+    .app-shell {
+        display: block;
+        border: 0;
+    }
+
+    .main-content {
+        position: relative;
+        touch-action: pan-y;
+    }
+
+    .main-content.is-swiping,
+    .main-content.is-swipe-settling {
+        overflow-anchor: none;
+    }
+
+    .tool-panel.is-swipe-active {
+        position: relative;
+        z-index: 2;
+        background-color: var(--paper);
+        will-change: transform;
+    }
+
+    .tool-panel.is-swipe-target {
+        position: absolute;
+        z-index: 1;
+        top: 0;
+        left: 0;
+        width: 100%;
+        min-height: 100%;
+        pointer-events: none;
+        background-color: var(--paper);
+        will-change: transform;
+    }
+
+    .main-content.is-swipe-settling .tool-panel.is-swipe-active,
+    .main-content.is-swipe-settling .tool-panel.is-swipe-target {
+        transition: transform 260ms cubic-bezier(.22, .72, .18, 1);
+    }
+
+    .sidebar {
+        position: sticky;
+        z-index: 45;
+        top: 0;
+        display: block;
+        overflow: hidden;
+        border-top: 0;
+        border-right: 0;
+        border-bottom: var(--line);
+    }
+
+    .sidebar-heading,
+    .sidebar-note {
+        display: none;
+    }
+
+    .tool-nav {
+        display: grid;
+        width: 100%;
+        min-width: 0;
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+    }
+
+    .tool-nav-link {
+        min-width: 0;
+        min-height: 66px;
+        padding: 8px 10px;
+        border-right: 1px solid var(--ink);
+        border-bottom: 0;
+        grid-template-columns: 20px minmax(0, 1fr);
+    }
+
+    .tool-nav-link:last-child {
+        border-right: 0;
+    }
+
+    .tool-nav-link > span:last-child {
+        display: none;
+    }
+
+    .hero-grid,
+    .tool-header {
+        align-items: start;
+        gap: 28px;
+        grid-template-columns: 1fr;
+    }
+
+    .workspace-grid,
+    .jwt-details-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .pdf-import-body {
+        grid-template-columns: 1fr;
+    }
+
+    .pdf-file-drop {
+        border-right: 0;
+        border-bottom: var(--line);
+    }
+
+    .policy-hero {
+        grid-template-columns: 1fr;
+    }
+}

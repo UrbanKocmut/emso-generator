@@ -1,0 +1,42 @@
+        <section class="tool-panel" data-panel="json" aria-labelledby="json-title" hidden>
+            <div class="tool-header">
+                <div>
+                    <p class="eyebrow">04 / UREJANJE PODATKOV</p>
+                    <h1 id="json-title">Formatiranje JSON</h1>
+                </div>
+                <p>Prilepite strnjen JSON in samodejno dobite berljiv izpis. Za hitrost in skladnost s standardi se uporablja vgrajeni razčlenjevalnik brskalnika.</p>
+            </div>
+
+            <div class="json-toolbar control-panel compact-panel">
+                <label class="field compact-field">
+                    <span>Zamik</span>
+                    <select id="json-indent">
+                        <option value="2">2 presledka</option>
+                        <option value="4">4 presledki</option>
+                        <option value="tab">Tabulator</option>
+                    </select>
+                </label>
+                <label class="check-field toolbar-check">
+                    <input id="json-sort" type="checkbox">
+                    <span>Razvrsti ključe objektov</span>
+                </label>
+                <div class="toolbar-actions">
+                    <button id="json-format" class="button primary" type="button">OBLIKUJ</button>
+                    <button id="json-minify" class="button" type="button">STRNI</button>
+                    <button class="button" type="button" data-copy-target="json-output">KOPIRAJ IZPIS</button>
+                    <button id="json-clear" class="button" type="button">POČISTI</button>
+                </div>
+            </div>
+
+            <div class="decoded-grid json-grid">
+                <div class="output-panel">
+                    <div class="panel-label"><label for="json-input">VNOS</label><span id="json-input-size">0 B</span></div>
+                    <textarea id="json-input" class="code-input json-editor" spellcheck="false" autocomplete="off" placeholder='Prilepite JSON, npr. {"pripravljeno":true,"elementi":[1,2,3]}'></textarea>
+                </div>
+                <div class="output-panel">
+                    <div class="panel-label"><label for="json-output">OBLIKOVAN IZPIS</label><span id="json-output-size">0 B</span></div>
+                    <textarea id="json-output" class="code-output json-editor" readonly spellcheck="false"></textarea>
+                </div>
+            </div>
+            <p id="json-status" class="inline-status prominent-status" role="status" aria-live="polite">Prilepite JSON za oblikovanje.</p>
+        </section>

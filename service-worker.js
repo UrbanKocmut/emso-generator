@@ -13,6 +13,13 @@ const CACHE_NAME = CACHE_PREFIX + self.DELAVNICA_PRECACHE.version;
 const SCOPE_URL = new URL(self.registration.scope);
 const INDEX_URL = new URL("./index.html", SCOPE_URL).href;
 const PRIVACY_URL = new URL("./zasebnost.html", SCOPE_URL).href;
+const PAGE_URLS = new Map();
+self.DELAVNICA_PRECACHE.entries.filter(entry => entry.url.endsWith("/index.html")).forEach(entry => {
+    const relative = entry.url.replace(/^\.\//, "");
+    const href = new URL(entry.url, SCOPE_URL).href;
+    PAGE_URLS.set(relative, href);
+    PAGE_URLS.set(relative.slice(0, -10), href);
+});
 const PRECACHE_REQUESTS = self.DELAVNICA_PRECACHE.entries.map(function (entry) {
     return new Request(new URL(entry.url, SCOPE_URL), { cache: "reload" });
 });
@@ -80,7 +87,7 @@ function navigationCacheKey(url) {
     if (relativePath === "zasebnost.html") {
         return PRIVACY_URL;
     }
-    return null;
+    return PAGE_URLS.get(relativePath) || null;
 }
 
 async function cacheFirst(request, navigationKey) {

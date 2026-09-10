@@ -48,7 +48,8 @@ function swipe(page, start = 300, end = 100) {
 }
 
 function assertRoute(page, route) {
-    assert(page.win.location.hash === "#" + route, "Expected route " + route + ", got " + page.win.location.hash);
+    const path = route === "overview" ? "/" : "/" + page.win.ToolboxTools.find(tool => tool.id === route).path;
+    assert(page.win.location.pathname === path, "Expected route " + route + ", got " + page.win.location.pathname);
     const visible = [...page.doc.querySelectorAll("[data-panel]")].filter((panel) => !panel.hidden);
     assert(visible.length === 1 && visible[0].dataset.panel === route,
         "Expected only " + route + " visible, got " + visible.map((panel) => panel.dataset.panel));
@@ -117,14 +118,14 @@ const checks = [
         assert(links.map((link) => link.dataset.route).join() === ["overview", ...ids].join(), "Navigation order changed");
         assert(page.doc.getElementById("tool-count").textContent === "06", "Tool count is incorrect");
         const cards = [...page.doc.querySelectorAll(".overview-grid .tool-card")];
-        assert(cards.map((card) => card.hash.slice(1)).join() === ids.join(), "Overview cards do not match navigation");
+        assert(cards.map((card) => card.dataset.route).join() === ids.join(), "Overview cards do not match navigation");
         assert(!page.doc.querySelector('script[src$="pdf-merger.js"]'), "PDF was executed before opening the tool");
         assert(!page.doc.querySelector('script[src$="pdf.worker.classic.js"]'), "Classic PDF worker was loaded on HTTP");
         for (const id of ids) {
             page.doc.querySelector('[data-route="' + id + '"]').click();
             await delay(40);
             assertRoute(page, id);
-            assert(page.doc.title === page.win.ToolboxTools.find((tool) => tool.id === id).title + " — Delavnica", "Page title does not match the registry");
+            assert(page.doc.title === page.win.ToolboxTools.find((tool) => tool.id === id).pageTitle, "Page title does not match the registry");
         }
         assert(page.doc.querySelectorAll('script[src$="pdf-merger.js"]').length === 1, "PDF bundle should load exactly once");
     }],

@@ -1,0 +1,12 @@
+# Delavnica
+
+Static, browser-local tools. No remote processing API. Agent/provider privacy is separate from site-local processing.
+
+- [Agent guide](https://delavnica.kocmut.com/agents/)
+- [Versioned schemas and catalog](https://delavnica.kocmut.com/tools.json)
+- [Generator EMŠO](https://delavnica.kocmut.com/emso/)
+- [Generator SI DDV](https://delavnica.kocmut.com/davcna-stevilka/)
+- [Preverjanje JWT](https://delavnica.kocmut.com/jwt/)
+- [Formatiranje JSON](https://delavnica.kocmut.com/json/)
+- [Sparkasse CSV v QIF](https://delavnica.kocmut.com/sparkasse-csv-qif/)
+- [Združevanje PDF-jev](https://delavnica.kocmut.com/pdf/)

@@ -1,0 +1,68 @@
+        <section class="tool-panel" data-panel="vat" aria-labelledby="vat-title" hidden>
+            <div class="tool-header">
+                <div>
+                    <p class="eyebrow">02 / SLOVENSKI DAVKI</p>
+                    <h1 id="vat-title">Generator SI DDV</h1>
+                </div>
+                <p>Ustvarite izmišljene slovenske identifikacijske številke za DDV, ki prestanejo osemmestno kontrolo FURS po modulu 11.</p>
+            </div>
+
+            <div class="workspace-grid">
+                <form id="vat-form" class="control-panel">
+                    <div class="panel-label">PARAMETRI</div>
+                    <div class="field-grid">
+                        <label class="field field-wide">
+                            <span>Količina <small>največ 5.000</small></span>
+                            <input id="vat-count" type="number" min="1" max="5000" step="1" value="10" inputmode="numeric" required>
+                        </label>
+                        <label class="check-field field-wide">
+                            <input id="vat-prefix" type="checkbox" checked>
+                            <span>Dodaj predpono države <strong>SI</strong></span>
+                        </label>
+                    </div>
+                    <div class="form-actions">
+                        <button class="button primary" type="submit">GENERIRAJ DAVČNE ŠTEVILKE</button>
+                        <button class="button" type="button" data-copy-target="vat-output">KOPIRAJ</button>
+                    </div>
+                    <p id="vat-status" class="inline-status" role="status" aria-live="polite">Pripravljeno.</p>
+                </form>
+
+                <div class="output-panel">
+                    <div class="panel-label"><span>IZPIS</span><span id="vat-output-count">0 ZAPISOV</span></div>
+                    <textarea id="vat-output" class="code-output identifier-output" readonly spellcheck="false" aria-label="Generirane slovenske davčne številke"></textarea>
+                    <p class="panel-footnote">Osem števk; po izbiri s predpono SI.</p>
+                </div>
+            </div>
+
+            <section class="reference-panel" aria-labelledby="vat-structure-title">
+                <div class="panel-label"><span>SESTAVA IN VIRI</span><span>SI + 8 ŠTEVK</span></div>
+                <div class="reference-content">
+                    <div class="structure-map vat-map" aria-label="Sestava slovenske številke za DDV: predpona države, sedemmestno jedro in kontrolna številka">
+                        <div class="structure-part">
+                            <span>PREDPONA</span>
+                            <strong>SI</strong>
+                            <p>Predpona države za identifikacijo DDV.</p>
+                        </div>
+                        <div class="structure-part">
+                            <span>01–07</span>
+                            <strong>NNNNNNN</strong>
+                            <p>Sedemmestno jedro davčne številke.</p>
+                        </div>
+                        <div class="structure-part">
+                            <span>08</span>
+                            <strong>C</strong>
+                            <p>Kontrolna številka, izračunana po modulu 11.</p>
+                        </div>
+                    </div>
+                    <div class="reference-copy">
+                        <p class="eyebrow">URADNI VIRI</p>
+                        <h2 id="vat-structure-title">Kako je sestavljena slovenska številka za DDV</h2>
+                        <p>Uspešna lokalna kontrola potrdi le sestavo. Za preverjanje dodeljenosti in aktivnosti številke uporabite VIES.</p>
+                        <ul class="reference-links">
+                            <li><a href="https://www.fu.gov.si/davki_in_druge_dajatve/poslovanje_z_nami/vpis_v_davcni_register_in_davcna_stevilka" target="_blank" rel="noreferrer">FURS — opredelitev davčne številke <span aria-hidden="true">↗</span></a></li>
+                            <li><a href="https://ec.europa.eu/taxation_customs/vies/" target="_blank" rel="noreferrer">Evropska komisija — preverjanje VIES <span aria-hidden="true">↗</span></a></li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+        </section>

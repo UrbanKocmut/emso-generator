@@ -1,0 +1,9 @@
+/* New explanatory content only; original workspace rules remain unchanged. */
+.tool-help .reference-copy { min-width: 0; overflow-wrap: anywhere; }
+.tool-help h3 { font-size: 16px; margin: 0 0 12px; }
+.tool-help p { margin: 0 0 18px; }
+.agent-documentation pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+.agent-documentation { max-width: 1080px; margin: auto; padding: 36px 24px; }
+.agent-documentation section { margin-block: 32px; }
+.agent-documentation code { overflow-wrap: anywhere; }
+.artifact-link { max-width: 100%; white-space: normal; overflow-wrap: anywhere; }

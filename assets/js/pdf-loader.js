@@ -3,7 +3,7 @@
 
     let loading = null;
     let ready = false;
-    const baseUrl = document.baseURI;
+    const baseUrl = window.DelavnicaRoot || document.baseURI;
     const dropZone = document.getElementById("pdf-drop-zone");
     ["dragover", "drop"].forEach(function (type) {
         // Keep a drop from navigating away while the PDF controller is loading.

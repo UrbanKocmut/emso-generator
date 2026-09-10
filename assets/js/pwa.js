@@ -145,8 +145,8 @@
 
     window.addEventListener("load", async function () {
         try {
-            const registration = await navigator.serviceWorker.register("./service-worker.js", {
-                scope: "./",
+            const registration = await navigator.serviceWorker.register(window.DelavnicaRoot ? window.DelavnicaRoot + "service-worker.js" : "./service-worker.js", {
+                scope: window.DelavnicaRoot || "./",
                 updateViaCache: "none"
             });
 

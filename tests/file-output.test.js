@@ -216,6 +216,7 @@ test("QIF and PDF controllers wire save/share and all PDF invalidation triggers"
     assert.match(pdfSource, /prepareSaveDestination\([\s\S]*?createPdfFile/);
     assert.match(pdfSource, /shareButton\?\.addEventListener\("click", sharePdf\)/);
     assert.match(pdfSource, /outputName\.addEventListener\("input", invalidatePreparedPdf\)/);
-    assert.ok((pdfSource.match(/invalidatePreparedPdf\(\);/g) || []).length >= 6);
+    assert.ok((pdfSource.match(/(?:invalidatePreparedPdf|preparedPdf\.invalidate)\(\);/g) || []).length >= 6);
+    assert.match(pdfSource, /session\?\.api\.invalidate\("pdf"\)/);
     assert.match(pdfSource, /preparedPdf\.release\(\)/);
 });

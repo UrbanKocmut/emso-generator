@@ -1,68 +1,57 @@
-import { promises as fs } from "node:fs";
-import path from "node:path";
-import { build, version as esbuildVersion } from "esbuild";
-import { generatePrecache, projectRoot } from "./generate-precache.mjs";
+import { promises as fs } from 'node:fs';
+import path from 'node:path';
+import { build, version as esbuildVersion } from 'esbuild';
+import { canonicalRuntimeContent, generatePrecache, projectRoot } from './generate-precache.mjs';
+import { assembleSite } from './assemble-site.mjs';
+import { createHash } from 'node:crypto';
 
-const checkOnly = process.argv.includes("--check");
-const sourcePath = path.join(projectRoot, "assets", "js", "pdf-merger.mjs");
-const bundlePath = path.join(projectRoot, "assets", "js", "pdf-merger.js");
-const requiredEsbuildVersion = "0.28.1";
-
-async function createPdfBundle() {
-    const result = await build({
-        entryPoints: [sourcePath],
-        bundle: true,
-        charset: "ascii",
-        format: "iife",
-        legalComments: "none",
-        logLevel: "silent",
-        minify: true,
-        platform: "browser",
-        write: false
-    });
-    if (result.outputFiles.length !== 1) {
-        throw new Error("Expected esbuild to produce exactly one PDF bundle.");
+const check = process.argv.includes('--check');
+async function contentVersion(outputs) {
+    const hash = createHash('sha256');
+    const files = [];
+    async function visit(relative) {
+        const entries = await fs.readdir(path.join(projectRoot, relative), { withFileTypes: true });
+        for (const entry of entries) {
+            const name = relative + '/' + entry.name;
+            if (entry.isDirectory()) await visit(name);
+            else if (!outputs.has(name)) files.push(name);
+        }
     }
-    // pdf-lib emits one template literal whose significant space sits directly
-    // before a newline. Escape that space without changing the runtime string so
-    // generated output also remains clean under `git diff --check`.
-    return Buffer.from(
-        result.outputFiles[0].text.replaceAll("` \n`", "`\\x20\n`"),
-        "utf8"
-    );
+    await visit('assets');
+    await visit('src');
+    await visit('fonts');
+    if (await fs.stat(path.join(projectRoot, 'sprites')).catch(() => null)) await visit('sprites');
+    files.push('service-worker.js', 'manifest.webmanifest');
+    for (const name of files.sort()) hash.update(name + '\0').update(canonicalRuntimeContent(name, await fs.readFile(path.join(projectRoot, name))));
+    for (const [name, value] of [...outputs].sort(([a], [b]) => a.localeCompare(b, 'en'))) hash.update(name + '\0' + value);
+    return hash.digest('hex');
+}
+async function bundle(entry, minify) {
+    const result = await build({ entryPoints: [path.join(projectRoot, entry)], bundle: true,
+        charset: 'ascii', format: 'iife', legalComments: 'none', logLevel: 'silent',
+        minify, platform: 'browser', write: false });
+    if (result.outputFiles.length !== 1) throw new Error('Expected one browser bundle.');
+    return result.outputFiles[0].text.replaceAll('` \n`', '`\\x20\n`');
 }
 
-async function buildProject() {
-    if (esbuildVersion !== requiredEsbuildVersion) {
-        throw new Error("Expected esbuild " + requiredEsbuildVersion + ", found " + esbuildVersion + ".");
-    }
-    const expectedBundle = await createPdfBundle();
-    if (checkOnly) {
-        let actualBundle;
-        try {
-            actualBundle = await fs.readFile(bundlePath);
-        } catch (error) {
-            if (error && error.code === "ENOENT") {
-                throw new Error("assets/js/pdf-merger.js is missing. Run npm run build.");
-            }
-            throw error;
+async function main() {
+    if (esbuildVersion !== '0.28.1') throw new Error('Expected esbuild 0.28.1.');
+    const outputs = await assembleSite();
+    outputs.set('assets/js/pdf-merger.js', await bundle('assets/js/pdf-merger.mjs', true));
+    outputs.set('assets/js/toolbox-ui.js', await bundle('src/ui/bootstrap.mjs', false));
+    const version = await contentVersion(outputs);
+    for (const [relativePath, template] of outputs) {
+        const expected = template.replaceAll('__DELAVNICA_APP_VERSION__', version);
+        const target = path.join(projectRoot, relativePath);
+        if (check) {
+            const actual = await fs.readFile(target, 'utf8').catch(error => { if (error.code === 'ENOENT') return ''; throw error; });
+            if (actual.replaceAll('\r\n', '\n') !== expected) throw new Error(relativePath + ' is stale. Run npm run build.');
+        } else {
+            await fs.mkdir(path.dirname(target), { recursive: true });
+            await fs.writeFile(target, expected);
         }
-        const normalizedActualBundle = Buffer.from(
-            actualBundle.toString("utf8").replace(/\r\n/g, "\n"),
-            "utf8"
-        );
-        if (!normalizedActualBundle.equals(expectedBundle)) {
-            throw new Error("assets/js/pdf-merger.js is stale. Run npm run build.");
-        }
-    } else {
-        await fs.writeFile(bundlePath, expectedBundle);
     }
-
-    await generatePrecache({ check: checkOnly });
-    console.log(checkOnly ? "Build outputs are current." : "Build outputs updated.");
+    await generatePrecache({ check });
+    console.log(check ? 'Build outputs are current.' : 'Build outputs updated.');
 }
-
-buildProject().catch((error) => {
-    console.error(error.message || error);
-    process.exitCode = 1;
-});
+main().catch(error => { console.error(error.message || error); process.exitCode = 1; });

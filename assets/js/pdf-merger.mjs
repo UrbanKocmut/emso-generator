@@ -1,10 +1,10 @@
+import { composePdfFile } from "./pdf-composition.mjs";
 import {
     getDocument,
     GlobalWorkerOptions
 } from "../vendor/pdfjs/pdf.min.mjs";
 import {
-    PDFDocument,
-    degrees
+    PDFDocument
 } from "../vendor/pdf-lib/pdf-lib.esm.min.js";
 import {
     movePage,
@@ -12,7 +12,7 @@ import {
     reorderPage
 } from "./pdf-merger-core.mjs";
 
-const PDF_MERGER_SCRIPT_URL = new URL("assets/js/pdf-merger.js", document.baseURI);
+const PDF_MERGER_SCRIPT_URL = new URL("assets/js/pdf-merger.js", window.DelavnicaRoot || document.baseURI);
 if (window.location.protocol !== "file:") {
     delete globalThis.pdfjsWorker;
 }
@@ -70,6 +70,9 @@ function initPdfMerger() {
         fileOutput.canShare(new File([""], "delavnica.pdf", { type: pdfFileType }))
     );
     const preparedPdf = fileOutput.createPreparedFileState();
+    const session = window.DelavnicaSession;
+    let workspaceRevision = 0;
+    let importTail = Promise.resolve();
 
     const thumbnailObserver = "IntersectionObserver" in window
         ? new IntersectionObserver(function (entries) {
@@ -108,6 +111,8 @@ function initPdfMerger() {
     }
 
     function invalidatePreparedPdf() {
+        workspaceRevision += 1;
+        session?.api.invalidate("pdf");
         preparedPdf.invalidate();
         syncShareAction();
     }
@@ -115,7 +120,7 @@ function initPdfMerger() {
     function setBusy(nextBusy) {
         busy = nextBusy;
         fileInput.disabled = busy;
-        clearButton.disabled = busy || pages.length === 0;
+        clearButton.disabled = !busy && pages.length === 0;
         downloadButton.disabled = busy || pages.length === 0;
         outputName.disabled = busy;
         syncShareAction();
@@ -151,6 +156,7 @@ function initPdfMerger() {
         const record = documents.get(documentId);
         documents.delete(documentId);
         if (record) {
+            if (![...documents.values()].some(other => other.fileId === record.fileId)) session?.files.release(record.fileId);
             record.loadingTask.destroy().catch(function () {
                 // The page data is already discarded from the workspace.
             });
@@ -274,7 +280,7 @@ function initPdfMerger() {
         fileHint.textContent = hasPages
             ? "kliknite ali spustite še en PDF"
             : "ali kliknite za izbiro več datotek";
-        clearButton.disabled = busy || !hasPages;
+        clearButton.disabled = !busy && !hasPages;
         downloadButton.disabled = busy || !hasPages;
         syncShareAction();
     }
@@ -363,6 +369,7 @@ function initPdfMerger() {
     }
 
     function friendlyLoadError(error, fileName) {
+        if (error?.code === "LIMIT_EXCEEDED" && session) return session.localizedError(error);
         const message = error && error.message ? error.message : String(error || "");
         if (/encrypt|password/i.test(message)) {
             return "Datoteka »" + fileName + "« je zaščitena z geslom in je ni mogoče združiti.";
@@ -373,17 +380,19 @@ function initPdfMerger() {
         return "Datoteke »" + fileName + "« ni bilo mogoče odpreti.";
     }
 
-    async function loadPdf(file) {
+    async function loadPdf(file, revision) {
         if (!file || (!/\.pdf$/i.test(file.name) && file.type !== "application/pdf")) {
             throw new Error("Datoteka »" + (file?.name || "brez imena") + "« ni PDF.");
         }
 
         const bytes = new Uint8Array(await file.arrayBuffer());
+        if (revision !== workspaceRevision) throw new Error("Import cancelled.");
         if (bytes.length === 0) {
             throw new Error("Datoteka »" + file.name + "« je prazna.");
         }
 
         await PDFDocument.load(bytes, { updateMetadata: false });
+        if (revision !== workspaceRevision) throw new Error("Import cancelled.");
 
         const loadingTask = getDocument(Object.assign({ data: bytes.slice() }, PDFJS_OPTIONS));
         loadingTask.onPassword = function (updatePassword) {
@@ -392,6 +401,7 @@ function initPdfMerger() {
         let viewer;
         try {
             viewer = await loadingTask.promise;
+            if (revision !== workspaceRevision) throw new Error("Import cancelled.");
             if (!viewer.numPages) {
                 throw new Error("PDF has no pages.");
             }
@@ -400,11 +410,15 @@ function initPdfMerger() {
             throw error;
         }
 
-        invalidatePreparedPdf();
+        preparedPdf.invalidate();
+        session?.artifacts.clear("pdf");
         documentSequence += 1;
         const documentId = "pdf-document-" + documentSequence;
+        const fileId = session?.files.add(file, "pdf", { pageCount: viewer.numPages });
+        if (fileId) session.files.update(fileId, { pageCount: viewer.numPages });
         documents.set(documentId, {
             id: documentId,
+            fileId,
             name: file.name,
             bytes,
             loadingTask,
@@ -426,10 +440,8 @@ function initPdfMerger() {
         return viewer.numPages;
     }
 
-    async function addFiles(fileList) {
-        if (busy) {
-            return;
-        }
+    async function importFiles(fileList, revision) {
+        if (revision !== workspaceRevision) return;
         const files = Array.from(fileList || []);
         if (!files.length) {
             return;
@@ -441,15 +453,24 @@ function initPdfMerger() {
         const errors = [];
 
         for (const file of files) {
+            if (revision !== workspaceRevision) break;
             setStatus("Odpiranje datoteke »" + file.name + "«…", false);
             try {
-                addedPages += await loadPdf(file);
+                const fileId = session?.files.add(file, "pdf");
+                try {
+                    addedPages += await loadPdf(file, revision);
+                } catch (error) {
+                    if (fileId) session.files.release(fileId);
+                    throw error;
+                }
                 addedFiles += 1;
                 syncWorkspace();
             } catch (error) {
                 errors.push(friendlyLoadError(error, file.name));
             }
         }
+
+        if (revision !== workspaceRevision) return;
 
         fileInput.value = "";
         setBusy(false);
@@ -462,6 +483,18 @@ function initPdfMerger() {
         } else {
             setStatus(errors.join(" ") || "Izbrane datoteke ni bilo mogoče dodati.", true);
         }
+    }
+
+    function addFiles(fileList) {
+        const selected = Array.from(fileList || []);
+        if (!selected.length) return importTail;
+        // New imports invalidate composition, while successive file selections queue.
+        session?.api.invalidate("pdf");
+        preparedPdf.invalidate();
+        const revision = workspaceRevision;
+        const previousWork = session?.api.whenIdle("pdf") || Promise.resolve();
+        importTail = Promise.all([importTail, previousWork]).then(() => importFiles(selected, revision));
+        return importTail;
     }
 
     function removePage(pageId) {
@@ -517,17 +550,17 @@ function initPdfMerger() {
     }
 
     function clearWorkspace() {
-        if (pages.length || documents.size) {
-            invalidatePreparedPdf();
-        }
+        invalidatePreparedPdf();
         documents.forEach(function (record) {
             record.loadingTask.destroy().catch(function () {
                 // Clearing the UI is sufficient even if the worker is already gone.
             });
         });
         documents.clear();
+        session?.files.clear("pdf");
         pages = [];
         fileInput.value = "";
+        setBusy(false);
         syncWorkspace();
         setStatus("Delovna površina je prazna.", false);
     }
@@ -547,47 +580,13 @@ function initPdfMerger() {
     }
 
     async function createPdfFile(name) {
-        const output = await PDFDocument.create();
-        const copiedPages = new Map();
-        const documentIds = Array.from(new Set(pages.map(function (page) {
-            return page.documentId;
-        })));
-
-        for (const documentId of documentIds) {
-            const record = documents.get(documentId);
-            if (!record) {
-                throw new Error("Missing source document.");
-            }
-            const source = await PDFDocument.load(record.bytes, { updateMetadata: false });
-            const sourceItems = pages.filter(function (page) {
-                return page.documentId === documentId;
-            });
-            const copies = await output.copyPages(source, sourceItems.map(function (page) {
-                return page.sourceIndex;
-            }));
-
-            sourceItems.forEach(function (item, index) {
-                const copy = copies[index];
-                copy.setRotation(degrees(normalizeRotation(copy.getRotation().angle + item.rotation)));
-                copiedPages.set(item.id, copy);
-            });
-        }
-
-        pages.forEach(function (page) {
-            output.addPage(copiedPages.get(page.id));
-        });
-
-        output.setTitle(name.replace(/\.pdf$/i, ""));
-        output.setCreator("Delavnica");
-        output.setProducer("Delavnica / pdf-lib");
-        output.setCreationDate(new Date());
-
-        const bytes = await output.save({
-            addDefaultPage: false,
-            objectsPerTick: 25,
-            useObjectStreams: true
-        });
-        return new File([bytes], name, { type: pdfFileType });
+        if (!session) return composePdfFile(documents, pages, name);
+        const response = await session.api.execute("compose_pdf", {
+            filename: name,
+            pages: pages.map(page => ({ fileId: documents.get(page.documentId).fileId, page: page.sourcePage, quarterTurns: page.rotation / 90 }))
+        }, { source: "manual" });
+        if (!response.success) throw Object.assign(new Error(response.error.message), { code: response.error.code });
+        return session.artifacts.getFile(response.result.artifact.id);
     }
 
     function setPdfOutputError(error, action) {
@@ -608,6 +607,7 @@ function initPdfMerger() {
         }
 
         const name = safeOutputName();
+        const exportRevision = workspaceRevision;
         const previousStatus = captureStatus();
         // Open the native picker while the click still carries user activation,
         // before PDF creation yields to any asynchronous work.
@@ -620,12 +620,14 @@ function initPdfMerger() {
 
         try {
             const destination = await destinationPromise;
+            if (exportRevision !== workspaceRevision) return;
             if (destination.kind === "cancelled") {
                 restoreStatus(previousStatus);
                 return;
             }
 
             const file = await createPdfFile(name);
+            if (exportRevision !== workspaceRevision) return;
             const result = await fileOutput.writeOrDownload(file, {
                 destination,
                 fileName: name,
@@ -642,10 +644,9 @@ function initPdfMerger() {
                 false
             );
         } catch (error) {
-            setPdfOutputError(error, "save");
+            if (error.code !== "CANCELLED" && exportRevision === workspaceRevision) setPdfOutputError(error, "save");
         } finally {
-            setBusy(false);
-            syncWorkspace();
+            if (exportRevision === workspaceRevision) { setBusy(false); syncWorkspace(); }
         }
     }
 
@@ -679,6 +680,7 @@ function initPdfMerger() {
 
         const name = safeOutputName();
         const revision = preparedPdf.revision;
+        const shareRevision = workspaceRevision;
         setBusy(true);
         setStatus("Priprava PDF-ja za deljenje…", false);
         try {
@@ -689,11 +691,52 @@ function initPdfMerger() {
             }
             setStatus("PDF je pripravljen. Pritisnite DELI PDF za izbiro aplikacije.", false);
         } catch (error) {
-            setPdfOutputError(error, "share");
+            if (error.code !== "CANCELLED" && shareRevision === workspaceRevision) setPdfOutputError(error, "share");
         } finally {
-            setBusy(false);
-            syncWorkspace();
+            if (shareRevision === workspaceRevision) { setBusy(false); syncWorkspace(); }
         }
+    }
+
+    async function compose(args, check) {
+        await importTail;
+        check();
+        const revision = workspaceRevision;
+        let nextPages = args.pages.map(instruction => {
+            const file = session.files.get(instruction.fileId, "pdf");
+            const record = [...documents.values()].find(record => record.fileId === instruction.fileId);
+            if (!record || instruction.page > record.viewer.numPages) {
+                throw Object.assign(new Error("PDF page is outside the selected document."), { code: "INVALID_ARGUMENT" });
+            }
+            return { id: "pdf-page-" + ++pageSequence, documentId: record.id, fileName: file.file.name,
+                sourcePage: instruction.page, sourceIndex: instruction.page - 1,
+                rotation: instruction.quarterTurns * 90, thumbnailState: "pending" };
+        });
+        check();
+        // Keep loaded source documents available for subsequent compositions.
+        const unchanged = pages.length === nextPages.length && pages.every((page, index) => page.documentId === nextPages[index].documentId && page.sourcePage === nextPages[index].sourcePage && page.rotation === nextPages[index].rotation);
+        if (outputName.value !== args.filename) preparedPdf.invalidate();
+        if (unchanged) nextPages = pages;
+        else { pages = nextPages; preparedPdf.invalidate(); }
+        outputName.value = args.filename;
+        setBusy(true);
+        syncWorkspace();
+        setStatus("Sestavljanje novega PDF-ja z " + pages.length + " stranmi…", false);
+        try {
+            const file = await composePdfFile(new Map(documents), nextPages, safeOutputName());
+            check();
+            if (revision !== workspaceRevision) throw Object.assign(new Error("PDF workspace changed."), { code: "CANCELLED" });
+            return { file, pageCount: nextPages.length };
+        } finally {
+            if (revision === workspaceRevision) { setBusy(false); syncWorkspace(); }
+        }
+    }
+    if (session) {
+        window.DelavnicaPdfWorkspace = { compose, dispose: clearWorkspace };
+        session.api.register("pdf", {
+            render(result) { session.showArtifact("pdf", result.artifact); setStatus("PDF je ustvarjen in pripravljen za prenos: " + result.artifact.filename + ".", false); },
+            error(error) { setStatus(session.localizedError(error), true); },
+            settled(cancelled) { if (cancelled) setStatus("Opravilo je preklicano.", false); }
+        });
     }
 
     fileInput.addEventListener("change", function () {

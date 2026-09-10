@@ -1,0 +1,23 @@
+@media (display-mode: standalone) {
+    body {
+        min-height: 100vh;
+        min-height: 100dvh;
+        padding-right: var(--safe-right);
+        padding-left: var(--safe-left);
+    }
+
+    .masthead {
+        padding-top: var(--safe-top);
+    }
+
+    .site-footer {
+        padding-right: max(24px, var(--safe-right));
+        padding-bottom: var(--safe-bottom);
+        padding-left: max(24px, var(--safe-left));
+    }
+
+    .toast {
+        right: max(22px, var(--safe-right));
+        bottom: max(22px, var(--safe-bottom));
+    }
+}
