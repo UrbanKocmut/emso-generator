@@ -64,6 +64,30 @@ test('failed installation leaves no partial cache and ordinary controls work', a
     } finally { await context.close(); await server.close(); }
 });
 
+test('a new deep link works under the previous worker without interrupting an old tab', async ({ browser }) => {
+    const server = await fixtureServer();
+    const context = await browser.newContext({ serviceWorkers: 'allow' });
+    try {
+        const oldPage = await context.newPage(); await oldPage.goto(server.origin + '/#json');
+        await oldPage.evaluate(() => navigator.serviceWorker.ready);
+        await expect.poll(() => oldPage.evaluate(() => !!navigator.serviceWorker.controller)).toBe(true);
+        await oldPage.locator('#json-input').fill('{"unsaved":"old-tab-sentinel"}');
+        server.current();
+        const fresh = await context.newPage(); await fresh.goto(server.origin + '/json/');
+        await expect(fresh.locator('[data-panel]:visible')).toHaveAttribute('data-panel', 'json');
+        await expect(fresh.locator('.tool-nav a')).toHaveCount(7);
+        const result = await fresh.evaluate(() => window.DelavnicaAgent.execute('format_json', {text:'{"n":9007199254740993}'}));
+        expect(result.success).toBe(true);
+        await expect(fresh.locator('#json-output')).toHaveValue(/9007199254740993/);
+        await fresh.locator('.tool-nav [data-route=pdf]').click();
+        await expect(fresh.locator('#pdf-file')).toBeEnabled();
+        expect(await fresh.evaluate(() => typeof window.DelavnicaPdfWorkspace?.compose)).toBe('function');
+        await expect(fresh.locator('#pwa-header-action')).toHaveText('POSODOBI');
+        await expect(oldPage.locator('#json-input')).toHaveValue('{"unsaved":"old-tab-sentinel"}');
+        expect(await oldPage.evaluate(() => !!window.DelavnicaAgent)).toBe(false);
+    } finally { await context.close(); await server.close(); }
+});
+
 test('tool inputs and artifacts never enter service-worker caches or storage', async ({ browser }) => {
     const context = await browser.newContext({ serviceWorkers: 'allow' });
     const page = await context.newPage();

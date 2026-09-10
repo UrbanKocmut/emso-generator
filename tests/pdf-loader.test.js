@@ -29,7 +29,7 @@ test("PDF scripts load only on request, once, and relative to the app", async ()
     const first = app.load();
     assert.equal(app.load(), first);
     assert.equal(app.head.children.length, 1);
-    assert.equal(app.head.children[0].src, "https://example.test/sub/assets/js/pdf-merger.js");
+    assert.equal(app.head.children[0].src, "https://example.test/sub/assets/v2/pdf-merger.js");
     assert.equal(app.input.disabled, true);
     let prevented = false;
     app.dropZone.dispatch("drop", { preventDefault() { prevented = true; } });
@@ -63,7 +63,7 @@ test("direct file opening loads the classic worker before the PDF bundle", async
     app.context.pdfjsWorker = {};
     app.head.children[0].onload();
     await Promise.resolve();
-    assert.equal(app.head.children[1].src, "file:///app/assets/js/pdf-merger.js");
+    assert.equal(app.head.children[1].src, "file:///app/assets/v2/pdf-merger.js");
     app.head.children[1].onload();
     assert.equal(await result, true);
 });

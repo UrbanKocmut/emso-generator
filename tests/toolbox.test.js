@@ -77,9 +77,9 @@ async function run() {
     assert.match(indexHtml, /id="pdf-pages"[^>]+aria-label="Strani novega dokumenta"/);
     assert.match(indexHtml, /id="qif-download"[^>]+disabled>SHRANI QIF/);
     assert.match(indexHtml, /id="pdf-download"[^>]+disabled>USTVARI IN SHRANI PDF/);
-    assert.match(indexHtml, /defer src="assets\/js\/pdf-loader\.js"/);
-    assert.doesNotMatch(indexHtml, /<script[^>]+src="assets\/(?:vendor\/pdfjs\/pdf\.worker\.classic|js\/pdf-merger)\.js"/);
-    assert.doesNotMatch(indexHtml, /type="module" src="assets\/js\/pdf-merger/);
+    assert.match(indexHtml, /defer src="assets\/v2\/pdf-loader\.js"/);
+    assert.doesNotMatch(indexHtml, /<script[^>]+src="assets\/(?:vendor\/pdfjs\/pdf\.worker\.classic|(?:js|v2)\/pdf-merger)\.js"/);
+    assert.doesNotMatch(indexHtml, /type="module" src="assets\/(?:js|v2)\/pdf-merger/);
     assert.match(indexHtml, /href="zasebnost\.html"/);
     assert.match(uiScript, /delavnica\.qif\.settings\.v1/);
     assert.match(uiScript, /localStorage\.setItem/);

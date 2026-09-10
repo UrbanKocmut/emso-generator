@@ -59,6 +59,21 @@ Implementation starts from revision `5c369f3`. The existing untracked
 
 ## Release handoff — not performed locally
 
+Release follow-up on 10 September: the GitHub Pages API confirms workflow
+publishing, the existing custom domain and enforced HTTPS. The first release
+attempt's Linux visual checks rejected Windows rasterization differences before
+deployment. CI now captures references from the immutable original revision on
+the same runner before comparing current workspaces, without raising the
+comparison threshold. Local checks pass 40 Node subtests and 68 browser tests.
+
+A new regression reproduced opening a new deep link while the previous worker
+still controls the origin. Generated `assets/v2/` compatibility copies keep that
+new HTML independent of old cached scripts without changing existing public
+asset URLs or reloading unsaved tabs. All four upgrade/privacy scenarios pass.
+Native WebMCP discovery exposed all eight registrations in the connected browser;
+a native JSON operation returned exact numeric text and updated visible controls.
+Search Console was reached but requires Google sign-in.
+
 - Real Android Chrome and iOS Safari require physical-device testing. Emulated
   touch events cannot certify native browser gesture arbitration. Check
   consecutive/reversed/cancelled swipes, navigation during settling, vertical

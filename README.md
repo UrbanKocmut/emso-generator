@@ -40,9 +40,10 @@ Edit source files, not generated outputs:
 - Styles: `src/css/*.css`; assembly order is explicit in `scripts/assemble-site.mjs`. Shared, desktop/tablet, mobile/landscape, standalone, mobile standalone, then accessibility/print rules retain the original cascade.
 - PDF composition: `assets/js/pdf-composition.mjs`; thumbnail/workspace UI: `assets/js/pdf-merger.mjs`.
 - Operations and schemas: `src/operations/`; controller integration and WebMCP: `src/ui/services.mjs`.
-- Generated: root/tool/agent HTML, `robots.txt`, `sitemap.xml`, `llms.txt`, `tools.json`, `assets/css/toolbox.css`, `assets/js/toolbox-ui.js`, `assets/js/pdf-merger.js` and `precache-manifest.js`. All are checked by `build:check`.
+- Generated: root/tool/agent HTML, `robots.txt`, `sitemap.xml`, `llms.txt`, `tools.json`, `assets/css/toolbox.css`, `assets/js/toolbox-ui.js`, `assets/js/pdf-merger.js`, compatibility copies in `assets/v2/` and `precache-manifest.js`. All are checked by `build:check`.
 
 Workspace baselines exclude intentionally added help below the controls. Full-page original screenshots are retained separately under `tests/browser/baseline-pages/`.
+CI captures matching-platform workspace references from the immutable original revision `5c369f3db4aaf6934a34c73ff513135459be13ca` before comparing the new implementation. This accommodates platform font/control rendering without accepting current-page screenshots or relaxing the 1% threshold.
 There is no plugin system or runtime framework.
 
 ## Correctness references
@@ -69,6 +70,8 @@ For browser regressions, open `/tests/mobile-navigation.html` on the preview ser
 ## Public pages and local agent API
 
 The build emits `/`, `/emso/`, `/davcna-stevilka/`, `/jwt/`, `/json/`, `/sparkasse-csv-qif/`, `/pdf/` and English documentation at `/agents/`. Each tool entry has real HTML, metadata and navigation. The router preserves original hashes and root `file://` opening. Unknown paths remain missing pages.
+
+New HTML loads changed runtime assets through generated `assets/v2/` compatibility paths. The original public asset URLs remain available. This prevents the previous service worker (which ignores query strings) from combining new deep-link HTML with old scripts while existing tabs await an explicit update.
 
 Read `/agents/` and `/tools.json` for the versioned schemas, limits, examples, error codes, local file lifecycle and bounded artifact reads. `window.DelavnicaAgent.execute(name, input, { signal })` and optional `document.modelContext.registerTool` registrations use the same adapter as manual controls. Runtime dependencies, files and processing remain local. Processing never triggers saving/sharing automatically.
 

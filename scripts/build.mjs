@@ -6,6 +6,13 @@ import { assembleSite } from './assemble-site.mjs';
 import { createHash } from 'node:crypto';
 
 const check = process.argv.includes('--check');
+// New entry pages can be opened while the previous worker still owns the tab.
+// That worker ignores query strings, so retain original URLs and also emit
+// migration paths for assets whose old versions cannot run the new HTML.
+const migrationAssets = new Map([
+    ['assets/css/toolbox.css', 'assets/v2/toolbox.css'],
+    ...['tool-registry', 'pdf-loader', 'toolbox-ui', 'pwa', 'pdf-merger'].map(name => ['assets/js/' + name + '.js', 'assets/v2/' + name + '.js'])
+]);
 async function contentVersion(outputs) {
     const hash = createHash('sha256');
     const files = [];
@@ -39,6 +46,14 @@ async function main() {
     const outputs = await assembleSite();
     outputs.set('assets/js/pdf-merger.js', await bundle('assets/js/pdf-merger.mjs', true));
     outputs.set('assets/js/toolbox-ui.js', await bundle('src/ui/bootstrap.mjs', false));
+    for (const [original, alias] of migrationAssets) {
+        outputs.set(alias, outputs.get(original) ?? (await fs.readFile(path.join(projectRoot, original), 'utf8')).replaceAll('\r\n', '\n'));
+    }
+    for (const [name, content] of outputs) if (name.endsWith('.html')) {
+        let html = content;
+        for (const [original, alias] of migrationAssets) html = html.replaceAll(original, alias);
+        outputs.set(name, html);
+    }
     const version = await contentVersion(outputs);
     for (const [relativePath, template] of outputs) {
         const expected = template.replaceAll('__DELAVNICA_APP_VERSION__', version);

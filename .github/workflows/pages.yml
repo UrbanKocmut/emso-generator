@@ -24,6 +24,18 @@ jobs:
       - run: npm run build
       - run: npm test
       - run: npx playwright install --with-deps chromium
+      # Font/control rasterization differs between Windows and Linux. Compare
+      # against the immutable original release on the same runner, never against
+      # newly accepted screenshots of the implementation under test.
+      - uses: actions/checkout@v6
+        with:
+          ref: 5c369f3db4aaf6934a34c73ff513135459be13ca
+          path: node_modules/baseline-site
+          persist-credentials: false
+      - name: Capture original-release workspace references on Linux
+        run: npx playwright test tests/browser/layout.spec.mjs --update-snapshots
+        env:
+          BASELINE_SITE: '1'
       - run: npm run test:browser
       - uses: actions/upload-artifact@v4
         if: failure()
