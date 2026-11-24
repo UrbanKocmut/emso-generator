@@ -59,7 +59,7 @@ function assertRoute(page, route) {
         assert(!panel.style.transform && !panel.style.top && !panel.hasAttribute("aria-hidden"),
             "Stale panel presentation on " + panel.dataset.panel);
     }
-    assert(page.doc.querySelector('[data-route="' + route + '"]').getAttribute("aria-current") === "page",
+    assert(page.doc.querySelector('.tool-nav [data-route="' + route + '"]').getAttribute("aria-current") === "page",
         "Navigation selection does not match the tool");
 }
 
@@ -121,48 +121,49 @@ const checks = [
         assert(cards.map((card) => card.dataset.route).join() === ids.join(), "Overview cards do not match navigation");
         assert(!page.doc.querySelector('script[src$="pdf-merger.js"]'), "PDF was executed before opening the tool");
         assert(!page.doc.querySelector('script[src$="pdf.worker.classic.js"]'), "Classic PDF worker was loaded on HTTP");
-        for (const id of ids) {
-            page.doc.querySelector('[data-route="' + id + '"]').click();
+        for (const [index, id] of ids.entries()) {
+            const selector = index === 0 ? '.overview-grid .tool-card' : '.tool-nav a';
+            page.doc.querySelector(selector + '[data-route="' + id + '"]').click();
             await delay(40);
             assertRoute(page, id);
             assert(page.doc.title === page.win.ToolboxTools.find((tool) => tool.id === id).pageTitle, "Page title does not match the registry");
         }
         assert(page.doc.querySelectorAll('script[src$="pdf-merger.js"]').length === 1, "PDF bundle should load exactly once");
     }],
-    ["The open rail and close button fit the logo column while the toolbar stays above scrolling content", async () => {
+    ["The drawer stays below the sticky launcher header and its close button remains reachable", async () => {
         for (const [width, height] of [[320, 568], [390, 844], [430, 932]]) {
             const page = await openPage("overview", width, height);
             const hint = page.doc.getElementById("mobile-info-hint");
             const rail = page.doc.getElementById("mobile-info-rail");
-            const sidebar = page.doc.querySelector(".sidebar");
+            const header = page.doc.querySelector(".masthead");
             hint.click();
             await delay(320);
-            const navTop = sidebar.getBoundingClientRect().top;
+            const navTop = header.getBoundingClientRect().top;
             const railTop = rail.getBoundingClientRect().top;
             for (const scrollY of [0, 500, page.doc.documentElement.scrollHeight]) {
                 page.win.scrollTo({ top: scrollY, behavior: "instant" });
-                const nav = sidebar.getBoundingClientRect();
+                const nav = header.getBoundingClientRect();
                 const panel = rail.getBoundingClientRect();
-                const logo = page.doc.querySelector(".mobile-home-link").getBoundingClientRect();
                 const close = page.doc.getElementById("mobile-info-close").getBoundingClientRect();
                 assert(Math.abs(nav.top - navTop) < 1, "Toolbar moved while scrolling at width " + width);
                 assert(Math.abs(panel.top - railTop) < 1, "Info rail moved while scrolling");
                 assert(Math.abs(panel.top - nav.bottom) < 1, "The rail overlaps the toolbar or leaves a gap");
-                assert(Math.abs(panel.right - logo.right) < 1, "The rail extends beyond the logo");
+                assert(panel.left >= -1 && panel.right <= width + 1 && panel.width <= 261,
+                    "The open drawer exceeds its bounds at width " + width);
+                assert(panel.width >= 200, "Drawer content is too narrow to read");
                 assert(close.left >= panel.left && close.right <= panel.right,
                     "The close button protrudes from the rail at width " + width);
-                assert(sidebar.contains(page.doc.elementFromPoint(nav.width / 2, nav.top + nav.height / 2)),
+                assert(header.contains(page.doc.elementFromPoint(nav.width / 2, nav.top + nav.height / 2)),
                     "Scrolling content obstructs the toolbar");
             }
         }
     }],
-    ["Pulling the info rail fully open never stretches it past the logo edge", async () => {
+    ["Dragging the drawer keeps it inside the open position", async () => {
         const page = await openPage();
         const overview = page.doc.querySelector('[data-panel="overview"]');
         const release = beginSwipe(page, 20, 300, overview);
-        const logo = page.doc.querySelector(".mobile-home-link").getBoundingClientRect();
         const rail = page.doc.getElementById("mobile-info-rail").getBoundingClientRect();
-        assert(Math.abs(rail.right - logo.right) < 1, "The rail overextends during a long drag");
+        assert(Math.abs(rail.left) < 1 && rail.right <= 261, "The drawer overextends during a long drag");
         release();
         await delay(320);
         assert(page.doc.getElementById("mobile-info-hint").getAttribute("aria-expanded") === "true", "The rail did not stay open");
@@ -174,7 +175,7 @@ const checks = [
         for (const scrollY of [0, 160]) {
             page.win.scrollTo({ top: scrollY, behavior: "instant" });
             const top = hint.getBoundingClientRect().top;
-            const release = beginSwipe(page, 100, 145, overview);
+            const release = beginSwipe(page, 100, 215, overview);
             assert(Math.abs(hint.getBoundingClientRect().top - top) < 1, "Tab jumped vertically while opening at scroll " + scrollY);
             release();
             await delay(320);
@@ -281,7 +282,7 @@ const checks = [
         beginSwipe(page, 4, 70, hint)();
         await delay(320);
         assert(hint.getAttribute("aria-expanded") === "true", "Dragging the tab did not open the rail");
-        page.doc.querySelector('[data-route="emso"]').click();
+        page.doc.querySelector('.tool-card[data-route="emso"]').click();
         await delay(320);
         assertRoute(page, "emso");
         assert(hint.hidden, "The landing tab is visible on a tool route");

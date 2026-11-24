@@ -114,6 +114,8 @@
 
     window.addEventListener("appinstalled", function () {
         installPrompt = null;
+        const installHelp = document.getElementById("install-help-button");
+        if (installHelp) installHelp.hidden = true;
         renderActions();
         showToast("DELAVNICA JE NAMEŠČENA");
     });

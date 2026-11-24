@@ -1,0 +1,70 @@
+/* Springs move the molded controls; editors and their text stay on the baseline. */
+@media screen and (prefers-reduced-motion: no-preference) {
+    :where(html:not([data-motion="paused"])) {
+        .tool-panel :is(.button, .mini-button, .pdf-page-action, .artifact-link) {
+            transition: scale 150ms cubic-bezier(.2,.8,.3,1.5), border-color 140ms, box-shadow 140ms;
+        }
+
+        .tool-panel :is(.button, .mini-button, .pdf-page-action, .artifact-link):active:not(:disabled) {
+            scale: .94 .91;
+        }
+
+        .tool-panel :where(.button.primary) { position: relative; }
+        .workspace-sparks {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            border-radius: inherit;
+            background:
+                radial-gradient(circle at 8% 37%, #ffdf66 0 2px, transparent 3px),
+                radial-gradient(circle at 13% 73%, #ff997a 0 3px, transparent 4px),
+                radial-gradient(circle at 20% 20%, #fff4df 0 1.5px, transparent 2.5px),
+                radial-gradient(circle at 80% 76%, #ffdf66 0 2px, transparent 3px),
+                radial-gradient(circle at 89% 22%, #ffc2e9 0 3px, transparent 4px),
+                radial-gradient(circle at 94% 59%, #fff4df 0 2px, transparent 3px);
+        }
+
+        .field > :is(span, label) {
+            transform-origin: left bottom;
+            transition: translate 190ms ease-out, color 170ms;
+        }
+        .field:focus-within > :is(span, label) { translate: 0 -2px; color: #3534a4; }
+        .check-field:has(input:checked) > span { animation: workspace-check 350ms ease-out; }
+        .validation-strip .state:is(.valid, .invalid) { animation: workspace-stamp 460ms ease-out; }
+
+        .tool-panel :is(.file-drop, .image-drop).is-dragging {
+            border-color: var(--action);
+            outline: 3px solid var(--pocket);
+            animation: workspace-drop-ring 1.15s ease-out infinite;
+        }
+        .file-drop.is-dragging .file-drop-icon { animation: workspace-catch 660ms ease-in-out infinite alternate; }
+        .pdf-page-card:is(.is-drop-before, .is-drop-after) .pdf-drag-handle { animation: workspace-catch 510ms ease-in-out infinite alternate; }
+        .pdf-page-grid.is-busy .pdf-drag-handle { animation: none; }
+
+        @media (hover: hover) and (pointer: fine) {
+            .file-drop:hover .file-drop-icon { animation: workspace-check 400ms ease-out; }
+            .tool-panel .mini-button:hover:not(:disabled) { rotate: -2deg; }
+        }
+    }
+}
+
+@keyframes workspace-check {
+    0% { scale: .92; }
+    42% { scale: 1.04; rotate: -2deg; }
+    75% { scale: .99; rotate: 1deg; }
+    100% { scale: 1; rotate: 0deg; }
+}
+@keyframes workspace-stamp {
+    0% { scale: 1.14 .85; rotate: -4deg; }
+    40% { scale: .94 1.12; rotate: 2deg; }
+    72% { scale: 1.03 .97; }
+    100% { scale: 1; rotate: 0deg; }
+}
+@keyframes workspace-catch {
+    from { translate: 0 1px; rotate: -4deg; }
+    to { translate: 0 -4px; rotate: 5deg; }
+}
+@keyframes workspace-drop-ring {
+    from { outline-offset: 0; outline-color: var(--pocket); }
+    to { outline-offset: 5px; outline-color: transparent; }
+}

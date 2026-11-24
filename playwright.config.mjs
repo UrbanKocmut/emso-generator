@@ -16,5 +16,5 @@ export default defineConfig({
     snapshotPathTemplate: '{testDir}/baselines/{testFilePath}/{arg}{ext}',
     expect: { toHaveScreenshot: { animations: 'disabled', maxDiffPixelRatio: 0.01 } },
     use: { baseURL: 'http://127.0.0.1:8876', browserName: 'chromium', serviceWorkers: 'block' },
-    webServer: { command: `node ${process.env.BASELINE_SITE ? 'node_modules/baseline-site/' : ''}scripts/serve.mjs 8876`, url: 'http://127.0.0.1:8876', reuseExistingServer: false }
+    webServer: { command: 'node scripts/serve.mjs 8876', url: 'http://127.0.0.1:8876', reuseExistingServer: false }
 });

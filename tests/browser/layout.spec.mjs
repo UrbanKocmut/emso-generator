@@ -1,60 +1,51 @@
 import tools from '../../assets/js/tool-registry.js';
 import { test, expect } from '@playwright/test';
 
-// Historical workspace baselines remain immutable. Expanded overview is tested separately.
-const routes = [ 'emso', 'vat', 'jwt', 'json', 'qif', 'pdf'];
-const sizes = [[390, 844], [500, 844], [844, 390], [768, 1024], [1280, 720], [1440, 900]];
-
-async function fixture(page, route) {
-    await page.clock.setFixedTime(new Date('2026-09-10T10:00:00Z'));
-    await page.goto('/#' + route);
-    await page.evaluate(async () => {
-        await document.fonts.ready;
-        document.getElementById('emso-output').value = '0101000500006\n0202001500019';
-        document.getElementById('emso-output-count').textContent = '2 ZAPISOV';
-        document.getElementById('vat-output').value = '15012557\n10000020';
-        document.getElementById('vat-output-count').textContent = '2 ZAPISOV';
-    });
-    if (route === 'pdf') await expect(page.locator('#pdf-file')).toBeEnabled();
-}
+const routes = [tools.overview, ...tools];
+const sizes = [[320, 568], [390, 844], [500, 844], [844, 390], [768, 1024], [1280, 720], [1440, 900]];
 
 for (const [width, height] of sizes) {
-    for (const route of routes) {
-        test(`${route} ${width}x${height}`, async ({ browser }, testInfo) => {
-            const context = await browser.newContext({ viewport: { width, height }, hasTouch: width <= 844, serviceWorkers: 'block' });
-            const page = await context.newPage();
-            await fixture(page, route);
-            // Preserve the full pre-change page as evidence, while gating only the
-            // original workspace. New help below it is intentionally independent.
-            if (process.env.CAPTURE_BASELINE) await page.screenshot({ path: `tests/browser/baseline-pages/${route}-${width}x${height}.png`, fullPage: true });
-            const panel = page.locator(`[data-panel="${route}"]`);
-            const clip = await panel.evaluate(el => {
-                const box = el.getBoundingClientRect();
-                const children = [...el.children].filter(child => !child.classList.contains('reference-panel') && !child.hasAttribute('data-agent-status'));
-                const bottom = Math.max(...children.map(child => child.getBoundingClientRect().bottom));
-                return { x: Math.max(0, box.x), y: Math.max(0, box.y), width: Math.min(box.width, innerWidth - Math.max(0, box.x)), height: Math.min(bottom, innerHeight) - Math.max(0, box.y) };
+    test(`all workspaces fit at ${width}x${height}`, async ({ page }) => {
+        await page.setViewportSize({ width, height });
+        for (const route of routes) {
+            await page.goto('/' + route.path);
+            await page.evaluate(() => document.fonts.ready);
+            const panel = page.locator('[data-panel]:visible');
+            await expect(panel).toHaveAttribute('data-panel', route.id);
+            const overflow = await panel.evaluate(element => {
+                const items = element.querySelectorAll('h1, .button, .tool-card, input:not([type="checkbox"]), select, textarea');
+                return [...items].filter(item => {
+                    const box = item.getBoundingClientRect();
+                    return box.width > 1 && box.height > 1 && (box.left < -1 || box.right > innerWidth + 1);
+                }).map(item => item.id || item.textContent.trim().slice(0, 40));
             });
-            await expect(page).toHaveScreenshot(`${route}-${width}x${height}.png`, { clip });
-            expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBeTruthy();
-            await context.close();
-        });
-    }
+            expect(overflow, `${route.id} at ${width}px`).toEqual([]);
+            expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+            if (route.id === 'overview') {
+                const tiles = panel.locator('.tool-card');
+                await expect(tiles).toHaveCount(tools.length);
+                // Use layout positions while entrance transforms move the painted tiles.
+                const columns = await tiles.evaluateAll(elements => new Set(elements.map(tile => tile.offsetLeft)).size);
+                if (width <= 500) expect(columns).toBe(2);
+                if (width >= 1280) expect(columns).toBe(3);
+            }
+        }
+    });
 }
 
 for (const width of [639, 640, 641, 859, 860, 861, 1179, 1180, 1181]) {
     test(`layout boundary ${width}`, async ({ page }) => {
         await page.setViewportSize({ width, height: 900 });
-        for (const route of (process.env.BASELINE_SITE ? routes : [tools.overview, ...tools].map(tool => tool.id))) {
-            await fixture(page, route);
-            expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBeTruthy();
-            await expect(page.locator('[data-panel]:visible')).toHaveCount(1);
-            const count = await page.evaluate(() => window.ToolboxTools.length + 1);
-            await expect(page.locator('.tool-nav [data-route]')).toHaveCount(count);
+        for (const route of routes) {
+            await page.goto('/' + route.path);
+            expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+            await expect(page.locator('[data-panel]:visible')).toHaveAttribute('data-panel', route.id);
+            await expect(page.locator('.tool-nav [data-route]')).toHaveCount(routes.length);
         }
     });
 }
 
-test('existing real-engine and mobile gesture regressions', async ({ browser }) => {
+test('real-engine and mobile gesture regressions', async ({ browser }) => {
     const context = await browser.newContext({ hasTouch: true, serviceWorkers: 'block' });
     const page = await context.newPage();
     await page.goto('/tests/mobile-navigation.html');

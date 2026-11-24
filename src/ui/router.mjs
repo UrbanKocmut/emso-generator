@@ -36,6 +36,11 @@ export function initToolNavigation() {
     document.documentElement.style.setProperty("--tool-route-count", String(ROUTE_SEQUENCE.length));
     document.documentElement.style.setProperty("--tool-count", String(tools.length));
     document.querySelectorAll("[data-route]").forEach(link => { link.href = routeUrl(link.dataset.route); });
+    // Deep links and root entries share one document while history changes its URL.
+    document.querySelectorAll("img[src]").forEach(image => { image.src = image.src; });
+    document.querySelectorAll('link[rel="manifest"], link[rel="icon"], link[rel="apple-touch-icon"], a[href]:not([data-route]):not([href^="#"])').forEach(link => {
+        link.href = link.href;
+    });
 }
 
 export function renderRoute() {

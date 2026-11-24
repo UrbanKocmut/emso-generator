@@ -1,0 +1,147 @@
+/* The pockets move on entry and touch. Only the loose objects keep playing. */
+@media screen and (prefers-reduced-motion: no-preference) {
+    .overview-grid .tool-card {
+        --beat: 5.6s;
+        --step: 0;
+        --lean: -4deg;
+        --gesture: toy-rock;
+        --lift: -5px;
+        isolation: isolate;
+        animation: tray-drop 540ms cubic-bezier(.2,.78,.28,1) calc(var(--step) * 39ms) backwards;
+        transition: transform 290ms cubic-bezier(.2,1.5,.35,1), box-shadow 200ms ease;
+    }
+    .overview-grid .tool-card:nth-child(2) { --step: 1; }
+    .overview-grid .tool-card:nth-child(3) { --step: 2; }
+    .overview-grid .tool-card:nth-child(4) { --step: 3; }
+    .overview-grid .tool-card:nth-child(5) { --step: 4; }
+    .overview-grid .tool-card:nth-child(6) { --step: 5; }
+    .overview-grid .tool-card:nth-child(7) { --step: 6; }
+    .overview-grid .tool-card:nth-child(8) { --step: 7; }
+    .overview-grid .tool-card:nth-child(9) { --step: 8; }
+    .overview-grid .tool-card:nth-child(even) { --lean: 4deg; }
+
+    .tool-card[data-route="emso"] { --gesture: toy-stamp; --beat: 4.8s; }
+    .tool-card[data-route="vat"] { --beat: 5.2s; --lift: -3px; }
+    .tool-card[data-route="jwt"] { --gesture: toy-turn; --beat: 6.1s; }
+    .tool-card[data-route="json"] { --gesture: toy-squeeze; --beat: 5.7s; }
+    .tool-card[data-route="qif"] { --gesture: toy-turn; --beat: 6.6s; }
+    .tool-card[data-route="pdf"] { --gesture: toy-stamp; --beat: 5.4s; }
+    .tool-card[data-route="xml"] { --gesture: toy-squeeze; --beat: 6.2s; }
+    .tool-card[data-route="jwt-generator"] { --gesture: toy-turn; --beat: 5.1s; }
+    .tool-card[data-route="image-resizer"] { --lift: -7px; --beat: 5.9s; }
+
+    .overview-grid .card-art {
+        transform-origin: 50% 78%;
+        animation: var(--gesture) var(--beat) ease-in-out calc(var(--step) * -480ms) infinite;
+        transition: scale 290ms cubic-bezier(.22,1.65,.35,1);
+    }
+    .overview-grid .toy-out-of-view .card-art { animation-play-state: paused; }
+    .overview-grid .card-label {
+        transition: transform 230ms cubic-bezier(.22,1.55,.4,1);
+    }
+    .overview-grid .tool-card::before {
+        position: absolute;
+        z-index: -1;
+        inset: 0;
+        border-radius: inherit;
+        background: radial-gradient(ellipse at var(--toy-light-x, 46%) var(--toy-light-y, 32%),
+            #fff9, #fff3 24%, transparent 68%);
+        opacity: 0;
+        transition: opacity 180ms ease;
+        pointer-events: none;
+        content: "";
+    }
+
+    .overview-grid .tool-card:focus-visible {
+        transform: translateY(-3px);
+        box-shadow: var(--lip), 0 6px 9px #54340d35;
+    }
+    .overview-grid .tool-card:focus-visible::before { opacity: .9; }
+    .overview-grid .tool-card:focus-visible .card-art { scale: 1.08; }
+    .overview-grid .tool-card:active {
+        transform: translateY(2px) scale(.965);
+        box-shadow: inset 0 4px 7px #50311533;
+        transition-duration: 65ms;
+    }
+    .overview-grid .tool-card:active .card-art { scale: .9 1.03; transition-duration: 75ms; }
+    .overview-grid .tool-card:active::before { opacity: 1; transition-duration: 65ms; }
+
+    .wordmark .brand-mark {
+        transform-origin: 46% 78%;
+        animation: brand-hop 7.2s ease-in-out infinite;
+    }
+    .wordmark:focus-visible .brand-mark { animation: brand-flip 740ms ease-out; }
+}
+
+@media screen and (prefers-reduced-motion: no-preference) and (hover: hover) and (pointer: fine) {
+    .overview-grid .tool-card:hover:not(:active) {
+        z-index: 1;
+        transform: perspective(820px) translateY(-3px) rotateX(var(--toy-tilt-x, 0deg)) rotateY(var(--toy-tilt-y, 0deg));
+        box-shadow: var(--lip), 0 8px 12px #50311539;
+        transition-duration: 160ms;
+    }
+    .overview-grid .tool-card:hover::before { opacity: .95; }
+    .overview-grid .tool-card:hover:not(:active) .card-art {
+        --beat: 1.9s;
+        --lift: -11px;
+        scale: 1.1;
+    }
+    .overview-grid .tool-card:hover:not(:active) .card-label { transform: translateY(-2px) rotate(-1deg); }
+    .wordmark:hover .brand-mark { animation: brand-flip 740ms ease-out; }
+}
+
+@keyframes tray-drop {
+    from { opacity: .25; translate: 0 -13px; rotate: var(--lean); scale: .86; }
+    55% { opacity: 1; translate: 0 2px; rotate: 0deg; scale: 1.013 .986; }
+    78% { translate: 0 -2px; scale: .994 1.012; }
+    to { translate: 0; rotate: 0deg; scale: 1; }
+}
+
+@keyframes toy-rock {
+    0%, 46%, 100% { transform: none; }
+    12% { transform: translateY(var(--lift)) rotate(-6deg); }
+    26% { transform: translateY(-2px) rotate(4deg); }
+    36% { transform: rotate(-1.5deg); }
+}
+@keyframes toy-stamp {
+    0%, 47%, 100% { transform: none; }
+    12% { transform: translateY(-11px) rotate(-4deg) scale(.98,1.03); }
+    19% { transform: translateY(2px) rotate(1deg) scale(1.06,.9); }
+    27% { transform: translateY(-3px) scale(.98,1.035); }
+    36% { transform: scale(1.012,.985); }
+}
+@keyframes toy-turn {
+    0%, 46%, 100% { transform: none; }
+    14% { transform: perspective(370px) translateY(-5px) rotate(-7deg) rotateY(-16deg); }
+    29% { transform: perspective(370px) translateY(-2px) rotate(5deg) rotateY(9deg); }
+}
+@keyframes toy-squeeze {
+    0%, 44%, 100% { transform: none; }
+    10% { transform: scale(.93,1.05); }
+    21% { transform: translateY(-5px) rotate(3deg) scale(1.07,.96); }
+    32% { transform: scale(.985,1.015); }
+}
+@keyframes brand-hop {
+    0%, 10%, 30%, 100% { transform: none; }
+    14% { transform: scale(1.08,.88) rotate(-4deg); }
+    19% { transform: translateY(-5px) rotate(7deg) scale(.97,1.04); }
+    24% { transform: scale(1.025,.975); }
+}
+@keyframes brand-flip {
+    from { transform: perspective(240px) rotateY(0deg); }
+    22% { transform: perspective(240px) rotateY(-22deg) rotate(-9deg); }
+    75% { transform: perspective(240px) rotateY(373deg) rotate(5deg); }
+    100% { transform: perspective(240px) rotateY(360deg); }
+}
+
+html[data-motion="paused"] .overview-grid :is(.tool-card, .card-art, .card-label) {
+    transform: none !important;
+    scale: none !important;
+}
+html[data-motion="paused"] .overview-grid .tool-card::before { opacity: 0; }
+
+@media (prefers-reduced-motion: reduce) {
+    .overview-grid .tool-card:is(:hover, :active), .overview-grid .tool-card:hover .card-art {
+        transform: none;
+    }
+}

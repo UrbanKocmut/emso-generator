@@ -83,7 +83,7 @@ test('a new deep link works under the previous worker without interrupting an ol
         await fresh.locator('.tool-nav [data-route=pdf]').click();
         await expect(fresh.locator('#pdf-file')).toBeEnabled();
         expect(await fresh.evaluate(() => typeof window.DelavnicaPdfWorkspace?.compose)).toBe('function');
-        await expect(fresh.locator('#pwa-header-action')).toHaveText('POSODOBI');
+        await expect(fresh.locator('#pwa-header-action')).toHaveText(/^posodobi$/i);
         await expect(oldPage.locator('#json-input')).toHaveValue('{"unsaved":"old-tab-sentinel"}');
         expect(await oldPage.evaluate(() => !!window.DelavnicaAgent)).toBe(false);
     } finally { await context.close(); await server.close(); }

@@ -22,13 +22,6 @@
         transition-duration: 1ms;
     }
 
-    .pwa-header-action[data-pwa-mode="install"]::before,
-    .pwa-header-action[data-pwa-mode="install"]::after {
-        opacity: 1;
-        animation: none;
-        transform: translate(0, -50%);
-    }
-
     .mobile-info-hint,
     .mobile-info-rail {
         transition-duration: 1ms;

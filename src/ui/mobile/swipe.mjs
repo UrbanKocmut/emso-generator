@@ -132,7 +132,8 @@ export function initSwipeNavigation() {
             }
         });
 
-        const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches ||
+            document.documentElement.dataset.motion === "paused";
         settleTimer = window.setTimeout(function () {
             finishGesture(activeGesture);
         }, reducedMotion ? 20 : 285);

@@ -227,6 +227,12 @@ test("manifest declares the complete standalone Slovenian app surface", async ()
         const [width, height] = icon.sizes.split("x").map(Number);
         assert.deepEqual(await pngDimensions(icon.src), { width, height });
     }
+    for (const sizes of ["192x192", "512x512"]) {
+        for (const purpose of ["any", "maskable"]) {
+            assert.ok(manifest.icons.some(icon => icon.sizes === sizes && (icon.purpose || "any").split(" ").includes(purpose)),
+                `Missing ${sizes} ${purpose} install icon`);
+        }
+    }
     for (const screenshot of manifest.screenshots) {
         const [width, height] = screenshot.sizes.split("x").map(Number);
         assert.deepEqual(await pngDimensions(screenshot.src), { width, height });

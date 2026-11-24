@@ -4,25 +4,43 @@ import { help } from '../src/html/help.mjs';
 import { structuredData, PUBLIC_ORIGIN } from '../src/metadata.mjs';
 import { OPERATIONS, API_VERSION, LIMITS, ERROR_CODES } from '../src/operations/catalog.mjs';
 
-export const cssSources = ['shared', 'desktop-tablet', 'mobile-landscape', 'standalone', 'mobile-standalone', 'accessibility-print', 'help', 'new-tools'];
+export const cssSources = [
+    'shared', 'desktop-tablet', 'mobile-landscape', 'standalone', 'mobile-standalone',
+    'help', 'new-tools', 'igralnica', 'igralnica-tools', 'igralnica-motion',
+    'igralnica-launcher-motion', 'igralnica-workspace-motion', 'accessibility-print'
+];
 const read = async path => (await readFile(new URL('../' + path, import.meta.url), 'utf8')).replaceAll('\r\n', '\n');
 export const escapeHtml = value => String(value).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 
+function artwork(tool, className, size) {
+    return `<img class="${className}" src="assets/igralnica/${tool.id}.webp" width="${size}" height="${size}" alt="">`;
+}
+
 export function navigation() {
-    return tools.map((tool, index) => `<a class="tool-nav-link" href="${tool.path}" data-route="${tool.id}"><span class="tool-number">${String(index + 1).padStart(2, '0')}</span><span><strong>${escapeHtml(tool.name)}</strong><small>${escapeHtml(tool.subtitle)}</small></span><span aria-hidden="true">↗</span></a>`).join('');
+    return tools.map(tool => `<a class="tool-nav-link" href="${tool.path}" data-route="${tool.id}" aria-label="${escapeHtml(tool.title)}">${artwork(tool, 'nav-art', 42)}<span class="nav-label"><strong>${escapeHtml(tool.name)}</strong><small>${escapeHtml(tool.subtitle)}</small></span></a>`).join('');
 }
 
 export function cards() {
-    return tools.map((tool, index) => `<a class="tool-card${tool.inverted ? ' inverted' : ''}" href="${tool.path}" data-route="${tool.id}"><span class="card-index">${String(index + 1).padStart(2, '0')} / ${escapeHtml(tool.category)}</span><span class="card-symbol" aria-hidden="true">${escapeHtml(tool.symbol)}</span><span class="card-title">${tool.cardTitle.map(escapeHtml).join('<br>')}</span><span class="card-description">${escapeHtml(tool.description)}</span><span class="card-action">ODPRI ORODJE <span aria-hidden="true">→</span></span></a>`).join('');
+    return tools.map(tool => `<a class="tool-card" href="${tool.path}" data-route="${tool.id}" aria-label="${escapeHtml(tool.title)}">${artwork(tool, 'card-art', 320)}<span class="card-label"><strong class="card-title">${escapeHtml(tool.name)}</strong><small>${escapeHtml(tool.subtitle)}</small></span></a>`).join('');
 }
 
 function helpHtml(id) {
-    return `<section class="reference-panel tool-help" aria-labelledby="${id}-help"><h2 class="panel-label" id="${id}-help">UPORABA IN POMOČ</h2><div class="reference-content">${help[id].map(([title, body]) => `<div class="reference-copy"><h3>${escapeHtml(title)}</h3><p>${escapeHtml(body)}</p></div>`).join('')}<div class="reference-copy"><a href="agents/">Navodila za agente (English)</a> · <a href="./" data-route="overview">Vsa orodja</a></div></div></section>`;
+    const articles = help[id].map(([title, body]) =>
+        `<div class="reference-copy"><h3>${escapeHtml(title)}</h3><p>${escapeHtml(body)}</p></div>`
+    ).join('');
+    const links = '<div class="reference-copy"><a href="agents/">Navodila za agente (English)</a> · <a href="./" data-route="overview">Vsa orodja</a></div>';
+    const content = `<div class="reference-content">${articles}${links}</div>`;
+    if (id === 'overview') {
+        return `<details class="tray-guide"><summary id="overview-help">O Delavnici</summary><section class="reference-panel tool-help" aria-labelledby="overview-help">${content}</section></details>`;
+    }
+    return `<section class="reference-panel tool-help" aria-labelledby="${id}-help"><h2 class="panel-label" id="${id}-help">UPORABA IN POMOČ</h2>${content}</section>`;
 }
 
 export async function assembleSite() {
     const panels = await Promise.all(['overview', ...tools.map(t => t.id)].map(async id => {
-        const panel = await read(`src/html/panels/${id}.html`);
+        const tool = tools.find(item => item.id === id);
+        let panel = await read(`src/html/panels/${id}.html`);
+        if (tool) panel = panel.replace('<div class="tool-header">', '<div class="tool-header">' + artwork(tool, 'tool-art', 128));
         const explanation = helpHtml(id);
         if (id === 'emso' || id === 'vat') {
             // Expand the existing reference section, after its original content.

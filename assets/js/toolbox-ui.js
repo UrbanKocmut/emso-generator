@@ -1168,7 +1168,7 @@
   // src/operations/adapter.mjs
   function createAdapter({ core: core2, files: files2, artifacts: artifacts2, pdf, navigate: navigate2 = () => {
   }, appVersion, onInvalidate = () => {
-  } }) {
+  }, onResult }) {
     const definitions = new Map(OPERATIONS.map((operation) => [operation.name, operation]));
     const controllers = /* @__PURE__ */ new Map();
     const jobs = /* @__PURE__ */ new Map();
@@ -1311,6 +1311,12 @@
         }
       };
       const promise = (tails.get(tool) || Promise.resolve()).then(run);
+      if (tool && onResult) {
+        void promise.then((reply) => {
+          if (!job.signal.aborted) onResult(tool, reply.success);
+        }).catch(() => {
+        });
+      }
       if (tool) {
         tails.set(tool, promise);
         void promise.finally(() => {
@@ -1457,6 +1463,12 @@
     document.querySelectorAll("[data-route]").forEach((link) => {
       link.href = routeUrl(link.dataset.route);
     });
+    document.querySelectorAll("img[src]").forEach((image) => {
+      image.src = image.src;
+    });
+    document.querySelectorAll('link[rel="manifest"], link[rel="icon"], link[rel="apple-touch-icon"], a[href]:not([data-route]):not([href^="#"])').forEach((link) => {
+      link.href = link.href;
+    });
   }
   function renderRoute() {
     const route = currentRoute();
@@ -1533,8 +1545,11 @@
     files,
     artifacts,
     navigate,
-    appVersion: "2d292fa7f0932e360da5d63a62b8dd0809b7fb6121a70481a3a5f9148e7cb81c",
+    appVersion: "3264edeb04f90755a9e737b196c6083d1195634b82937eae9e48b343bb84fa5d",
     onInvalidate: (tool) => showArtifact(tool, null),
+    onResult(tool, success) {
+      window.dispatchEvent(new CustomEvent("delavnica:toolresult", { detail: { tool, success } }));
+    },
     pdf: async (args, check) => {
       if (!await window.DelavnicaPdfLoader.load()) throw new Error("PDF engines could not be loaded.");
       check();
@@ -1548,7 +1563,7 @@
       status.textContent = localizedError(error);
       status.classList.add("is-error");
     } });
-    window.DelavnicaAgent = Object.freeze({ apiVersion: API_VERSION, appVersion: "2d292fa7f0932e360da5d63a62b8dd0809b7fb6121a70481a3a5f9148e7cb81c", execute: (name, input, { signal } = {}) => api.execute(name, input, { signal }) });
+    window.DelavnicaAgent = Object.freeze({ apiVersion: API_VERSION, appVersion: "3264edeb04f90755a9e737b196c6083d1195634b82937eae9e48b343bb84fa5d", execute: (name, input, { signal } = {}) => api.execute(name, input, { signal }) });
     const lifetime = new AbortController();
     window.addEventListener("pagehide", (event) => {
       if (!event.persisted) {
@@ -1619,10 +1634,9 @@
     const rail = byId("mobile-info-rail");
     const closeButton = byId("mobile-info-close");
     const surface = byId("main-content");
-    const homeLink = document.querySelector(".mobile-home-link");
-    const sidebar = document.querySelector(".sidebar");
+    const masthead = document.querySelector(".masthead");
     const overviewPanel = document.querySelector('[data-panel="overview"]');
-    if (!hint || !rail || !closeButton || !surface || !homeLink || !sidebar || !overviewPanel) {
+    if (!hint || !rail || !closeButton || !surface || !masthead || !overviewPanel) {
       return;
     }
     let isOpen = false;
@@ -1635,15 +1649,10 @@
     function syncInfoGeometry() {
       if (isMobileInfoViewport()) {
         document.body.style.setProperty(
-          "--mobile-info-width",
-          homeLink.getBoundingClientRect().width + "px"
-        );
-        document.body.style.setProperty(
           "--mobile-nav-height",
-          sidebar.getBoundingClientRect().height + "px"
+          masthead.getBoundingClientRect().height + "px"
         );
       } else {
-        document.body.style.removeProperty("--mobile-info-width");
         document.body.style.removeProperty("--mobile-nav-height");
       }
     }
@@ -1683,7 +1692,7 @@
         document.body.classList.remove("is-mobile-info-settling");
       }
       if (focusTarget) {
-        (isOpen ? closeButton : surface).focus({ preventScroll: true });
+        (isOpen ? closeButton : hint).focus({ preventScroll: true });
       }
     }
     function resetGesture() {
@@ -1829,8 +1838,7 @@
       }
     });
     const layoutObserver = new ResizeObserver(syncInfoGeometry);
-    layoutObserver.observe(homeLink);
-    layoutObserver.observe(sidebar);
+    layoutObserver.observe(masthead);
     syncInfoGeometry();
     setOpen(false, false);
   }
@@ -1943,7 +1951,7 @@
           activeGesture.targetPanel.style.transform = shouldCommit ? "translate3d(0, 0, 0)" : "translate3d(" + activeGesture.direction * activeGesture.width + "px, 0, 0)";
         }
       });
-      const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches || document.documentElement.dataset.motion === "paused";
       settleTimer = window.setTimeout(function() {
         finishGesture(activeGesture);
       }, reducedMotion ? 20 : 285);
@@ -2060,6 +2068,322 @@
         resetGesture();
       }
     });
+  }
+
+  // src/ui/tool-flight.mjs
+  function visibleSquare(image) {
+    if (!image) return null;
+    const box = image.getBoundingClientRect();
+    const size = Math.min(box.width, box.height);
+    if (size < 1 || box.bottom <= 0 || box.top >= innerHeight || box.right <= 0 || box.left >= innerWidth) return null;
+    return { x: box.x + (box.width - size) / 2, y: box.y + (box.height - size) / 2, size };
+  }
+  function initToolFlights() {
+    if (!Element.prototype.animate) return;
+    const reduced = matchMedia("(prefers-reduced-motion: reduce)");
+    let candidate;
+    let frame;
+    let active;
+    function enabled() {
+      return !reduced.matches && document.documentElement.dataset.motion !== "paused" && !document.hidden;
+    }
+    function clearFlight() {
+      cancelAnimationFrame(frame);
+      if (!active) return;
+      active.animation.cancel();
+      active.copy.remove();
+      active = null;
+    }
+    document.addEventListener("click", (event) => {
+      candidate = null;
+      if (!enabled() || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      const link = event.target.closest("a[data-route]");
+      if (!link || link.hasAttribute("download") || link.target && link.target !== "_self") return;
+      const panel = document.querySelector("[data-panel]:not([hidden])");
+      const destination = link.dataset.route;
+      if (!panel || panel.dataset.panel === destination) return;
+      const returning = destination === "overview";
+      const source = returning ? panel.querySelector(".tool-art") : link.querySelector(".card-art, .nav-art");
+      const from = visibleSquare(source);
+      if (!from) return;
+      const captured = { from, src: source.currentSrc || source.src, destination, previous: panel.dataset.panel };
+      candidate = captured;
+      setTimeout(() => {
+        if (candidate === captured) candidate = null;
+      }, 0);
+    }, true);
+    function fly({ from, src, destination, previous }) {
+      if (!enabled()) return;
+      const to = destination === "overview" ? visibleSquare(document.querySelector(`.tool-card[data-route="${previous}"] .card-art`)) : visibleSquare(document.querySelector(`[data-panel="${destination}"] .tool-art`)) || visibleSquare(document.querySelector(`.tool-nav-link[data-route="${destination}"] .nav-art`));
+      if (!to) return;
+      const x2 = to.x - from.x;
+      const y = to.y - from.y;
+      const distance = Math.hypot(x2, y);
+      if (distance < 16) return;
+      const copy = new Image();
+      copy.className = "motion-flight";
+      copy.alt = "";
+      copy.setAttribute("aria-hidden", "true");
+      copy.src = src;
+      Object.assign(copy.style, { left: from.x + "px", top: from.y + "px", width: from.size + "px", height: from.size + "px" });
+      document.body.append(copy);
+      const scale = to.size / from.size;
+      const lift = Math.min(90, distance * 0.28);
+      const turn = x2 < 0 ? -19 : 19;
+      const animation = copy.animate([
+        { transform: "translate(0, 0) scale(1)" },
+        { offset: 0.52, transform: `translate(${x2 * 0.55}px, ${y * 0.55 - lift}px) rotate(${turn}deg) scale(${(1 + scale) * 0.58})` },
+        { offset: 0.85, opacity: 1, transform: `translate(${x2}px, ${y - 4}px) rotate(-3deg) scale(${scale * 1.06})` },
+        { opacity: 0, transform: `translate(${x2}px, ${y}px) scale(${scale})` }
+      ], { duration: Math.min(650, 390 + distance / 4), easing: "cubic-bezier(.2,.68,.23,1)", fill: "both" });
+      active = { copy, animation };
+      animation.onfinish = () => {
+        if (active?.copy === copy) clearFlight();
+      };
+    }
+    window.addEventListener("delavnica:routechange", (event) => {
+      clearFlight();
+      const captured = candidate;
+      candidate = null;
+      if (captured?.destination === event.detail.route) frame = requestAnimationFrame(() => fly(captured));
+    });
+    document.addEventListener("scroll", () => {
+      if (active) clearFlight();
+    }, { capture: true, passive: true });
+    window.addEventListener("resize", clearFlight);
+    window.addEventListener("pagehide", clearFlight);
+    window.addEventListener("delavnica:motionchange", clearFlight);
+    document.addEventListener("visibilitychange", clearFlight);
+  }
+
+  // src/ui/launcher-motion.mjs
+  function initLauncherMotion() {
+    const tray = document.querySelector(".overview-grid");
+    if (!tray) return;
+    const finePointer = matchMedia("(hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference)");
+    const variables = ["--toy-tilt-x", "--toy-tilt-y", "--toy-light-x", "--toy-light-y"];
+    let tile = null;
+    let frame = 0;
+    let x2 = 0;
+    let y = 0;
+    if ("IntersectionObserver" in window) {
+      const visibility = new IntersectionObserver((entries) => {
+        for (const entry of entries) {
+          entry.target.classList.toggle("toy-out-of-view", !entry.isIntersecting);
+        }
+      }, { rootMargin: "24px" });
+      for (const card of tray.querySelectorAll(".tool-card")) visibility.observe(card);
+    }
+    function resetTilt() {
+      cancelAnimationFrame(frame);
+      frame = 0;
+      if (tile) {
+        for (const name of variables) tile.style.removeProperty(name);
+        tile = null;
+      }
+    }
+    function updateTilt() {
+      frame = 0;
+      const box = tile.getBoundingClientRect();
+      if (!box.width || !box.height) return;
+      const across = Math.max(0, Math.min(1, (x2 - box.left) / box.width));
+      const down = Math.max(0, Math.min(1, (y - box.top) / box.height));
+      tile.style.setProperty("--toy-tilt-x", (7 - 14 * down).toFixed(2) + "deg");
+      tile.style.setProperty("--toy-tilt-y", (16 * across - 8).toFixed(2) + "deg");
+      tile.style.setProperty("--toy-light-x", (100 * across).toFixed(1) + "%");
+      tile.style.setProperty("--toy-light-y", (100 * down).toFixed(1) + "%");
+    }
+    tray.addEventListener("pointermove", (event) => {
+      if (event.pointerType === "touch" || !finePointer.matches || document.documentElement.dataset.motion === "paused") return;
+      const nextTile = event.target.closest(".tool-card");
+      if (nextTile !== tile) {
+        resetTilt();
+        tile = nextTile;
+      }
+      if (!tile) return;
+      x2 = event.clientX;
+      y = event.clientY;
+      if (!frame) frame = requestAnimationFrame(updateTilt);
+    }, { passive: true });
+    tray.addEventListener("pointerleave", resetTilt);
+    tray.addEventListener("pointercancel", resetTilt);
+    finePointer.addEventListener("change", resetTilt);
+    document.addEventListener("visibilitychange", resetTilt);
+    window.addEventListener("blur", resetTilt);
+    window.addEventListener("delavnica:motionchange", resetTilt);
+    window.addEventListener("delavnica:routechange", resetTilt);
+  }
+
+  // src/ui/workspace-motion.mjs
+  var bounce = [
+    { scale: ".92 1.08", translate: "0 0", rotate: "-2deg" },
+    { scale: "1.07 .9", translate: "0 5px", rotate: "3deg", offset: 0.22 },
+    { scale: ".98 1.03", translate: "0 -6px", rotate: "-3deg", offset: 0.5 },
+    { scale: "1.01 .99", translate: "0 1px", rotate: "1deg", offset: 0.75 },
+    { scale: "1", translate: "0 0", rotate: "0deg" }
+  ];
+  var readout = [
+    { translate: "0 4px", backgroundColor: "var(--pocket)" },
+    { translate: "0 -2px", offset: 0.42 },
+    { translate: "0 0" }
+  ];
+  var shake = [
+    { translate: "0 0" },
+    { translate: "4px 0" },
+    { translate: "-3px 0" },
+    { translate: "2px 0" },
+    { translate: "0 0" }
+  ];
+  function initWorkspaceMotion() {
+    if (!Element.prototype.animate) return;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const running = /* @__PURE__ */ new Map();
+    let panel = null;
+    let list = null;
+    let itemCount = 0;
+    let reorderFrame = 0;
+    function enabled() {
+      return !reduced.matches && !document.hidden && document.documentElement.dataset.motion !== "paused";
+    }
+    function play(element, name, keyframes, duration, delay = 0) {
+      if (!element || !enabled()) return;
+      running.get(element)?.cancel();
+      const animation = element.animate(keyframes, {
+        id: "igralnica-workspace-" + name,
+        duration,
+        delay,
+        easing: "cubic-bezier(.2,.68,.29,1)"
+      });
+      running.set(element, animation);
+      const finish = () => {
+        if (running.get(element) === animation) running.delete(element);
+        if (element.classList.contains("workspace-sparks")) element.remove();
+      };
+      animation.onfinish = animation.oncancel = finish;
+    }
+    function result(event) {
+      if (!enabled() || event.detail.tool !== panel?.dataset.panel) return;
+      const success = event.detail.success;
+      play(panel.querySelector(".tool-art"), success ? "bounce" : "wobble", success ? bounce : shake, 520);
+      if (!success) return;
+      const labels = panel.querySelectorAll(".output-panel:has(.code-output, .code-block) > .panel-label");
+      labels.forEach((label, index) => play(label, "readout", readout, 620, index * 55));
+      play(panel.querySelector("#image-resizer-downloads .artifact-link"), "download", bounce, 450);
+    }
+    const statusObserver = new MutationObserver(() => {
+      const status = panel?.querySelector(".inline-status");
+      if (status?.classList.contains("is-error")) {
+        play(status, "error", shake, 320);
+      } else if (list) {
+        play(status, "file-status", [{ translate: "0 3px" }, { translate: "0 0" }], 210);
+      }
+    });
+    const collectionObserver = new MutationObserver(() => {
+      if (!list) return;
+      const count2 = list.children.length;
+      if (count2 > itemCount) {
+        play(list.children[itemCount], "arrival", [
+          { translate: "0 10px", scale: ".97" },
+          { translate: "0 -2px", scale: "1", offset: 0.55 },
+          { translate: "0 0" }
+        ], 420);
+      }
+      itemCount = count2;
+    });
+    const toast = document.getElementById("toast");
+    const toastObserver = new MutationObserver(() => {
+      if (!toast.hidden) play(toast, "toast", [
+        { translate: "0 13px", scale: ".91" },
+        { translate: "0 -3px", scale: "1.025", offset: 0.5 },
+        { translate: "0 0", scale: "1" }
+      ], 420);
+    });
+    function reconnect() {
+      statusObserver.disconnect();
+      collectionObserver.disconnect();
+      toastObserver.disconnect();
+      cancelAnimationFrame(reorderFrame);
+      running.forEach((animation) => animation.cancel());
+      running.clear();
+      list = null;
+      panel = document.querySelector(".tool-panel:not([hidden]):not(.overview-panel):not(.is-swipe-target)");
+      if (!enabled()) return;
+      if (toast) toastObserver.observe(toast, { attributes: true, attributeFilter: ["data-toast-revision"] });
+      if (!panel) return;
+      const status = panel.querySelector(".inline-status");
+      if (status) statusObserver.observe(status, { childList: true });
+      list = panel.querySelector(".pdf-page-grid, .image-list");
+      if (list) {
+        itemCount = list.children.length;
+        collectionObserver.observe(list, { childList: true });
+      }
+    }
+    function press(event) {
+      if (!enabled() || !panel?.contains(event.target)) return;
+      const control = event.target.closest(".button, .mini-button, .pdf-page-action, .artifact-link");
+      if (!control) return;
+      play(control, "press", [
+        { scale: ".945 .91" },
+        { scale: "1.025 1.055", offset: 0.43 },
+        { scale: "1" }
+      ], 325);
+      if (!control.classList.contains("primary")) return;
+      control.querySelector(".workspace-sparks")?.remove();
+      const sparks = document.createElement("span");
+      sparks.className = "workspace-sparks";
+      sparks.setAttribute("aria-hidden", "true");
+      control.append(sparks);
+      play(sparks, "sparks", [
+        { scale: ".35 .15", opacity: 0.7 },
+        { scale: ".9 1", opacity: 1, offset: 0.35 },
+        { scale: "1.04 1.25", opacity: 0 }
+      ], 410);
+    }
+    function movePage(event) {
+      if (!enabled() || list?.id !== "pdf-pages" || !list.contains(event.target) || list.classList.contains("is-busy")) return;
+      const target = event.target.closest(".pdf-page-card");
+      if (!target) return;
+      const action = event.target.closest("[data-action]")?.dataset.action;
+      let other;
+      if (event.type === "drop") {
+        other = list.querySelector(".is-dragging");
+        if (!other || other === target) return;
+      } else if (event.type === "keydown") {
+        if (!event.altKey || event.target.closest("button") || !["ArrowLeft", "ArrowRight"].includes(event.key)) return;
+        other = event.key === "ArrowLeft" ? target.previousElementSibling : target.nextElementSibling;
+      } else if (action === "previous" || action === "next") {
+        other = action === "previous" ? target.previousElementSibling : target.nextElementSibling;
+      } else {
+        if (action === "rotate-left" || action === "rotate-right") {
+          play(target.querySelector(".pdf-page-preview"), "turn", [
+            { rotate: action === "rotate-left" ? "8deg" : "-8deg", scale: ".92" },
+            { rotate: "0deg", scale: "1" }
+          ], 360);
+        }
+        return;
+      }
+      if (!other) return;
+      const before = [target, other].map((card) => ({ card, x: card.offsetLeft, y: card.offsetTop }));
+      cancelAnimationFrame(reorderFrame);
+      reorderFrame = requestAnimationFrame(() => {
+        for (const { card, x: x2, y } of before) {
+          const dx = x2 - card.offsetLeft, dy = y - card.offsetTop;
+          if (dx || dy) play(card, "reorder", [
+            { translate: Math.max(-120, Math.min(120, dx)) + "px " + Math.max(-120, Math.min(120, dy)) + "px", scale: ".97" },
+            { translate: "0 0", scale: "1" }
+          ], 340);
+        }
+      });
+    }
+    const pages2 = document.getElementById("pdf-pages");
+    for (const type of ["click", "keydown", "drop"]) pages2?.addEventListener(type, movePage, true);
+    document.getElementById("main-content")?.addEventListener("click", press, true);
+    window.addEventListener("delavnica:toolresult", result);
+    window.addEventListener("delavnica:routechange", reconnect);
+    window.addEventListener("delavnica:motionchange", reconnect);
+    document.addEventListener("visibilitychange", reconnect);
+    reduced.addEventListener("change", reconnect);
+    reconnect();
   }
 
   // src/ui/tools/emso.mjs
@@ -3112,6 +3436,9 @@
     initKeyboardShortcuts();
     initMobileInfoRail();
     initSwipeNavigation();
+    initToolFlights();
+    initLauncherMotion();
+    initWorkspaceMotion();
   }
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", init, { once: true });

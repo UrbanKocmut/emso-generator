@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-    <meta name="theme-color" content="#0a0a0a">
+    <meta name="theme-color" content="#fff4df">
     <meta name="color-scheme" content="light">
     <meta name="application-name" content="Delavnica">
     <meta name="mobile-web-app-capable" content="yes">
@@ -19,17 +19,18 @@
     <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
     <link rel="stylesheet" href="assets/css/toolbox.css">
     <script defer src="assets/js/pwa.js"></script>
+    <script defer src="assets/js/motion-controls.js"></script>
 </head>
 <body class="policy-document">
 <a class="skip-link" href="#policy-content">Preskoči na vsebino</a>
 
 <header class="masthead">
     <a class="wordmark" href="index.html#overview" aria-label="Nazaj v Delavnico">
-        <span class="wordmark-mark" aria-hidden="true">U/</span>
-        <span>DELAVNICA</span>
+        <img class="brand-mark" src="assets/igralnica/mark.png" width="64" height="50" alt="">
+        <span>Delavnica</span>
     </a>
     <div class="masthead-meta">
-        <button id="pwa-header-action" class="button pwa-action pwa-header-action" type="button" data-pwa-action hidden>NAMESTI</button>
+        <button id="pwa-header-action" class="button pwa-action pwa-header-action" type="button" data-pwa-action data-pwa-install-label="Namesti" data-pwa-update-label="Posodobi" hidden>Namesti</button>
     </div>
 </header>
 

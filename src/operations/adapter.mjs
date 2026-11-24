@@ -4,7 +4,7 @@ import { formatXml } from '../processing/xml.mjs';
 import { generateJwt } from '../processing/jwt-generator.mjs';
 import { resizeImages } from '../processing/images.mjs';
 
-export function createAdapter({ core, files, artifacts, pdf, navigate = () => {}, appVersion, onInvalidate = () => {} }) {
+export function createAdapter({ core, files, artifacts, pdf, navigate = () => {}, appVersion, onInvalidate = () => {}, onResult }) {
     const definitions = new Map(OPERATIONS.map(operation => [operation.name, operation]));
     const controllers = new Map();
     const jobs = new Map();
@@ -122,6 +122,12 @@ export function createAdapter({ core, files, artifacts, pdf, navigate = () => {}
             }
         };
         const promise = (tails.get(tool) || Promise.resolve()).then(run);
+        // Deliver presentation feedback independently of the caller's operation promise.
+        if (tool && onResult) {
+            void promise.then(reply => {
+                if (!job.signal.aborted) onResult(tool, reply.success);
+            }).catch(() => {});
+        }
         if (tool) { tails.set(tool, promise); void promise.finally(() => { if (tails.get(tool) === promise) tails.delete(tool); }); }
         return promise;
     }

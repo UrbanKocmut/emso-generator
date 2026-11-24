@@ -118,148 +118,35 @@ a {
     outline-offset: 3px;
 }
 
-.masthead {
-    display: flex;
-    min-height: 72px;
-    align-items: stretch;
-    justify-content: space-between;
-    border-bottom: var(--line);
-    background: var(--white);
-}
-
-.wordmark {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    padding: 0 28px 0 0;
-    font-size: 18px;
-    font-weight: 700;
-    letter-spacing: .04em;
-    text-decoration: none;
-}
-
-.wordmark-mark {
-    display: grid;
-    width: 72px;
-    align-self: stretch;
-    place-items: center;
-    color: var(--white);
-    background: var(--ink);
-    font-family: "IBM Plex Mono", monospace;
-    font-size: 17px;
-}
-
+.masthead,
+.wordmark,
 .masthead-meta {
     display: flex;
     align-items: center;
-    justify-content: center;
-    padding: 0 28px;
-    border-left: var(--line);
-    font-family: "IBM Plex Mono", monospace;
-    font-size: 11px;
-    letter-spacing: .06em;
 }
 
-.pwa-action {
-    align-items: center;
-    justify-content: center;
-    border: 1px solid var(--ink);
-    color: var(--ink);
-    background: var(--white);
-    font-family: "IBM Plex Mono", monospace;
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: .08em;
+.masthead {
+    justify-content: space-between;
+}
+
+.wordmark {
+    text-decoration: none;
 }
 
 .pwa-action:disabled {
     cursor: wait;
-    opacity: .55;
 }
 
-.pwa-header-action {
-    position: relative;
-    display: inline-flex;
-    min-width: 104px;
-    min-height: 40px;
-    overflow: visible;
-    padding: 8px 14px;
-}
-
-.pwa-header-action[data-pwa-mode="install"] {
-    margin-right: 52px;
-    margin-left: 52px;
-}
-
-.pwa-header-action[data-pwa-mode="install"]::before,
-.pwa-header-action[data-pwa-mode="install"]::after {
-    position: absolute;
-    top: 50%;
-    width: 30px;
-    color: var(--ink);
-    font-family: "IBM Plex Mono", monospace;
-    font-size: 20px;
-    line-height: 1;
-    pointer-events: none;
-}
-
-.pwa-header-action[data-pwa-mode="install"]::before {
-    right: calc(100% + 14px);
-    content: "→";
-    animation: pwa-arrow-from-left 1.1s ease-in-out infinite;
-}
-
-.pwa-header-action[data-pwa-mode="install"]::after {
-    left: calc(100% + 14px);
-    content: "←";
-    animation: pwa-arrow-from-right 1.1s ease-in-out infinite;
-}
-
-@keyframes pwa-arrow-from-left {
-    0%,
-    100% {
-        opacity: .4;
-        transform: translate(-5px, -50%);
-    }
-
-    50% {
-        opacity: 1;
-        transform: translate(4px, -50%);
-    }
-}
-
-@keyframes pwa-arrow-from-right {
-    0%,
-    100% {
-        opacity: .4;
-        transform: translate(5px, -50%);
-    }
-
-    50% {
-        opacity: 1;
-        transform: translate(-4px, -50%);
-    }
-}
-
-.button.pwa-overview-action {
-    display: none;
-}
-
-.install-tip,
 .mobile-info-hint,
 .mobile-info-rail {
     display: none;
 }
 
-/* Keep the fixed hint outside transformed panels, and hide it while changing tools. */
+/* During a swipe the visible panel can change before the active route settles. */
 body:has(.main-content.is-swiping) .mobile-info-hint,
 body:has(.main-content.is-swipe-settling) .mobile-info-hint {
     opacity: 0;
     pointer-events: none;
-}
-
-.meta-divider {
-    color: var(--muted);
 }
 
 .app-shell {
@@ -268,19 +155,14 @@ body:has(.main-content.is-swipe-settling) .mobile-info-hint {
     min-height: calc(100vh - 72px - 54px);
     margin: 0 auto;
     grid-template-columns: 252px minmax(0, 1fr);
-    border-right: var(--line);
-    border-left: var(--line);
 }
 
 .sidebar {
     display: flex;
     min-width: 0;
     flex-direction: column;
-    border-right: var(--line);
-    background: var(--white);
 }
 
-.sidebar-heading,
 .panel-label {
     display: flex;
     min-height: 40px;
@@ -302,12 +184,7 @@ body:has(.main-content.is-swipe-settling) .mobile-info-hint {
 
 .tool-nav-link {
     display: grid;
-    min-height: 76px;
     align-items: center;
-    gap: 12px;
-    padding: 12px 14px;
-    border-bottom: 1px solid var(--ink);
-    grid-template-columns: 26px minmax(0, 1fr) auto;
     text-decoration: none;
 }
 
@@ -315,50 +192,9 @@ body:has(.main-content.is-swipe-settling) .mobile-info-hint {
     display: none;
 }
 
-.tool-nav-link[aria-current="page"] {
-    color: var(--white);
-    background: var(--ink);
-}
-
-.tool-number {
-    align-self: start;
-    padding-top: 2px;
-    font-family: "IBM Plex Mono", monospace;
-    font-size: 10px;
-}
-
 .tool-nav-link strong,
 .tool-nav-link small {
     display: block;
-}
-
-.tool-nav-link strong {
-    font-size: 15px;
-    letter-spacing: .02em;
-}
-
-.tool-nav-link small {
-    margin-top: 1px;
-    color: var(--muted);
-    font-size: 12px;
-}
-
-.tool-nav-link[aria-current="page"] small {
-    color: #c7c7c2;
-}
-
-.sidebar-note {
-    margin-top: auto;
-    padding: 20px 16px;
-    border-top: 1px solid var(--ink);
-}
-
-.sidebar-note p {
-    margin: 10px 0 0;
-    color: var(--muted);
-    font-family: "IBM Plex Mono", monospace;
-    font-size: 11px;
-    line-height: 1.75;
 }
 
 .eyebrow {
@@ -377,39 +213,12 @@ body:has(.main-content.is-swipe-settling) .mobile-info-hint {
     padding: clamp(28px, 5vw, 72px);
 }
 
-.overview-panel {
-    background-image:
-        linear-gradient(rgba(10, 10, 10, .045) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(10, 10, 10, .045) 1px, transparent 1px);
-    background-size: 32px 32px;
-}
-
-.hero-grid {
-    display: grid;
-    align-items: end;
-    gap: 48px;
-    margin-bottom: clamp(48px, 7vw, 92px);
-    grid-template-columns: minmax(0, 1.8fr) minmax(250px, .8fr);
-}
-
-.hero-grid h1,
 .tool-header h1 {
     margin: 0;
     font-size: clamp(48px, 6.3vw, 102px);
     font-weight: 700;
     letter-spacing: -.065em;
     line-height: .91;
-}
-
-.hero-copy {
-    padding-bottom: 4px;
-}
-
-.hero-copy > p {
-    max-width: 430px;
-    margin: 0;
-    font-size: clamp(17px, 1.5vw, 22px);
-    line-height: 1.45;
 }
 
 .text-link {
@@ -423,80 +232,6 @@ body:has(.main-content.is-swipe-settling) .mobile-info-hint {
     font-size: 12px;
     font-weight: 700;
     text-decoration: none;
-}
-
-.overview-grid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-.tool-card {
-    display: flex;
-    min-width: 0;
-    min-height: 390px;
-    flex-direction: column;
-    padding: 20px;
-    border: var(--line);
-    background: var(--white);
-    text-decoration: none;
-}
-
-.tool-card:not(:nth-child(3n + 1)) {
-    margin-left: calc(0px - var(--line-width));
-}
-
-.tool-card:nth-child(n + 4) {
-    margin-top: calc(0px - var(--line-width));
-}
-
-.tool-card.inverted {
-    color: var(--white);
-    background: var(--ink);
-}
-
-.card-index,
-.card-action {
-    font-family: "IBM Plex Mono", monospace;
-    font-size: 10px;
-    letter-spacing: .08em;
-}
-
-.card-symbol {
-    display: grid;
-    width: 62px;
-    height: 62px;
-    margin: 28px 0 36px;
-    place-items: center;
-    border: 2px solid currentColor;
-    font-family: "IBM Plex Mono", monospace;
-    font-size: 20px;
-}
-
-.card-title {
-    margin-bottom: 20px;
-    font-size: clamp(21px, 1.55vw, 28px);
-    font-weight: 700;
-    letter-spacing: -.04em;
-    line-height: 1;
-}
-
-.card-description {
-    margin-bottom: 32px;
-    color: var(--muted);
-    font-size: 13px;
-    line-height: 1.45;
-}
-
-.inverted .card-description {
-    color: #bcbcb7;
-}
-
-.card-action {
-    display: flex;
-    justify-content: space-between;
-    margin-top: auto;
-    padding-top: 14px;
-    border-top: 1px solid currentColor;
 }
 
 .tool-header {
@@ -1602,32 +1337,15 @@ body:has(.main-content.is-swipe-settling) .mobile-info-hint {
         transform: translate(-2px, -2px);
     }
 
-    .tool-nav-link:hover {
-        color: var(--white);
-        background: var(--ink);
-    }
-
-    .tool-nav-link:hover small {
-        color: #c7c7c2;
-    }
-
-    .tool-card,
     .text-link,
     .reference-links a,
     .button,
-    .pwa-header-action,
     .mini-button,
     .file-drop,
     .text-link > span[aria-hidden="true"],
     .reference-links a > span[aria-hidden="true"] {
         transition: color 120ms ease, background-color 120ms ease,
             border-color 120ms ease, transform 120ms ease, box-shadow 120ms ease;
-    }
-
-    .tool-card:hover {
-        z-index: 1;
-        transform: translate(-4px, -4px);
-        box-shadow: 6px 6px 0 var(--ink);
     }
 
     .text-link:hover {

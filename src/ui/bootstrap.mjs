@@ -4,6 +4,9 @@ import { initToolNavigation, initRouter } from './router.mjs';
 import { initKeyboardShortcuts } from './keyboard.mjs';
 import { initMobileInfoRail } from './mobile/info-panel.mjs';
 import { initSwipeNavigation } from './mobile/swipe.mjs';
+import { initToolFlights } from './tool-flight.mjs';
+import { initLauncherMotion } from './launcher-motion.mjs';
+import { initWorkspaceMotion } from './workspace-motion.mjs';
 import { initEmsoTool } from './tools/emso.mjs';
 import { initVatTool } from './tools/vat.mjs';
 import { initJwtTool } from './tools/jwt.mjs';
@@ -28,6 +31,9 @@ function init() {
     initKeyboardShortcuts();
     initMobileInfoRail();
     initSwipeNavigation();
+    initToolFlights();
+    initLauncherMotion();
+    initWorkspaceMotion();
 }
 
 if (document.readyState === "loading") {

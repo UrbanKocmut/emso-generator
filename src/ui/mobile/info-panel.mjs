@@ -5,10 +5,9 @@ export function initMobileInfoRail() {
     const rail = byId("mobile-info-rail");
     const closeButton = byId("mobile-info-close");
     const surface = byId("main-content");
-    const homeLink = document.querySelector(".mobile-home-link");
-    const sidebar = document.querySelector(".sidebar");
+    const masthead = document.querySelector(".masthead");
     const overviewPanel = document.querySelector('[data-panel="overview"]');
-    if (!hint || !rail || !closeButton || !surface || !homeLink || !sidebar || !overviewPanel) {
+    if (!hint || !rail || !closeButton || !surface || !masthead || !overviewPanel) {
         return;
     }
 
@@ -23,14 +22,9 @@ export function initMobileInfoRail() {
 
     function syncInfoGeometry() {
         if (isMobileInfoViewport()) {
-            // Use the actual grid cell, including its fractional width, so
-            // scrollbars and safe-area padding cannot offset the rail edge.
-            document.body.style.setProperty("--mobile-info-width",
-                homeLink.getBoundingClientRect().width + "px");
             document.body.style.setProperty("--mobile-nav-height",
-                sidebar.getBoundingClientRect().height + "px");
+                masthead.getBoundingClientRect().height + "px");
         } else {
-            document.body.style.removeProperty("--mobile-info-width");
             document.body.style.removeProperty("--mobile-nav-height");
         }
     }
@@ -73,7 +67,7 @@ export function initMobileInfoRail() {
             document.body.classList.remove("is-mobile-info-settling");
         }
         if (focusTarget) {
-            (isOpen ? closeButton : surface).focus({ preventScroll: true });
+            (isOpen ? closeButton : hint).focus({ preventScroll: true });
         }
     }
 
@@ -240,8 +234,7 @@ export function initMobileInfoRail() {
         }
     });
     const layoutObserver = new ResizeObserver(syncInfoGeometry);
-    layoutObserver.observe(homeLink);
-    layoutObserver.observe(sidebar);
+    layoutObserver.observe(masthead);
     syncInfoGeometry();
     setOpen(false, false);
 }

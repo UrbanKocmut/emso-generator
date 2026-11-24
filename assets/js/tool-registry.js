@@ -44,7 +44,7 @@
             description: "Ustvarite žeton z zahtevki in podpisom HMAC prek Web Crypto."
         },
         {
-            id: "image-resizer", path: "image-resizer/", title: "Sprememba velikosti slik", name: "SLIKE", subtitle: "Sprememba velikosti",
+            id: "image-resizer", path: "image-resizer/", title: "Sprememba velikosti slik", name: "Slike", subtitle: "Sprememba velikosti",
             category: "SLIKE", symbol: "↔", cardTitle: ["VELIKOST", "SLIK"], inverted: true,
             description: "Prilagodite več slik JPEG, PNG ali WebP ter jih prenesite posamezno ali kot ZIP."
         }

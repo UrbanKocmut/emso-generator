@@ -1,22 +1,4 @@
 @media (max-width: 1180px) {
-    .overview-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .overview-grid .tool-card {
-        min-height: 350px;
-        margin-top: 0;
-        margin-left: 0;
-    }
-
-    .overview-grid .tool-card:nth-child(even) {
-        margin-left: calc(0px - var(--line-width));
-    }
-
-    .overview-grid .tool-card:nth-child(n + 3) {
-        margin-top: calc(0px - var(--line-width));
-    }
-
     .json-toolbar {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
@@ -49,10 +31,6 @@
     body {
         /* Clip sideways swipes without creating an extra vertical scroll container. */
         overflow-x: clip;
-    }
-
-    .masthead-meta {
-        padding: 0 16px;
     }
 
     .app-shell {
@@ -101,13 +79,9 @@
         display: block;
         overflow-x: auto;
         scrollbar-width: none;
-        border-top: 0;
-        border-right: 0;
-        border-bottom: var(--line);
     }
 
-    .sidebar-heading,
-    .sidebar-note {
+    .sidebar-heading {
         display: none;
     }
 
@@ -121,21 +95,8 @@
     .tool-nav-link {
         min-width: 0;
         min-height: 66px;
-        padding: 8px 10px;
-        border-right: 1px solid var(--ink);
-        border-bottom: 0;
-        grid-template-columns: 20px minmax(0, 1fr);
     }
 
-    .tool-nav-link:last-child {
-        border-right: 0;
-    }
-
-    .tool-nav-link > span:last-child {
-        display: none;
-    }
-
-    .hero-grid,
     .tool-header {
         align-items: start;
         gap: 28px;

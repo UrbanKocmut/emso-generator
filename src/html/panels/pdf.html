@@ -2,7 +2,7 @@
             <div class="tool-header">
                 <div>
                     <p class="eyebrow">06 / DOKUMENTI</p>
-                    <h1 id="pdf-title">Združevanje <span class="pdf-title-word">PDF-jev</span></h1>
+                    <h1 id="pdf-title">Združi PDF</h1>
                 </div>
                 <p>Dodajte poljubno število dokumentov, uredite posamezne strani in prenesite nov PDF. Datoteke ostanejo samo v tem zavihku brskalnika.</p>
             </div>
@@ -14,12 +14,11 @@
                         <input id="pdf-file" class="visually-hidden" type="file" accept=".pdf,application/pdf" multiple disabled>
                         <span class="file-drop-icon" aria-hidden="true">PDF</span>
                         <span>
-                            <strong>SPUSTITE PDF-JE SEM</strong>
+                            <strong>Dodaj PDF</strong>
                             <small id="pdf-file-hint">ali kliknite za izbiro več datotek</small>
                         </span>
                     </label>
                     <div class="pdf-import-actions">
-                        <button id="pdf-clear" class="button" type="button" disabled>ODSTRANI VSE</button>
                         <p id="pdf-status" class="inline-status" role="status" aria-live="polite">Dodajte enega ali več PDF-jev za začetek.</p>
                     </div>
                 </div>
@@ -53,9 +52,10 @@
                         <span>Ime datoteke</span>
                         <input id="pdf-output-name" type="text" value="zdruzen-dokument.pdf" maxlength="180" spellcheck="false">
                     </label>
-                    <button id="pdf-download" class="button primary pdf-download-button" type="button" disabled>USTVARI IN SHRANI PDF</button>
+                    <button id="pdf-download" class="button primary pdf-download-button" type="button" disabled>Shrani PDF</button>
                     <button id="pdf-share" class="button pdf-share-button" type="button" hidden disabled>PRIPRAVI ZA DELJENJE</button>
                 </div>
                 <p class="pdf-export-note">Izvoz ohrani velikost in kakovost izvirnih strani. Digitalni podpisi po združevanju niso več veljavni; zaščiteni PDF-ji niso podprti.</p>
+                <button id="pdf-clear" class="button pdf-clear-button" type="button" disabled>Odstrani vse strani</button>
             </section>
         </section>

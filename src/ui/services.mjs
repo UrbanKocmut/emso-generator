@@ -19,6 +19,9 @@ export function showArtifact(tool, metadata) {
 }
 export const api = createAdapter({ core: window.ToolboxCore, files, artifacts, navigate,
     appVersion: '__DELAVNICA_APP_VERSION__', onInvalidate: tool => showArtifact(tool, null),
+    onResult(tool, success) {
+        window.dispatchEvent(new CustomEvent('delavnica:toolresult', { detail: { tool, success } }));
+    },
     pdf: async (args, check) => {
         if (!await window.DelavnicaPdfLoader.load()) throw new Error('PDF engines could not be loaded.');
         check();

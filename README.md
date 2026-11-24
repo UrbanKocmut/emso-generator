@@ -28,7 +28,7 @@ The production site has no remote runtime dependency or server component; GitHub
 
 ## Adding a tool
 
-1. Add display metadata to `assets/js/tool-registry.js`. It supplies navigation, overview cards, document titles, route order, and mobile navigation sizing.
+1. Add display metadata to `assets/js/tool-registry.js` and a square transparent tool illustration at `assets/igralnica/<id>.webp`. Navigation, launcher tiles and workspace headings share that illustration.
 2. Add its `data-panel` partial to `src/html/panels/`, preserving existing markup and CSS conventions.
 3. Put processing in DOM-independent functions, either in `toolbox-core.js` or a small focused file when warranted. Wire controls in `src/ui/tools/` or the lazy `assets/js/pdf-merger.mjs` controller.
 4. Add behavior tests, then run `npm run build` and `npm test`. Add a manifest shortcut only if the new tool needs an operating-system shortcut; these are intentionally curated separately.
@@ -37,13 +37,12 @@ Edit source files, not generated outputs:
 
 - Shell and panels: `src/html/shell.html`, `src/html/panels/*.html`, `src/html/help.mjs` and `src/html/agents.html`.
 - Browser UI: `src/ui/bootstrap.mjs`, router, shared helpers, tool controllers and mobile modules.
-- Styles: `src/css/*.css`; assembly order is explicit in `scripts/assemble-site.mjs`. Shared, desktop/tablet, mobile/landscape, standalone, mobile standalone, then accessibility/print rules retain the original cascade.
+- Styles: `src/css/*.css`. The Igralnica shell and tool styles build on the responsive layouts. Accessibility and print rules load last. The assembly order is in `scripts/assemble-site.mjs`.
 - PDF composition: `assets/js/pdf-composition.mjs`; thumbnail/workspace UI: `assets/js/pdf-merger.mjs`.
 - Operations and schemas: `src/operations/`; controller integration and WebMCP: `src/ui/services.mjs`.
 - Generated: root/tool/agent HTML, `robots.txt`, `sitemap.xml`, `llms.txt`, `tools.json`, `assets/css/toolbox.css`, `assets/js/toolbox-ui.js`, `assets/js/pdf-merger.js`, compatibility copies in `assets/v2/` and `assets/v3/`, the fflate license and `precache-manifest.js`. All are checked by `build:check`.
 
-Workspace baselines exclude intentionally added help below the controls. Full-page original screenshots are retained separately under `tests/browser/baseline-pages/`. The expanded overview and new tools are checked separately in `new-tools.spec.mjs`, including screenshots in the test output; historical overview baselines remain unchanged.
-CI captures matching-platform workspace references from the immutable original revision `5c369f3db4aaf6934a34c73ff513135459be13ca` before comparing the new implementation. This accommodates platform font/control rendering without accepting current-page screenshots or relaxing the 1% threshold.
+Browser checks cover the launcher and all nine tools at mobile, tablet and desktop widths. Windows CI compares the Igralnica visual references with pinned Chromium. The original full-page screenshots remain under `tests/browser/baseline-pages/`.
 There is no plugin system or runtime framework.
 
 ## Correctness references
@@ -69,7 +68,7 @@ For browser regressions, open `/tests/mobile-navigation.html` on the preview ser
 
 ## Public pages and local agent API
 
-The build emits `/`, `/emso/`, `/davcna-stevilka/`, `/jwt/`, `/json/`, `/sparkasse-csv-qif/`, `/pdf/`, `/xml/`, `/jwt-generator/`, `/image-resizer/` and English documentation at `/agents/`. Each tool entry has real HTML, metadata and navigation. The router preserves original hashes and root `file://` opening. Unknown paths remain missing pages. Navigation retains its original cell sizes and scrolls horizontally on phones/tablets and vertically in mobile landscape.
+The build emits `/`, `/emso/`, `/davcna-stevilka/`, `/jwt/`, `/json/`, `/sparkasse-csv-qif/`, `/pdf/`, `/xml/`, `/jwt-generator/`, `/image-resizer/` and English documentation at `/agents/`. Each tool entry has real HTML, metadata and navigation. The router preserves original hashes and root `file://` opening. Unknown paths remain missing pages. The launcher uses a responsive tile grid. Within each tool, the navigation scrolls horizontally on phones and tablets and vertically in mobile landscape.
 
 New HTML loads the expanded UI, registry and styles through generated `assets/v3/` compatibility paths; unchanged loaders retain `assets/v2/`. Original public asset URLs and v2 copies remain available. This prevents previous service workers (which ignore query strings) from combining new deep-link HTML with old scripts while existing tabs await an explicit update.
 
