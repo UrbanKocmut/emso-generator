@@ -60,6 +60,31 @@ test('mobile install control switches from instructions to the native prompt', a
     await expect(help).toBeVisible();
 });
 
+test('the last mobile tab stays visible when the bundled font replaces a narrower fallback', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    let captureFont;
+    const pendingFont = new Promise(resolve => { captureFont = resolve; });
+    await page.route('**/Nunito-Variable.ttf', captureFont, { times: 1 });
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
+    await page.addStyleTag({ content: `
+        @font-face {
+            font-family: "Compact fallback";
+            src: url("/fonts/IBMPlexSans-Bold.woff2");
+            font-weight: 900;
+            size-adjust: 70%;
+        }
+        .tool-nav-link .nav-label strong { font-family: Nunito, "Compact fallback", sans-serif; }
+    ` });
+    await page.evaluate(() => document.fonts.load('900 12px "Compact fallback"'));
+    await page.locator('.tool-card[data-route="image-resizer"]').click();
+    const tab = page.locator('.tool-nav-link[data-route="image-resizer"]');
+    const overflow = () => tab.evaluate(link => link.getBoundingClientRect().right - link.closest('.sidebar').getBoundingClientRect().right);
+    expect(await overflow()).toBeLessThanOrEqual(1);
+    await (await pendingFont).continue();
+    await page.evaluate(() => document.fonts.ready);
+    expect(await overflow()).toBeLessThanOrEqual(1);
+});
+
 test('clicks, history, reload, aliases, section anchors and new tabs share routes', async ({ page }) => {
     await page.goto('/');
     await page.evaluate(() => { window.retainedMarker = {}; });

@@ -1470,9 +1470,19 @@
       link.href = link.href;
     });
   }
+  function centerActiveToolLink() {
+    const activeLink = document.querySelector(".tool-nav-link[aria-current='page']");
+    const sidebar = activeLink?.closest(".sidebar");
+    if (!sidebar) return;
+    if (sidebar.scrollWidth > sidebar.clientWidth) {
+      sidebar.scrollLeft = activeLink.offsetLeft - (sidebar.clientWidth - activeLink.offsetWidth) / 2;
+    }
+    if (sidebar.scrollHeight > sidebar.clientHeight) {
+      sidebar.scrollTop = activeLink.offsetTop - (sidebar.clientHeight - activeLink.offsetHeight) / 2;
+    }
+  }
   function renderRoute() {
     const route = currentRoute();
-    let activeLink = null;
     document.querySelectorAll("[data-panel]").forEach(function(panel) {
       panel.hidden = panel.dataset.panel !== route;
     });
@@ -1480,7 +1490,6 @@
     document.querySelectorAll("[data-route]").forEach(function(link) {
       if (link.dataset.route === route) {
         link.setAttribute("aria-current", "page");
-        if (link.classList.contains("tool-nav-link")) activeLink = link;
       } else {
         link.removeAttribute("aria-current");
       }
@@ -1489,13 +1498,7 @@
     if (route === "pdf") {
       window.DelavnicaPdfLoader.load();
     }
-    const sidebar = document.querySelector(".sidebar");
-    if (activeLink && sidebar && sidebar.scrollWidth > sidebar.clientWidth) {
-      sidebar.scrollLeft = activeLink.offsetLeft - (sidebar.clientWidth - activeLink.offsetWidth) / 2;
-    }
-    if (activeLink && sidebar && sidebar.scrollHeight > sidebar.clientHeight) {
-      sidebar.scrollTop = activeLink.offsetTop - (sidebar.clientHeight - activeLink.offsetHeight) / 2;
-    }
+    centerActiveToolLink();
     const changed = renderedRoute !== route;
     renderedRoute = route;
     const metadata = pages.find((page) => page.id === route);
@@ -1524,6 +1527,7 @@
     window.addEventListener("hashchange", fromLocation);
     window.addEventListener("resize", renderRoute);
     fromLocation();
+    document.fonts.ready.then(centerActiveToolLink);
   }
 
   // src/ui/services.mjs
@@ -1545,7 +1549,7 @@
     files,
     artifacts,
     navigate,
-    appVersion: "3264edeb04f90755a9e737b196c6083d1195634b82937eae9e48b343bb84fa5d",
+    appVersion: "f68c4893574aeaec87725b5386654fb7d3bf4959871eaa1aea839be29f54be37",
     onInvalidate: (tool) => showArtifact(tool, null),
     onResult(tool, success) {
       window.dispatchEvent(new CustomEvent("delavnica:toolresult", { detail: { tool, success } }));
@@ -1563,7 +1567,7 @@
       status.textContent = localizedError(error);
       status.classList.add("is-error");
     } });
-    window.DelavnicaAgent = Object.freeze({ apiVersion: API_VERSION, appVersion: "3264edeb04f90755a9e737b196c6083d1195634b82937eae9e48b343bb84fa5d", execute: (name, input, { signal } = {}) => api.execute(name, input, { signal }) });
+    window.DelavnicaAgent = Object.freeze({ apiVersion: API_VERSION, appVersion: "f68c4893574aeaec87725b5386654fb7d3bf4959871eaa1aea839be29f54be37", execute: (name, input, { signal } = {}) => api.execute(name, input, { signal }) });
     const lifetime = new AbortController();
     window.addEventListener("pagehide", (event) => {
       if (!event.persisted) {

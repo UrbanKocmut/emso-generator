@@ -1,12 +1,12 @@
 "use strict";
 
 self.DELAVNICA_PRECACHE = Object.freeze({
-    "version": "28aed343a96c71a56526087a98e34dbd42b942343ab10a8cd4a7d065cfcba952",
-    "totalBytes": 11832299,
+    "version": "3299c7bad87770f94922435e21e2392479ba5b90b8241048d80a347cb5376eeb",
+    "totalBytes": 11832539,
     "entries": [
         {
             "url": "./agents/index.html",
-            "revision": "a55f5049da11e8cb66ba3f2c4c234a0ae675a1c5a7342812c4aff10c7eabd59f",
+            "revision": "ea63ebcfda0c8a4f37faecbd0aabcd90ecc916b0d49fd61c63eb6d987139c4cf",
             "size": 27818
         },
         {
@@ -151,8 +151,8 @@ self.DELAVNICA_PRECACHE = Object.freeze({
         },
         {
             "url": "./assets/js/toolbox-ui.js",
-            "revision": "bdf2a15c5d7e687cb864084bdcdcc684491466dbc3257f7cba0e86c36028bd6a",
-            "size": 146284
+            "revision": "669eeacf0aca072fc752424c1670a8bc2823a9bb3bb884641de1244a919fd2a1",
+            "size": 146364
         },
         {
             "url": "./assets/screenshots/delavnica-mobile.png",
@@ -186,8 +186,8 @@ self.DELAVNICA_PRECACHE = Object.freeze({
         },
         {
             "url": "./assets/v2/toolbox-ui.js",
-            "revision": "bdf2a15c5d7e687cb864084bdcdcc684491466dbc3257f7cba0e86c36028bd6a",
-            "size": 146284
+            "revision": "669eeacf0aca072fc752424c1670a8bc2823a9bb3bb884641de1244a919fd2a1",
+            "size": 146364
         },
         {
             "url": "./assets/v2/toolbox.css",
@@ -201,8 +201,8 @@ self.DELAVNICA_PRECACHE = Object.freeze({
         },
         {
             "url": "./assets/v3/toolbox-ui.js",
-            "revision": "bdf2a15c5d7e687cb864084bdcdcc684491466dbc3257f7cba0e86c36028bd6a",
-            "size": 146284
+            "revision": "669eeacf0aca072fc752424c1670a8bc2823a9bb3bb884641de1244a919fd2a1",
+            "size": 146364
         },
         {
             "url": "./assets/v3/toolbox.css",
@@ -1341,7 +1341,7 @@ self.DELAVNICA_PRECACHE = Object.freeze({
         },
         {
             "url": "./tools.json",
-            "revision": "0c61f03ad18483a349439552296d58043f3e94f407c56595f551a148cdda9c63",
+            "revision": "5717bc589a5ee926fa9d0a0afa34384f9e9c35f67fe12b1dddcfe2535ac5feac",
             "size": 18094
         },
         {

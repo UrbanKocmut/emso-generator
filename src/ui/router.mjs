@@ -43,9 +43,20 @@ export function initToolNavigation() {
     });
 }
 
+function centerActiveToolLink() {
+    const activeLink = document.querySelector(".tool-nav-link[aria-current='page']");
+    const sidebar = activeLink?.closest(".sidebar");
+    if (!sidebar) return;
+    if (sidebar.scrollWidth > sidebar.clientWidth) {
+        sidebar.scrollLeft = activeLink.offsetLeft - (sidebar.clientWidth - activeLink.offsetWidth) / 2;
+    }
+    if (sidebar.scrollHeight > sidebar.clientHeight) {
+        sidebar.scrollTop = activeLink.offsetTop - (sidebar.clientHeight - activeLink.offsetHeight) / 2;
+    }
+}
+
 export function renderRoute() {
     const route = currentRoute();
-    let activeLink = null;
 
     document.querySelectorAll("[data-panel]").forEach(function (panel) {
         panel.hidden = panel.dataset.panel !== route;
@@ -55,7 +66,6 @@ export function renderRoute() {
     document.querySelectorAll("[data-route]").forEach(function (link) {
         if (link.dataset.route === route) {
             link.setAttribute("aria-current", "page");
-            if (link.classList.contains("tool-nav-link")) activeLink = link;
         } else {
             link.removeAttribute("aria-current");
         }
@@ -66,13 +76,7 @@ export function renderRoute() {
         window.DelavnicaPdfLoader.load();
     }
 
-    const sidebar = document.querySelector(".sidebar");
-    if (activeLink && sidebar && sidebar.scrollWidth > sidebar.clientWidth) {
-        sidebar.scrollLeft = activeLink.offsetLeft - (sidebar.clientWidth - activeLink.offsetWidth) / 2;
-    }
-    if (activeLink && sidebar && sidebar.scrollHeight > sidebar.clientHeight) {
-        sidebar.scrollTop = activeLink.offsetTop - (sidebar.clientHeight - activeLink.offsetHeight) / 2;
-    }
+    centerActiveToolLink();
     const changed = renderedRoute !== route;
     renderedRoute = route;
     const metadata = pages.find(page => page.id === route);
@@ -102,4 +106,6 @@ export function initRouter() {
     window.addEventListener("hashchange", fromLocation);
     window.addEventListener("resize", renderRoute);
     fromLocation();
+    // The bundled font can widen the tab strip after the initial route is visible.
+    document.fonts.ready.then(centerActiveToolLink);
 }
