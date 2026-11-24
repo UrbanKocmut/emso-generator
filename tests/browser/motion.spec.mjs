@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-test.use({ reducedMotion: 'no-preference' });
+test.use({ contextOptions: { reducedMotion: 'no-preference' } });
 
 test('changing motion preference live stops and restores launcher motion', async ({ page }) => {
     await page.goto('/');

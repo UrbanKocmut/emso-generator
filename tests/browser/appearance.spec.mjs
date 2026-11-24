@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 
 // These reviewed references use the pinned Windows Chromium rasterizer.
 test.skip(process.platform !== 'win32', 'Visual comparisons run in the Windows CI job');
-test.use({ locale: 'sl-SI', reducedMotion: 'reduce', serviceWorkers: 'block' });
+test.use({ locale: 'sl-SI', contextOptions: { reducedMotion: 'reduce' }, serviceWorkers: 'block' });
 
 for (const [width, height] of [[1440, 900], [390, 844]]) {
     test(`Igralnica launcher at ${width}x${height}`, async ({ page }) => {
@@ -27,6 +27,7 @@ test('mobile PDF workspace with imported pages', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto('/pdf/');
     await expect(page.locator('#pdf-file')).toBeEnabled();
+    await expect(page.locator('.motion-switch')).toBeHidden();
     await page.evaluate(async () => {
         const { PDFDocument, rgb } = await import('/assets/vendor/pdf-lib/pdf-lib.esm.min.js');
         const pdf = await PDFDocument.create();
